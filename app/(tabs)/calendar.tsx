@@ -1,210 +1,340 @@
-import { View, StyleSheet, Text, Pressable, Modal } from 'react-native';
-import { Calendar } from 'react-native-big-calendar';
-import { useState } from 'react';
-import dayjs from 'dayjs';
+import { useMemo, useState } from 'react';
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
-import { Colors } from '../../src/theme/colors';
-import { Spacing } from '../../src/theme/spacing';
-import { Typography } from '../../src/theme/typography';
+/* -----------------------------
+   Date helpers
+-------------------------------- */
 
-type CalendarMode = 'week' | 'month';
-
-const WEEK_JUMPS = [0, 1, 2, 3, 4,5,6,7, 8,9,10,11, 12];
-
-function formatWeekRange(weeksFromNow: number): string {
-  const base = dayjs().add(weeksFromNow, 'week');
-
-  const start = base.startOf('week').add(1, 'day');
-  const end = start.add(6, 'day');
-
-  return `${start.format('DD.MM')} – ${end.format('DD.MM')}`;
+function startOfWeek(date: Date) {
+  const d = new Date(date);
+  const day = d.getDay() || 7;
+  d.setDate(d.getDate() - (day - 1));
+  d.setHours(0, 0, 0, 0);
+  return d;
 }
 
+function addDays(date: Date, days: number) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function sameDay(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+function formatDate(d: Date) {
+  return d.toLocaleDateString('pl-PL', {
+    day: '2-digit',
+    month: '2-digit',
+  });
+}
+
+function weekLabel(start: Date) {
+  const end = addDays(start, 6);
+  return `${formatDate(start)} – ${formatDate(end)}`;
+}
+
+/* -----------------------------
+   Constants
+-------------------------------- */
+
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+
+const WEEK_JUMPS = Array.from({ length: 26 }, (_, i) => i);
+
+/* -----------------------------
+   Screen
+-------------------------------- */
 
 export default function CalendarScreen() {
-  const [mode, setMode] = useState<CalendarMode>('week');
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [weekPickerVisible, setWeekPickerVisible] = useState(false);
+  const [mode, setMode] = useState<'week' | 'month'>('week');
+  const [weekOffset, setWeekOffset] = useState(0);
 
-  function goPrevious() {
-    setCurrentDate(dayjs(currentDate).subtract(1, mode).toDate());
-  }
+  const today = new Date();
 
-  function goNext() {
-    setCurrentDate(dayjs(currentDate).add(1, mode).toDate());
-  }
+  const baseWeekStart = useMemo(
+    () => startOfWeek(new Date()),
+    []
+  );
 
-  function jumpWeeks(weeks: number) {
-    setCurrentDate(dayjs().add(weeks, 'week').toDate());
-    setWeekPickerVisible(false);
-  }
+  const weekStart = useMemo(
+    () => addDays(baseWeekStart, weekOffset * 7),
+    [baseWeekStart, weekOffset]
+  );
 
-  function getHeaderLabel() {
-    if (mode === 'month') {
-      return dayjs(currentDate).format('MMMM YYYY');
-    }
-
-    const start = dayjs(currentDate).startOf('week').add(1, 'day');
-    const end = start.add(6, 'day');
-
-    return `${start.format('DD MMM')} – ${end.format('DD MMM YYYY')}`;
-  }
+  const days = useMemo(
+    () =>
+      Array.from({ length: 7 }, (_, i) =>
+        addDays(weekStart, i)
+      ),
+    [weekStart]
+  );
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={goPrevious} style={styles.arrow}>
-          <Text style={styles.arrowText}>‹</Text>
-        </Pressable>
+        <Text style={styles.title}>Kalendarz</Text>
 
-        <Pressable
-          onPress={() => mode === 'week' && setWeekPickerVisible(true)}
-        >
-          <Text style={styles.headerText}>
-            {getHeaderLabel()} {mode === 'week' ? '▾' : ''}
-          </Text>
-        </Pressable>
+        <View style={styles.modeSwitch}>
+          <Pressable
+            style={[
+              styles.modeButton,
+              mode === 'week' && styles.modeActive,
+            ]}
+            onPress={() => setMode('week')}
+          >
+            <Text>Tydzień</Text>
+          </Pressable>
 
-        <Pressable onPress={goNext} style={styles.arrow}>
-          <Text style={styles.arrowText}>›</Text>
-        </Pressable>
+          <Pressable
+            style={[
+              styles.modeButton,
+              mode === 'month' && styles.modeActive,
+            ]}
+            onPress={() => setMode('month')}
+          >
+            <Text>Miesiąc</Text>
+          </Pressable>
+        </View>
       </View>
 
-      {/* Mode selector */}
-      <View style={styles.modeSelector}>
-        <Pressable
-          style={[styles.modeButton, mode === 'week' && styles.activeMode]}
-          onPress={() => setMode('week')}
+      {/* Week jump */}
+      {mode === 'week' && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.weekJump}
+          contentContainerStyle={{ paddingHorizontal: 8 }}
         >
-          <Text style={styles.modeText}>Week</Text>
-        </Pressable>
-
-        <Pressable
-          style={[styles.modeButton, mode === 'month' && styles.activeMode]}
-          onPress={() => setMode('month')}
-        >
-          <Text style={styles.modeText}>Month</Text>
-        </Pressable>
-      </View>
+          {WEEK_JUMPS.map((w) => {
+            const start = addDays(baseWeekStart, w * 7);
+            return (
+              <Pressable
+                key={w}
+                style={[
+                  styles.weekJumpItem,
+                  w === weekOffset && styles.weekJumpActive,
+                ]}
+                onPress={() => setWeekOffset(w)}
+              >
+                <Text style={styles.weekJumpText}>
+                  {weekLabel(start)}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      )}
 
       {/* Calendar */}
-      <Calendar
-        height={mode === 'month' ? 700 : 600}
-        mode={mode}
-        date={currentDate}
-        events={[]}
-        swipeEnabled
-        weekStartsOn={1}
-      />
-
-      {/* Week picker modal */}
-      <Modal
-        visible={weekPickerVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setWeekPickerVisible(false)}
-      >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setWeekPickerVisible(false)}
-        >
-          <View style={styles.modalContent}>
-            {WEEK_JUMPS.map(weeks => (
-            <Pressable
-                key={weeks}
-                style={styles.modalItem}
-                onPress={() => jumpWeeks(weeks)}
-            >
-                <Text style={styles.modalText}>
-                {formatWeekRange(weeks)}
-                </Text>
-            </Pressable>
-            ))}
-
-
+      {mode === 'week' ? (
+        <ScrollView>
+          {/* Days header */}
+          <View style={styles.daysRow}>
+            <View style={styles.timeCell} />
+            {days.map((day) => {
+              const isToday = sameDay(day, today);
+              return (
+                <View
+                  key={day.toISOString()}
+                  style={[
+                    styles.dayCell,
+                    isToday && styles.todayHeader,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.dayText,
+                      isToday && styles.todayText,
+                    ]}
+                  >
+                    {day.toLocaleDateString('pl-PL', {
+                      weekday: 'short',
+                    })}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.dayText,
+                      isToday && styles.todayText,
+                    ]}
+                  >
+                    {formatDate(day)}
+                  </Text>
+                </View>
+              );
+            })}
           </View>
-        </Pressable>
-      </Modal>
+
+          {/* Time grid */}
+          {HOURS.map((h) => (
+            <View key={h} style={styles.row}>
+              <View style={styles.timeCell}>
+                <Text style={styles.timeText}>
+                  {String(h).padStart(2, '0')}:00
+                </Text>
+              </View>
+
+              {days.map((day) => {
+                const isToday = sameDay(day, today);
+                return (
+                  <View
+                    key={day.toISOString() + h}
+                    style={[
+                      styles.slot,
+                      isToday && styles.todaySlot,
+                    ]}
+                  />
+                );
+              })}
+            </View>
+          ))}
+        </ScrollView>
+      ) : (
+        <View style={styles.monthPlaceholder}>
+          <Text style={styles.monthText}>
+            Widok miesięczny – do zrobienia
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
 
+/* -----------------------------
+   Styles
+-------------------------------- */
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: '#fff',
+    marginTop: 15,
   },
 
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    backgroundColor: Colors.surface,
+    padding: 16,
     borderBottomWidth: 1,
-    borderColor: Colors.border,
+    borderColor: '#eee',
   },
 
-  headerText: {
-    ...Typography.subtitle,
-    color: Colors.textPrimary,
+  title: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 5,
   },
 
-  arrow: {
-    padding: Spacing.sm,
-  },
-
-  arrowText: {
-    fontSize: 26,
-    color: Colors.primary,
-  },
-
-  modeSelector: {
+  modeSwitch: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderColor: Colors.border,
+    gap: 10,
   },
 
   modeButton: {
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: '#eee',
   },
 
-  activeMode: {
-    borderBottomWidth: 2,
-    borderColor: Colors.primary,
+  modeActive: {
+    backgroundColor: '#cde7ff',
   },
 
-  modeText: {
-    ...Typography.body,
-    color: Colors.textPrimary,
+  weekJump: {
+    height: 40,
+    padding: 2,
+    borderBottomWidth: 1,
+    borderColor: '#eee',
   },
 
-  modalOverlay: {
+  weekJumpItem: {
+    paddingHorizontal: 6,
+    paddingVertical: 5,
+    marginRight: 8,
+    borderRadius: 15,
+    backgroundColor: '#eee',
+  },
+
+  weekJumpActive: {
+    backgroundColor: '#cde7ff',
+  },
+
+  weekJumpText: {
+    fontSize: 13,
+  },
+
+  daysRow: {
+    flexDirection: 'row',
+  },
+
+  row: {
+    flexDirection: 'row',
+  },
+
+  timeCell: {
+    width: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRightWidth: 1,
+    borderColor: '#eee',
+  },
+
+  timeText: {
+    fontSize: 11,
+    color: '#555',
+  },
+
+  dayCell: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    paddingVertical: 6,
+    borderRightWidth: 1,
+    borderColor: '#eee',
+    alignItems: 'center',
+  },
+
+  dayText: {
+    fontSize: 12,
+  },
+
+  todayHeader: {
+    backgroundColor: '#eef6ff',
+  },
+
+  todayText: {
+    fontWeight: '600',
+    color: '#1e5eff',
+  },
+
+  slot: {
+    flex: 1,
+    height: 36,
+    borderRightWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#eee',
+  },
+
+  todaySlot: {
+    backgroundColor: '#f6fbff',
+  },
+
+  monthPlaceholder: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
 
-  modalContent: {
-    backgroundColor: Colors.surface,
-    borderRadius: 8,
-    width: '80%',
-    paddingVertical: Spacing.sm,
-  },
-
-  modalItem: {
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-  },
-
-  modalText: {
-    ...Typography.body,
-    color: Colors.textPrimary,
+  monthText: {
+    color: '#777',
   },
 });

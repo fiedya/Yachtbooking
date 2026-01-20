@@ -1,48 +1,55 @@
-import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../src/theme/colors';
+import { Tabs } from 'expo-router';
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.textSecondary,
-        tabBarStyle: {
-          backgroundColor: Colors.surface,
-        },
+        tabBarShowLabel: false,
       }}
     >
-      {/* 1️⃣ BOOK */}
+      <Tabs.Screen
+        name="news"
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="newspaper-outline" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="yachts"
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="boat-outline" size={size} color={color} />
+          ),
+        }}
+      />
+
       <Tabs.Screen
         name="book"
         options={{
-          title: 'Book',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="boat" size={size} color={color} />
+            <Ionicons name="add-circle-outline" size={size} color={color} />
           ),
         }}
       />
 
-      {/* 2️⃣ CALENDAR */}
       <Tabs.Screen
         name="calendar"
         options={{
-          title: 'Calendar',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar" size={size} color={color} />
+            <Ionicons name="calendar-outline" size={size} color={color} />
           ),
         }}
       />
 
-      {/* 3️⃣ PROFILE */}
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
+            <Ionicons name="person-outline" size={size} color={color} />
           ),
         }}
       />

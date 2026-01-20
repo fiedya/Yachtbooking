@@ -13,18 +13,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const unsub = onAuthStateChanged(u => {
-        console.log('[AUTH PROVIDER]', {
-            uid: u?.uid,
-            phone: u?.phoneNumber,
-        });
-        setUser(u);
-        setLoading(false);
-        });
+  useEffect(() => {
+    let initialized = false;
 
-    return unsub;
-    }, []);
+    const unsub = onAuthStateChanged(u => {
+      console.log('[AUTH PROVIDER]', {
+        uid: u?.uid,
+        phone: u?.phoneNumber,
+      });
+
+      setUser(u);
+      setLoading(false);
+      initialized = true;
+    });
+
+    return () => {
+      if (initialized) {
+        unsub();
+      }
+    };
+  }, []);
+
 
 
   return (
