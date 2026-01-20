@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import firestore from '@react-native-firebase/firestore';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -45,6 +46,26 @@ function weekLabel(start: Date) {
   return `${formatDate(start)} – ${formatDate(end)}`;
 }
 
+function getBookingStyle(
+  booking: any,
+  day: Date
+) {
+  const start = booking.start.toDate();
+  const end = booking.end.toDate();
+
+  if (!sameDay(start, day)) return null;
+
+  const startMinutes =
+    start.getHours() * 60 + start.getMinutes();
+  const endMinutes =
+    end.getHours() * 60 + end.getMinutes();
+
+  return {
+    top: (startMinutes / 60) * 36,
+    height: ((endMinutes - startMinutes) / 60) * 36,
+  };
+}
+
 /* -----------------------------
    Constants
 -------------------------------- */
@@ -60,6 +81,8 @@ const WEEK_JUMPS = Array.from({ length: 26 }, (_, i) => i);
 export default function CalendarScreen() {
   const [mode, setMode] = useState<'week' | 'month'>('week');
   const [weekOffset, setWeekOffset] = useState(0);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
 
   const today = new Date();
 
@@ -72,6 +95,37 @@ export default function CalendarScreen() {
     () => addDays(baseWeekStart, weekOffset * 7),
     [baseWeekStart, weekOffset]
   );
+  useEffect(() => {
+    const weekEnd = addDays(weekStart, 7);
+
+    const unsub = firestore()
+      .collection('bookings')
+      .where('start', '<', weekEnd)
+      .where('end', '>', weekStart)
+      .onSnapshot(
+        (snap) => {
+          if (!snap) {
+            console.warn('[CALENDAR] snapshot is null');
+            setBookings([]);
+            return;
+          }
+
+          const data = snap.docs.map((d) => ({
+            id: d.id,
+            ...d.data(),
+          }));
+
+          setBookings(data);
+        },
+        (error) => {
+          console.error('[CALENDAR] booking subscription error', error);
+          setBookings([]);
+        }
+      );
+
+    return unsub;
+  }, [weekStart]);
+
 
   const days = useMemo(
     () =>
@@ -195,7 +249,33 @@ export default function CalendarScreen() {
                       styles.slot,
                       isToday && styles.todaySlot,
                     ]}
-                  />
+                  >
+                    {h === 0 &&
+                      bookings
+                        .filter((b) => b.status === 'pending')
+                        .map((b) => {
+                          const layout = getBookingStyle(b, day);
+                          if (!layout) return null;
+
+                          return (
+                            <Pressable
+                              key={b.id}
+                              style={[styles.booking, layout]}
+                              onPress={() => setSelectedBooking(b)}
+                            >
+
+
+                              <Text style={styles.bookingTitle}>
+                                {b.yachtName}
+                              </Text>
+                              <Text style={styles.bookingSubtitle}>
+                                {b.userName}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                  </View>
+
                 );
               })}
             </View>
@@ -207,7 +287,45 @@ export default function CalendarScreen() {
             Widok miesięczny – do zrobienia
           </Text>
         </View>
-      )}
+      )
+
+      
+    }
+    
+    {selectedBooking && (
+    <View style={styles.modalOverlay}>
+      <View style={styles.modal}>
+        <Text style={styles.modalTitle}>
+          {selectedBooking.yachtName}
+        </Text>
+
+        <Text style={styles.modalText}>
+          👤 {selectedBooking.userName}
+        </Text>
+
+        <Text style={styles.modalText}>
+          ⏰{' '}
+          {selectedBooking.start.toDate().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          })}{' '}
+          –{' '}
+          {selectedBooking.end.toDate().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
+        </Text>
+
+        <Pressable
+          style={styles.modalClose}
+          onPress={() => setSelectedBooking(null)}
+        >
+          <Text style={styles.modalCloseText}>Zamknij</Text>
+        </Pressable>
+      </View>
+    </View>
+  )}
+
     </View>
   );
 }
@@ -337,4 +455,66 @@ const styles = StyleSheet.create({
   monthText: {
     color: '#777',
   },
+
+  booking: {
+    position: 'absolute',
+    left: 2,
+    right: 2,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 6,
+    padding: 4,
+    zIndex: 10,
+  },
+
+  bookingTitle: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#333',
+  },
+
+  bookingSubtitle: {
+    fontSize: 10,
+    color: '#555',
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+
+  modal: {
+    width: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+  },
+
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+
+  modalText: {
+    fontSize: 14,
+    marginBottom: 8,
+  },
+
+  modalClose: {
+    marginTop: 16,
+    alignSelf: 'flex-end',
+  },
+
+  modalCloseText: {
+    color: '#1e5eff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+
 });

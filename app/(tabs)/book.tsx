@@ -1,4 +1,5 @@
 import { createBooking } from '@/src/services/booking.service';
+import { getUser } from '@/src/services/userService';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import auth from '@react-native-firebase/auth';
 import { useState } from 'react';
@@ -18,6 +19,7 @@ const YACHTS = [
 
 export default function BookScreen() {
   const user = auth().currentUser;
+  
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
@@ -45,9 +47,16 @@ export default function BookScreen() {
     setLoading(true);
 
     try {
+
+      const profile = await getUser(user.uid);
+
+      const fullName = profile
+        ? `${profile.name} ${profile.surname}`
+        : user.phoneNumber || '';
+
       await createBooking({
         userId: user.uid,
-        userName: user.phoneNumber || '',
+        userName: fullName,
         yachtId: yacht.id,
         yachtName: yacht.name,
         start,
