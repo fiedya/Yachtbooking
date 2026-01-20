@@ -1,5 +1,3 @@
-import { Timestamp } from 'firebase/firestore';
-
 export type User = {
   uid: string;                 // Firebase Auth UID (doc ID)
   phone: string;
@@ -7,5 +5,5 @@ export type User = {
   surname: string;
   description: string;
   photoUrl: string | null;     // Profile image (Storage URL)
-  createdAt: Timestamp;
+  createdAt: any;
 };

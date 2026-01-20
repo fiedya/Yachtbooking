@@ -1,4 +1,4 @@
-import { onAuthStateChanged } from '@/src/services/authService';
+import auth from '@react-native-firebase/auth';
 import { createContext, useContext, useEffect, useState } from 'react';
 
 const AuthContext = createContext<{
@@ -14,27 +14,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let initialized = false;
+    console.log(
+      '[AUTH PROVIDER] currentUser on mount:',
+      auth().currentUser?.uid ?? 'NO USER'
+    );
 
-    const unsub = onAuthStateChanged(u => {
-      console.log('[AUTH PROVIDER]', {
+    const unsubscribe = auth().onAuthStateChanged(u => {
+      console.log('[AUTH PROVIDER] state changed:', {
         uid: u?.uid,
         phone: u?.phoneNumber,
       });
 
       setUser(u);
       setLoading(false);
-      initialized = true;
     });
 
-    return () => {
-      if (initialized) {
-        unsub();
-      }
-    };
+    return unsubscribe;
   }, []);
-
-
 
   return (
     <AuthContext.Provider value={{ user, loading }}>

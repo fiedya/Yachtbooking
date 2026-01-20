@@ -1,39 +1,10 @@
-import { onAuthStateChanged } from '@/src/services/authService';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { AuthProvider } from '@/src/auth/AuthProvider';
+import { Stack } from 'expo-router';
 
-const AuthContext = createContext<{
-  user: any | null;
-  loading: boolean;
-}>({
-  user: null,
-  loading: true,
-});
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const unsub = onAuthStateChanged(u => {
-        console.log('[AUTH PROVIDER]', {
-            uid: u?.uid,
-            phone: u?.phoneNumber,
-        });
-        setUser(u);
-        setLoading(false);
-        });
-
-    return unsub;
-    }, []);
-
-
+export default function RootLayout() {
   return (
-    <AuthContext.Provider value={{ user, loading }}>
-      {children}
-    </AuthContext.Provider>
+    <AuthProvider>
+      <Stack screenOptions={{ headerShown: false }} />
+    </AuthProvider>
   );
-}
-
-export function useAuth() {
-  return useContext(AuthContext);
 }
