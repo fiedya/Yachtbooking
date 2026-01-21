@@ -2,7 +2,7 @@
   "expo": {
     "name": "YachtBooking",
     "slug": "YachtBooking",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "yachtbooking",
@@ -38,7 +38,8 @@
     },
     "updates": {
       "fallbackToCacheTimeout": 0,
-      "url": "https://u.expo.dev/43f3a1da-a643-43ab-9562-85e52bc8213e"
+      "url": "https://u.expo.dev/43f3a1da-a643-43ab-9562-85e52bc8213e",
+      "enabled": false
     },
     "owner": "fiedya",
     "runtimeVersion": {
