@@ -32,7 +32,6 @@ export async function createOrUpdateUser(
 
   if (!snap.exists())
     {
-      console.log('[USER SERVICE] creating user document');
 
       await ref.set({
         phone,
@@ -40,12 +39,11 @@ export async function createOrUpdateUser(
         surname,
         description: '',
         photoUrl: null,
-        role: 'admin',
+        role: 'user',
         onboarded: true,
         createdAt: firestore.FieldValue.serverTimestamp(),
       });
 
-      console.log('[USER SERVICE] user document CREATED');
     } 
   else
     {

@@ -6,4 +6,5 @@ export type User = {
   description: string;
   photoUrl: string | null;     // Profile image (Storage URL)
   createdAt: any;
+  role: string;
 };

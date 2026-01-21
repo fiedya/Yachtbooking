@@ -1,7 +1,9 @@
 import { createBooking } from '@/src/services/booking.service';
 import { getUser } from '@/src/services/userService';
+import { headerStyles } from '@/src/theme/header';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import auth from '@react-native-firebase/auth';
+import { Stack } from 'expo-router';
 import { useState } from 'react';
 import {
   Alert,
@@ -74,7 +76,15 @@ export default function BookScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Nowa rezerwacja</Text>
+     <Stack.Screen
+            options={{
+          headerShown: true,
+          title: 'Nowa rezerwacja',
+          headerStyle: headerStyles.header,
+          headerTitleStyle: headerStyles.title
+        }}
+      />
+      <Text style={styles.title}></Text>
 
       {/* Date */}
         <Text style={styles.label}>Data</Text>

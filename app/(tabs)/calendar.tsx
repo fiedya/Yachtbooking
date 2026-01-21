@@ -1,4 +1,6 @@
+import { headerStyles } from '@/src/theme/header';
 import firestore from '@react-native-firebase/firestore';
+import { Stack } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Pressable,
@@ -137,10 +139,16 @@ export default function CalendarScreen() {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Kalendarz',
+          headerStyle: headerStyles.header,
+          headerTitleStyle: headerStyles.title
+        }}
+      />
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Kalendarz</Text>
-
         <View style={styles.modeSwitch}>
           <Pressable
             style={[
@@ -315,6 +323,12 @@ export default function CalendarScreen() {
             minute: '2-digit',
           })}
         </Text>
+        <Text style={styles.modalText}>
+          {'Status: '}
+          {selectedBooking.status}
+        </Text>
+
+
 
         <Pressable
           style={styles.modalClose}
@@ -329,10 +343,6 @@ export default function CalendarScreen() {
     </View>
   );
 }
-
-/* -----------------------------
-   Styles
--------------------------------- */
 
 const styles = StyleSheet.create({
   container: {
@@ -460,7 +470,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 2,
     right: 2,
-    backgroundColor: '#058d23',
+    backgroundColor: '#e0e0e0',
     borderRadius: 6,
     padding: 4,
     zIndex: 10,

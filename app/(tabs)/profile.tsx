@@ -1,19 +1,18 @@
+import { headerStyles } from '@/src/theme/header';
 import auth from '@react-native-firebase/auth';
-import { useRouter } from 'expo-router';
+import Constants from 'expo-constants';
+import { Stack, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { User } from '../../src/entities/user';
 import { subscribeToUser } from '../../src/services/userService';
-
-type UserProfile = {
-  name: string;
-  surname: string;
-  phone: string;
-  description?: string;
-};
+import { useMode } from '../providers/ModeProvider';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<User | null>(null);
+  const { mode, toggleMode } = useMode();
+
 
   const user = auth().currentUser;
 
@@ -46,9 +45,29 @@ export default function ProfileScreen() {
 
   const fullName = `${profile.name} ${profile.surname}`;
   const firstLetter = profile.name?.charAt(0)?.toUpperCase() ?? '?';
+  
+
 
   return (
     <View style={styles.container}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Profil',
+          headerStyle: headerStyles.header,
+          headerTitleStyle: headerStyles.title,
+          headerRight: () =>
+            profile.role === 'admin' ? (
+              <Pressable onPress={toggleMode} style={headerStyles.adminButton}>
+                <Text style={headerStyles.adminButtonText}>
+                  {mode === 'admin' ? 'User' : 'Admin'}
+                </Text>
+              </Pressable>
+            ) : null,
+        }}
+      />
+
+
       {/* Avatar placeholder */}
       <View style={styles.avatarWrapper}>
         <View style={styles.avatarPlaceholder}>
@@ -89,6 +108,12 @@ export default function ProfileScreen() {
           </Text>
         </Pressable>
       </View>
+      <View style={{ alignItems: 'center', marginTop: 12 }}>
+        <Text style={{ fontSize: 12, color: '#999' }}>
+          Version {Constants.expoConfig?.version}
+        </Text>
+      </View>
+
     </View>
   );
 }
@@ -103,7 +128,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     padding: 24,
-    marginTop: 15,
     backgroundColor: '#fff',
   },
 
@@ -202,3 +226,4 @@ const styles = StyleSheet.create({
     color: '#c00',
   },
 });
+

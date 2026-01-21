@@ -1,7 +1,12 @@
+import { User } from '@/src/entities/user';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { useState } from 'react';
+import { useMode } from '../providers/ModeProvider';
 
 export default function TabsLayout() {
+    const { mode } = useMode();
+    const [profile, setProfile] = useState<User | null>(null);
   return (
     <Tabs
       screenOptions={{
@@ -53,6 +58,10 @@ export default function TabsLayout() {
           ),
         }}
       />
+      {profile?.role === 'admin' && mode === 'admin' && (
+        <Tabs.Screen name="admin" options={{ title: 'Admin' }} />
+      )}
+
     </Tabs>
   );
 }
