@@ -1,3 +1,4 @@
+import { styles as theme } from '@/src/theme/styles';
 import auth from '@react-native-firebase/auth';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -5,12 +6,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  StyleSheet,
   Text,
   TextInput,
-  View,
+  View
 } from 'react-native';
 import { createOrUpdateUser } from '../src/services/userService';
+
 
 export default function OnboardingScreen() {
   const [name, setName] = useState('');
@@ -60,107 +61,50 @@ async function handleContinue() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.flex}
+      style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.container}>
-        <Text style={styles.title}>Witaj 👋</Text>
-        <Text style={styles.subtitle}>
-          Uzupełnij swoje dane, aby kontynuować
-        </Text>
+      <View style={theme.screenPadded}>
 
-        <View style={styles.form}>
+    <Text style={theme.title}>Witaj 👋</Text>
+    <Text style={theme.textSecondary}>
+      Uzupełnij swoje dane, aby kontynuować
+    </Text>
+
+
+        <View style={{ gap: 12, marginBottom: 32 }}>
           <TextInput
             placeholder="Imię"
             value={name}
             onChangeText={setName}
-            style={styles.input}
-            autoCapitalize="words"
+            style={theme.input}
+              autoCapitalize="words"
           />
 
           <TextInput
             placeholder="Nazwisko"
             value={surname}
             onChangeText={setSurname}
-            style={styles.input}
+            style={theme.input}
             autoCapitalize="words"
           />
         </View>
 
-        <Pressable
-          style={[
-            styles.button,
-            (!name || !surname) && styles.buttonDisabled,
-          ]}
-          onPress={handleContinue}
-          disabled={!name || !surname || loading}
-        >
-          <Text style={styles.buttonText}>
-            {loading ? 'Zapisywanie…' : 'Kontynuuj'}
-          </Text>
-        </Pressable>
+    <Pressable
+      style={[
+        theme.button,
+        (!name || !surname) && theme.buttonDisabled,
+      ]}
+      onPress={handleContinue}
+      disabled={!name || !surname || loading}
+    >
+      <Text style={theme.buttonText}>
+        {loading ? 'Zapisywanie…' : 'Kontynuuj'}
+      </Text>
+    </Pressable>
+
       </View>
     </KeyboardAvoidingView>
   );
 }
 
-/* -----------------------------
-   Styles
--------------------------------- */
-
-const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-  },
-
-  container: {
-    flex: 1,
-    padding: 24,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-  },
-
-  title: {
-    fontSize: 26,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-
-  subtitle: {
-    fontSize: 15,
-    color: '#666',
-    marginBottom: 32,
-  },
-
-  form: {
-    gap: 12,
-    marginBottom: 32,
-  },
-
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    backgroundColor: '#fafafa',
-  },
-
-  button: {
-    backgroundColor: '#1e5eff',
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-
-  buttonDisabled: {
-    backgroundColor: '#a5b8ff',
-  },
-
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

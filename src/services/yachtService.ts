@@ -48,9 +48,6 @@ export function subscribeToYachts(
     );
 }
 
-/**
- * Fetch single yacht by ID
- */
 export async function getYachtById(id: string): Promise<Yacht | null> {
   const docSnap = await firestore()
     .collection('yachts')
@@ -65,4 +62,41 @@ export async function getYachtById(id: string): Promise<Yacht | null> {
     id: docSnap.id,
     ...(docSnap.data() as Omit<Yacht, 'id'>),
   };
+}
+
+export async function addYacht(
+  data: Omit<Yacht, 'id' | 'createdAt'> & { active?: boolean }
+) {
+  return firestore()
+    .collection('yachts')
+    .add({
+      ...data,
+      active: data.active ?? true, // ✅ default true
+      createdAt: firestore.FieldValue.serverTimestamp(),
+    });
+}
+
+
+
+export async function setYachtActive(
+  yachtId: string,
+  active: boolean
+) {
+  return firestore()
+    .collection('yachts')
+    .doc(yachtId)
+    .update({ active });
+}
+
+
+export async function getActiveYachts(): Promise<Yacht[]> {
+  const snap = await firestore()
+    .collection('yachts')
+    .where('active', '==', true)
+    .get();
+
+  return snap.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Yacht[];
 }

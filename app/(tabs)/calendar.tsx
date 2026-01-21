@@ -1,13 +1,15 @@
 import { headerStyles } from '@/src/theme/header';
+import { styles, styles as theme } from '@/src/theme/styles';
+import { Ionicons } from '@expo/vector-icons';
 import firestore from '@react-native-firebase/firestore';
 import { Stack } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
+
 import {
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
-  View,
+  View
 } from 'react-native';
 
 /* -----------------------------
@@ -74,7 +76,6 @@ function getBookingStyle(
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
-const WEEK_JUMPS = Array.from({ length: 26 }, (_, i) => i);
 
 /* -----------------------------
    Screen
@@ -85,6 +86,9 @@ export default function CalendarScreen() {
   const [weekOffset, setWeekOffset] = useState(0);
   const [bookings, setBookings] = useState<any[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [showWeekPicker, setShowWeekPicker] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const today = new Date();
 
@@ -97,7 +101,10 @@ export default function CalendarScreen() {
     () => addDays(baseWeekStart, weekOffset * 7),
     [baseWeekStart, weekOffset]
   );
+
   useEffect(() => {
+    console.log('[CALENDAR] subscribing, key:', refreshKey);
+
     const weekEnd = addDays(weekStart, 7);
 
     const unsub = firestore()
@@ -105,28 +112,29 @@ export default function CalendarScreen() {
       .where('start', '<', weekEnd)
       .where('end', '>', weekStart)
       .onSnapshot(
-        (snap) => {
+        snap => {
           if (!snap) {
-            console.warn('[CALENDAR] snapshot is null');
             setBookings([]);
+            setIsRefreshing(false);
             return;
           }
 
-          const data = snap.docs.map((d) => ({
+          const data = snap.docs.map(d => ({
             id: d.id,
             ...d.data(),
           }));
 
           setBookings(data);
+          setIsRefreshing(false); 
         },
-        (error) => {
-          console.error('[CALENDAR] booking subscription error', error);
-          setBookings([]);
+        error => {
+          console.error('[CALENDAR] error', error);
+          setIsRefreshing(false);
         }
       );
 
     return unsub;
-  }, [weekStart]);
+  }, [weekStart, refreshKey]);
 
 
   const days = useMemo(
@@ -137,101 +145,126 @@ export default function CalendarScreen() {
     [weekStart]
   );
 
+  
+
   return (
-    <View style={styles.container}>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: 'Kalendarz',
-          headerStyle: headerStyles.header,
-          headerTitleStyle: headerStyles.title
-        }}
-      />
+    <View style={theme.screen}>
+    <Stack.Screen
+      options={{
+        headerShown: true,
+        title: 'Kalendarz',
+        headerStyle: headerStyles.header,
+        headerTitleStyle: headerStyles.title,
+        headerRight: () => (
+          <Pressable
+            onPress={() => setRefreshKey(k => k + 1)}
+            style={{ margin: 10, paddingRight:'5%' }}>
+            <Ionicons name="refresh" size={24} color={isRefreshing ? '#999' : '#000'}/>
+          </Pressable>
+        ),
+      }}
+    />
+
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.modeSwitch}>
+      <View style={[theme.cardPadding, theme.gridBorderBottom]}>
+        <View style={[theme.row, { gap: 8 }]}>
           <Pressable
             style={[
-              styles.modeButton,
-              mode === 'week' && styles.modeActive,
-            ]}
+                theme.pill,
+                mode === 'week' && theme.pillActive,
+              ]}
             onPress={() => setMode('week')}
           >
-            <Text>Tydzień</Text>
+            <Text
+              style={mode === 'week' ? theme.textOnPrimary : theme.textSecondary}
+            >
+              Tydzień
+            </Text>
           </Pressable>
 
           <Pressable
             style={[
-              styles.modeButton,
-              mode === 'month' && styles.modeActive,
-            ]}
+                theme.pill,
+                mode === 'month' && theme.pillActive,
+              ]}
             onPress={() => setMode('month')}
           >
-            <Text>Miesiąc</Text>
+            <Text
+              style={mode === 'month' ? theme.textOnPrimary : theme.textSecondary}
+            >
+              Miesiąc
+            </Text>
           </Pressable>
         </View>
       </View>
 
       {/* Week jump */}
       {mode === 'week' && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.weekJump}
-          contentContainerStyle={{ paddingHorizontal: 8 }}
-        >
-          {WEEK_JUMPS.map((w) => {
-            const start = addDays(baseWeekStart, w * 7);
-            return (
-              <Pressable
-                key={w}
-                style={[
-                  styles.weekJumpItem,
-                  w === weekOffset && styles.weekJumpActive,
-                ]}
-                onPress={() => setWeekOffset(w)}
-              >
-                <Text style={styles.weekJumpText}>
-                  {weekLabel(start)}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+        <View style={[theme.row, theme.gridBorderBottom, { padding: 12, alignItems: 'center' }]}>
+          
+          {/* Previous week */}
+          <Pressable
+            onPress={() => setWeekOffset(o => o - 1)}
+            style={theme.iconButton}
+          >
+            <Ionicons name="chevron-back-outline"/>
+          </Pressable>
+
+          {/* Current week label */}
+          <Pressable
+            onPress={() => setShowWeekPicker(true)}
+            style={{ flex: 1, alignItems: 'center' }}
+          >
+            <Text style={theme.textPrimary}>
+              {weekLabel(weekStart)}
+            </Text>
+            <Text style={theme.textMuted}>Ten tydzień</Text>
+          </Pressable>
+
+          {/* Next week */}
+          <Pressable
+            onPress={() => setWeekOffset(o => o + 1)}
+            style={theme.iconButton}
+          >
+            <Ionicons name="chevron-forward-outline"/>
+          </Pressable>
+
+        </View>
       )}
+
 
       {/* Calendar */}
       {mode === 'week' ? (
         <ScrollView>
           {/* Days header */}
-          <View style={styles.daysRow}>
-            <View style={styles.timeCell} />
+          <View style={theme.gridRow}>
+            <View  style={[
+              theme.gridCellCenter,
+              theme.gridBorderRight,
+              { width: 56 },
+            ]} />
             {days.map((day) => {
               const isToday = sameDay(day, today);
               return (
                 <View
                   key={day.toISOString()}
                   style={[
-                    styles.dayCell,
-                    isToday && styles.todayHeader,
-                  ]}
+                      theme.gridCellCenter,
+                      theme.gridBorderRight,
+                      { flex: 1, paddingVertical: 6 },
+                      isToday && theme.highlightBackground,
+                    ]}
                 >
                   <Text
-                    style={[
-                      styles.dayText,
-                      isToday && styles.todayText,
-                    ]}
-                  >
+                    style={isToday ? theme.highlightText : theme.textSecondary}>
                     {day.toLocaleDateString('pl-PL', {
                       weekday: 'short',
                     })}
                   </Text>
                   <Text
-                    style={[
-                      styles.dayText,
-                      isToday && styles.todayText,
-                    ]}
+                    style={isToday ? theme.highlightText : theme.textSecondary}
                   >
+
                     {formatDate(day)}
                   </Text>
                 </View>
@@ -242,8 +275,12 @@ export default function CalendarScreen() {
           {/* Time grid */}
           {HOURS.map((h) => (
             <View key={h} style={styles.row}>
-              <View style={styles.timeCell}>
-                <Text style={styles.timeText}>
+              <View style={[
+                theme.gridCellCenter,
+                theme.gridBorderRight,
+                { width: 56 },
+              ]}>
+                <Text style={theme.textXs}>
                   {String(h).padStart(2, '0')}:00
                 </Text>
               </View>
@@ -253,9 +290,12 @@ export default function CalendarScreen() {
                 return (
                   <View
                     key={day.toISOString() + h}
+                    pointerEvents="box-none"
                     style={[
-                      styles.slot,
-                      isToday && styles.todaySlot,
+                      theme.gridBorderRight,
+                      theme.gridBorderBottom,
+                      { flex: 1, height: 36 },
+                      isToday && theme.highlightBackground,
                     ]}
                   >
                     {h === 0 &&
@@ -267,18 +307,18 @@ export default function CalendarScreen() {
 
                           return (
                             <Pressable
-                              key={b.id}
-                              style={[styles.booking, layout]}
-                              onPress={() => setSelectedBooking(b)}
+                              style={[
+                                  theme.absoluteCard,
+                                  { backgroundColor: '#e0e0e0' },
+                                  layout,
+                                ]}
+                                onPress={() => {
+                                    console.log('BOOKING PRESSED', b.id);
+                                    setSelectedBooking(b);
+                                }}
                             >
-
-
-                              <Text style={styles.bookingTitle}>
-                                {b.yachtName}
-                              </Text>
-                              <Text style={styles.bookingSubtitle}>
-                                {b.userName}
-                              </Text>
+                              <Text style={[theme.textXs, { fontWeight: '600' }]}>{b.yachtName}</Text>
+                              <Text style={theme.textXs}>{b.userName}</Text>
                             </Pressable>
                           );
                         })}
@@ -290,8 +330,8 @@ export default function CalendarScreen() {
           ))}
         </ScrollView>
       ) : (
-        <View style={styles.monthPlaceholder}>
-          <Text style={styles.monthText}>
+        <View style={[theme.screen, theme.center]}>
+          <Text style={theme.textMuted}>
             Widok miesięczny – do zrobienia
           </Text>
         </View>
@@ -301,17 +341,17 @@ export default function CalendarScreen() {
     }
     
     {selectedBooking && (
-    <View style={styles.modalOverlay}>
-      <View style={styles.modal}>
-        <Text style={styles.modalTitle}>
+    <View style={theme.modalOverlay}>
+      <View style={theme.modal}>
+        <Text style={theme.title}>
           {selectedBooking.yachtName}
         </Text>
 
-        <Text style={styles.modalText}>
+        <Text style={theme.textPrimary}>
           👤 {selectedBooking.userName}
         </Text>
 
-        <Text style={styles.modalText}>
+        <Text style={theme.textPrimary}>
           ⏰{' '}
           {selectedBooking.start.toDate().toLocaleTimeString([], {
             hour: '2-digit',
@@ -323,208 +363,68 @@ export default function CalendarScreen() {
             minute: '2-digit',
           })}
         </Text>
-        <Text style={styles.modalText}>
+        <Text style={theme.textPrimary}>
           {'Status: '}
           {selectedBooking.status}
         </Text>
 
 
 
+      <Pressable style={{ marginTop: 16, alignSelf: 'flex-end' }} onPress={() => setSelectedBooking(null)}>
+        <Text style={theme.link}>Zamknij</Text>
+      </Pressable>
+
+      </View>
+    </View>
+  )}
+  {showWeekPicker && (
+    <View style={theme.modalOverlay}>
+      <View style={theme.modal}>
+        <Text style={theme.title}>Wybierz tydzień</Text>
+
+        <ScrollView style={{ maxHeight: 300 }}>
+          {Array.from({ length: 12 }, (_, i) => {
+            const offset = i - 2; // few past, few future
+            const start = addDays(baseWeekStart, offset * 7);
+
+            return (
+              <Pressable
+                key={offset}
+                style={[
+                  theme.listItem,
+                  offset === weekOffset && theme.listItemActive,
+                ]}
+                onPress={() => {
+                  setWeekOffset(offset);
+                  setShowWeekPicker(false);
+                }}
+              >
+                <Text
+                  style={
+                    offset === weekOffset
+                      ? theme.textOnPrimary
+                      : theme.textPrimary
+                  }
+                >
+                  {weekLabel(start)}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+
         <Pressable
-          style={styles.modalClose}
-          onPress={() => setSelectedBooking(null)}
+          onPress={() => setShowWeekPicker(false)}
+          style={{ marginTop: 16, alignSelf: 'flex-end' }}
         >
-          <Text style={styles.modalCloseText}>Zamknij</Text>
+          <Text style={theme.link}>Zamknij</Text>
         </Pressable>
       </View>
     </View>
   )}
 
     </View>
+
+    
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    marginTop: 15,
-  },
-
-  header: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderColor: '#eee',
-  },
-
-  title: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 5,
-  },
-
-  modeSwitch: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-
-  modeButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    backgroundColor: '#eee',
-  },
-
-  modeActive: {
-    backgroundColor: '#cde7ff',
-  },
-
-  weekJump: {
-    height: 40,
-    padding: 2,
-    borderBottomWidth: 1,
-    borderColor: '#eee',
-  },
-
-  weekJumpItem: {
-    paddingHorizontal: 6,
-    paddingVertical: 5,
-    marginRight: 8,
-    borderRadius: 15,
-    backgroundColor: '#eee',
-  },
-
-  weekJumpActive: {
-    backgroundColor: '#cde7ff',
-  },
-
-  weekJumpText: {
-    fontSize: 13,
-  },
-
-  daysRow: {
-    flexDirection: 'row',
-  },
-
-  row: {
-    flexDirection: 'row',
-  },
-
-  timeCell: {
-    width: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRightWidth: 1,
-    borderColor: '#eee',
-  },
-
-  timeText: {
-    fontSize: 11,
-    color: '#555',
-  },
-
-  dayCell: {
-    flex: 1,
-    paddingVertical: 6,
-    borderRightWidth: 1,
-    borderColor: '#eee',
-    alignItems: 'center',
-  },
-
-  dayText: {
-    fontSize: 12,
-  },
-
-  todayHeader: {
-    backgroundColor: '#eef6ff',
-  },
-
-  todayText: {
-    fontWeight: '600',
-    color: '#1e5eff',
-  },
-
-  slot: {
-    flex: 1,
-    height: 36,
-    borderRightWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#eee',
-  },
-
-  todaySlot: {
-    backgroundColor: '#f6fbff',
-  },
-
-  monthPlaceholder: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  monthText: {
-    color: '#777',
-  },
-
-  booking: {
-    position: 'absolute',
-    left: 2,
-    right: 2,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 6,
-    padding: 4,
-    zIndex: 10,
-  },
-
-  bookingTitle: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#333',
-  },
-
-  bookingSubtitle: {
-    fontSize: 10,
-    color: '#555',
-  },
-  modalOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 100,
-  },
-
-  modal: {
-    width: '80%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-  },
-
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-
-  modalText: {
-    fontSize: 14,
-    marginBottom: 8,
-  },
-
-  modalClose: {
-    marginTop: 16,
-    alignSelf: 'flex-end',
-  },
-
-  modalCloseText: {
-    color: '#1e5eff',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-
-});

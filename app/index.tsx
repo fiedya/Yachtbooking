@@ -1,4 +1,4 @@
-import { useAuth } from '@/src/auth/AuthProvider';
+import { useAuth } from '@/app/providers/AuthProvider';
 import { Redirect } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
 

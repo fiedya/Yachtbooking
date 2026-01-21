@@ -99,11 +99,16 @@ export function subscribeToUser(
     .doc(uid)
     .onSnapshot(
       snap => {
-        if (snap.exists()) {
-          onChange(snap.data());
-        } else {
+        if (!snap.exists()) {
           onChange(null);
+          return;
         }
+
+        onChange({
+          id: snap.id,
+          ...snap.data(),
+        });
+        console.log('🔥 USER IMAGE:', snap.data()?.imageUrl);
       },
       error => {
         console.error('[USER SERVICE] subscribe error', error);

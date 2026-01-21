@@ -1,4 +1,4 @@
-import { AuthProvider } from '@/src/auth/AuthProvider';
+import { AuthProvider } from '@/app/providers/AuthProvider';
 import { Stack } from 'expo-router';
 import { ModeProvider } from './providers/ModeProvider';
 

@@ -1,9 +1,15 @@
+import { uploadImage } from '@/src/services/imageUploadService';
 import { headerStyles } from '@/src/theme/header';
+import { spacing } from '@/src/theme/spacing';
+import { styles as theme } from '@/src/theme/styles';
+import { pickImageFromGallery } from '@/src/utils/pickImage';
 import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 import Constants from 'expo-constants';
 import { Stack, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { User } from '../../src/entities/user';
 import { subscribeToUser } from '../../src/services/userService';
 import { useMode } from '../providers/ModeProvider';
@@ -12,8 +18,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const [profile, setProfile] = useState<User | null>(null);
   const { mode, toggleMode } = useMode();
-
-
+  const insets = useSafeAreaInsets();
   const user = auth().currentUser;
 
   useEffect(() => {
@@ -35,9 +40,29 @@ export default function ProfileScreen() {
     }
   }
 
+  async function handleChangeAvatar() {
+  if (!user?.uid) return;
+
+  const localUri = await pickImageFromGallery();
+  if (!localUri) return;
+
+  const imageUrl = await uploadImage(
+  localUri,
+  `users/${user.uid}/avatar.jpg`
+);
+
+
+  await firestore()
+    .collection('users')
+    .doc(user.uid)
+    .update({ photoUrl: imageUrl });
+
+
+}
+
   if (!profile) {
     return (
-      <View style={styles.container}>
+      <View style={[theme.screen, theme.center]}>
         <Text>Ładowanie profilu…</Text>
       </View>
     );
@@ -49,7 +74,7 @@ export default function ProfileScreen() {
 
 
   return (
-    <View style={styles.container}>
+    <View style={theme.screenPadded}>
       <Stack.Screen
         options={{
           headerShown: true,
@@ -69,161 +94,77 @@ export default function ProfileScreen() {
 
 
       {/* Avatar placeholder */}
-      <View style={styles.avatarWrapper}>
-        <View style={styles.avatarPlaceholder}>
-          <Text style={styles.avatarText}>{firstLetter}</Text>
-        </View>
-
-        <Pressable style={styles.changePhoto}>
-          <Text style={styles.changePhotoText}>Zmień zdjęcie</Text>
-        </Pressable>
+    <View style={[theme.center, { marginBottom: 16, marginTop: 16 }]}>
+      
+      <Pressable
+        style={{ marginTop: 8 }}
+        onPress={handleChangeAvatar}
+      >
+      <View style={theme.avatar}>
+        {profile.photoUrl ? (
+          <Image
+            key={profile.photoUrl} // 🔥 FORCE REMOUNT
+            source={{ uri: profile.photoUrl }}
+            style={{
+              width: '100%',
+              height: '100%',
+              borderRadius: 999,
+            }}
+          />
+        ) : (
+          <Image
+            source={require('@/assets/images/user_placeholder.png')}
+            style={{
+              width: '100%',
+              height: '100%',
+              borderRadius: 999,
+            }}
+          />
+        )}
+        
       </View>
+        <Text style={[theme.link, {alignSelf: 'center', marginTop: 10}]}>Zmień zdjęcie</Text>
+      </Pressable>
+    </View>
 
       {/* Name & phone */}
-      <Text style={styles.name}>{fullName}</Text>
-      <Text style={styles.phone}>{profile.phone}</Text>
+      <Text style={theme.title}>{fullName}</Text>
+      <Text style={theme.textSecondary}>{profile.phone}</Text>
+
 
       {/* Description */}
-      <View style={styles.descriptionBox}>
-        <Text style={styles.descriptionLabel}>O mnie</Text>
-        <Text style={styles.descriptionText}>
+      <View style={[theme.card, theme.cardPadding]}>
+        <Text style={theme.sectionTitle}>O mnie</Text>
+        <Text style={theme.textPrimary}>
           {profile.description || 'Brak opisu'}
         </Text>
 
-        <Pressable style={styles.editDescription}>
-          <Text style={styles.editDescriptionText}>
-            Edytuj opis
-          </Text>
+
+        <Pressable style={{ marginTop: 8 }}>
+          <Text style={theme.link}>Edytuj opis</Text>
         </Pressable>
+
       </View>
 
       {/* Actions */}
-      <View style={styles.actions}>
+      <View style={{ width: '100%', marginTop: 'auto' }}>
         <Pressable
-          style={[styles.button, styles.logout]}
+          style={[theme.button, theme.buttonDanger]}
           onPress={handleLogout}
         >
-          <Text style={[styles.buttonText, styles.logoutText]}>
+          <Text style={theme.buttonDangerText}>
             Wyloguj się
           </Text>
         </Pressable>
       </View>
-      <View style={{ alignItems: 'center', marginTop: 12 }}>
-        <Text style={{ fontSize: 12, color: '#999' }}>
-          Version {Constants.expoConfig?.version}
-        </Text>
-      </View>
+
+  <View style={{ marginTop: spacing.md, marginBottom: 0, alignItems: 'center' }}>
+    <Text style={theme.versionText}>
+      Version {Constants.expoConfig?.version}
+    </Text>
+  </View>
 
     </View>
   );
 }
-
-
-/* -----------------------------
-   Styles
--------------------------------- */
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 24,
-    backgroundColor: '#fff',
-  },
-
-  avatarWrapper: {
-    alignItems: 'center',
-    marginBottom: 16,
-    marginTop:16
-  },
-
-  avatarPlaceholder: {
-    width: 104,
-    height: 104,
-    borderRadius: 52,
-    backgroundColor: '#e6f0ff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  avatarText: {
-    fontSize: 42,
-    fontWeight: '600',
-    color: '#1e5eff',
-  },
-
-  changePhoto: {
-    marginTop: 8,
-  },
-
-  changePhotoText: {
-    fontSize: 13,
-    color: '#1e5eff',
-  },
-
-  name: {
-    fontSize: 22,
-    fontWeight: '600',
-    marginTop: 8,
-  },
-
-  phone: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 24,
-  },
-
-  descriptionBox: {
-    width: '100%',
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: '#f7f9fc',
-    marginBottom: 32,
-  },
-
-  descriptionLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 6,
-  },
-
-  descriptionText: {
-    fontSize: 14,
-    color: '#333',
-    lineHeight: 20,
-  },
-
-  editDescription: {
-    marginTop: 8,
-  },
-
-  editDescriptionText: {
-    fontSize: 13,
-    color: '#1e5eff',
-  },
-
-  actions: {
-    width: '100%',
-    marginTop: 'auto',
-  },
-
-  button: {
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-
-  logout: {
-    backgroundColor: '#ffe6e6',
-  },
-
-  logoutText: {
-    color: '#c00',
-  },
-});
 

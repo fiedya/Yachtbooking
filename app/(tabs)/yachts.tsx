@@ -1,61 +1,79 @@
 import { Yacht } from '@/src/entities/yacht';
 import { subscribeToYachts } from '@/src/services/yachtService';
-import { useNavigation } from '@react-navigation/native';
+import { styles as theme } from '@/src/theme/styles';
+import { Ionicons } from '@expo/vector-icons';
+import { router, Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   FlatList,
   Image,
   Pressable,
-  StyleSheet,
   Text
 } from 'react-native';
+import { useMode } from '../providers/ModeProvider';
+
 
 export default function YachtsScreen() {
   const [yachts, setYachts] = useState<Yacht[]>([]);
-  const navigation = useNavigation<any>();
-
+  const { mode } = useMode();
   useEffect(() => {
     const unsubscribe = subscribeToYachts(setYachts);
     return unsubscribe;
   }, []);
 
   return (
-    <FlatList
-      data={yachts}
-      keyExtractor={(item) => item.id}
-      contentContainerStyle={styles.list}
-      renderItem={({ item }) => (
+    <>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Jachty',
+        }}
+      />
+
+      <FlatList
+        data={yachts}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={theme.listPadding}
+        renderItem={({ item }) => (
+          <Pressable
+            style={theme.card}
+            onPress={() =>
+              router.push({
+                pathname: '/subtabs/yachtDetails',
+                params: { id: item.id },
+              })
+            }
+
+          >
+            <Image
+              source={{ uri: item.imageUrl }}
+              style={theme.cardImage}
+            />
+            <Text style={theme.cardTitle}>{item.name}</Text>
+          </Pressable>
+        )}
+      />
+      {mode === 'admin' && (
         <Pressable
-          style={styles.card}
-          onPress={() =>
-            navigation.navigate('YachtDetails', { id: item.id })
-          }
+          onPress={() => router.push('/subtabs/addEditYacht')}
+          style={{
+            position: 'absolute',
+            right: 20,
+            bottom: 20,
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            backgroundColor: '#1e5eff',
+            alignItems: 'center',
+            justifyContent: 'center',
+            elevation: 4,
+          }}
         >
-          <Image source={{ uri: item.imageUrl }} style={styles.image} />
-          <Text style={styles.name}>{item.name}</Text>
+          <Ionicons name="add" size={28} color="#fff" />
         </Pressable>
       )}
-    />
-  );
-}
 
-const styles = StyleSheet.create({
-  list: {
-    padding: 16,
-  },
-  card: {
-    marginBottom: 16,
-    borderRadius: 12,
-    backgroundColor: '#fff',
-    overflow: 'hidden',
-  },
-  image: {
-    height: 160,
-    width: '100%',
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: '600',
-    padding: 8,
-  },
-});
+    </>
+  );
+
+}

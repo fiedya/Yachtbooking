@@ -12,4 +12,6 @@ export type Yacht = {
   type: string;
   description: string;
   imageUrl: string;
+  createdAt: any;
+  active: boolean;
 };

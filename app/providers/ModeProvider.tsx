@@ -1,23 +1,25 @@
-import { createContext, ReactNode, useContext, useState } from 'react';
+// app/providers/ModeProvider.tsx
+import { createContext, useContext, useState } from 'react';
 
-export type AppMode = 'user' | 'admin';
+type Mode = 'user' | 'admin';
 
 type ModeContextType = {
-  mode: AppMode;
+  mode: Mode;
   toggleMode: () => void;
+  setMode: (mode: Mode) => void;
 };
 
 const ModeContext = createContext<ModeContextType | null>(null);
 
-export function ModeProvider({ children }: { children: ReactNode }) {
-  const [mode, setMode] = useState<AppMode>('user');
+export function ModeProvider({ children }: { children: React.ReactNode }) {
+  const [mode, setMode] = useState<Mode>('user');
 
   function toggleMode() {
-    setMode(prev => (prev === 'user' ? 'admin' : 'user'));
+    setMode(prev => (prev === 'admin' ? 'user' : 'admin'));
   }
 
   return (
-    <ModeContext.Provider value={{ mode, toggleMode }}>
+    <ModeContext.Provider value={{ mode, toggleMode, setMode }}>
       {children}
     </ModeContext.Provider>
   );
