@@ -38,6 +38,13 @@
         "projectId": "43f3a1da-a643-43ab-9562-85e52bc8213e"
       }
     },
-    "owner": "fiedya"
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/43f3a1da-a643-43ab-9562-85e52bc8213e"
+    },
+    "owner": "fiedya",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }
