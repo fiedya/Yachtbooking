@@ -1,10 +1,13 @@
+export type UserStatus = 'to_verify' | 'verified' | 'rejected';
+
 export type User = {
   uid: string;                 // Firebase Auth UID (doc ID)
   phone: string;
   name: string;
   surname: string;
   description: string;
-  photoUrl: string | null;     // Profile image (Storage URL)
+  photoUrl: string | null;
   createdAt: any;
-  role: string;
+  role: 'user' | 'admin';
+  status: UserStatus;
 };

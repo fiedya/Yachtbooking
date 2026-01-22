@@ -5,59 +5,38 @@ export async function getUser(uid: string) {
 
   const ref = firestore().collection('users').doc(uid);
   const snap = await ref.get();
-
-  console.log('[USER SERVICE] getUser exists:', snap.exists());
-
   return snap.exists() ? snap.data() : null;
 }
-
 export async function createOrUpdateUser(
   uid: string,
   phone: string,
   name: string,
   surname: string
-)
- {
-  console.log('[USER SERVICE] createOrUpdateUser START', {
-    uid,
-    phone,
-    name,
-    surname,
-  });
-
+) {
   const ref = firestore().collection('users').doc(uid);
-
   const snap = await ref.get();
-  console.log('[USER SERVICE] user doc exists BEFORE write:', snap.exists());
 
-  if (!snap.exists())
-    {
-
-      await ref.set({
-        phone,
-        name,
-        surname,
-        description: '',
-        photoUrl: null,
-        role: 'user',
-        onboarded: true,
-        createdAt: firestore.FieldValue.serverTimestamp(),
-      });
-
-    } 
-  else
-    {
-      console.log('[USER SERVICE] updating existing user document');
-
-      await ref.update({
-        name,
-        surname,
-        onboarded: true,
-      });
-    console.log('[USER SERVICE] user document UPDATED');
+  if (!snap.exists) {
+    await ref.set({
+      uid,
+      phone,
+      name,
+      surname,
+      description: '',
+      photoUrl: null,
+      role: 'user',
+      status: 'to_verify', // ✅ NEW DEFAULT
+      onboarded: true,
+      createdAt: firestore.FieldValue.serverTimestamp(),
+    });
+  } else {
+    await ref.update({
+      name,
+      surname,
+      onboarded: true,
+    });
   }
 
-  console.log('[USER SERVICE] createOrUpdateUser END');
 }
 
 export async function createUserIfMissing(
@@ -65,19 +44,20 @@ export async function createUserIfMissing(
   phone: string,
   name?: string,
   surname?: string
-)
-{
+) {
   const ref = firestore().collection('users').doc(uid);
   const snap = await ref.get();
 
   if (!snap.exists) {
     await ref.set({
+      uid,
       phone,
       name: name ?? '',
       surname: surname ?? '',
       description: '',
       photoUrl: null,
-      role: 'admin',
+      role: 'user',
+      status: 'to_verify',
       onboarded: !!(name && surname),
       createdAt: firestore.FieldValue.serverTimestamp(),
     });
@@ -86,6 +66,7 @@ export async function createUserIfMissing(
       name,
       surname,
       onboarded: true,
+      // ❗ do NOT update status
     });
   }
 }
@@ -99,7 +80,7 @@ export function subscribeToUser(
     .doc(uid)
     .onSnapshot(
       snap => {
-        if (!snap.exists()) {
+        if (!snap.exists) {
           onChange(null);
           return;
         }
@@ -108,9 +89,16 @@ export function subscribeToUser(
           id: snap.id,
           ...snap.data(),
         });
-        console.log('🔥 USER IMAGE:', snap.data()?.imageUrl);
       },
       error => {
+              const msg = error?.message ?? '';
+
+              if (msg.includes('permission-denied')) {
+                // ✅ Expected during auth bootstrap
+                console.log('[USER SERVICE] Firestore not ready yet');
+                return;
+              }
+
         console.error('[USER SERVICE] subscribe error', error);
       }
     );

@@ -227,14 +227,27 @@ pill: {
   paddingHorizontal: spacing.sm,
   paddingVertical: 5,
   borderRadius: radius.round,
+  marginVertical: 4,
+  alignContent: 'center',
+  alignSelf: 'center'
+},
+
+pillDefault:{
+
   backgroundColor: colors.border,
-  marginVertical: 4
 },
 
 pillActive: {
   backgroundColor: colors.primaryLight
 },
 
+pillInvisible:{
+  backgroundColor: colors.transparent,
+},
+
+pillSecondary:{
+  backgroundColor: colors.secondary,
+},
 
 /* ---------- Time / small text ---------- */
 

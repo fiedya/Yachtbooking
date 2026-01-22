@@ -14,4 +14,6 @@ export const colors = {
 
   danger: '#cc0000',
   dangerSoft: '#ffe6e6',
+
+  transparent: '#00000000'
 };

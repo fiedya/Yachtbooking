@@ -1,5 +1,6 @@
 import { Yacht } from '@/src/entities/yacht';
 import { subscribeToYachts } from '@/src/services/yachtService';
+import { colors } from '@/src/theme/colors';
 import { styles as theme } from '@/src/theme/styles';
 import { Ionicons } from '@expo/vector-icons';
 import { router, Stack } from 'expo-router';
@@ -39,7 +40,7 @@ export default function YachtsScreen() {
             style={theme.card}
             onPress={() =>
               router.push({
-                pathname: '/subtabs/yachtDetails',
+                pathname: '/subtabs/yacht-details',
                 params: { id: item.id },
               })
             }
@@ -55,7 +56,7 @@ export default function YachtsScreen() {
       />
       {mode === 'admin' && (
         <Pressable
-          onPress={() => router.push('/subtabs/addEditYacht')}
+          onPress={() => router.push('/subtabs/add-edit-yacht')}
           style={{
             position: 'absolute',
             right: 20,
@@ -63,7 +64,7 @@ export default function YachtsScreen() {
             width: 56,
             height: 56,
             borderRadius: 28,
-            backgroundColor: '#1e5eff',
+            backgroundColor: colors.primary,
             alignItems: 'center',
             justifyContent: 'center',
             elevation: 4,
