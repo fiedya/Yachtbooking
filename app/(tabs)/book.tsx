@@ -128,6 +128,7 @@ export default function BookScreen() {
 
   return (
     <View style={styles.container}>
+        <ScrollView>
      <Stack.Screen
             options={{
           headerShown: true,
@@ -267,7 +268,7 @@ export default function BookScreen() {
       </Text>
     )}
   </View>
-
+</ScrollView>
 
       {/* Submit */}
       <Pressable
