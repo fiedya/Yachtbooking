@@ -30,6 +30,7 @@ export default function YachtDetailsScreen() {
           title: yacht.name,
           headerStyle: headerStyles.header,
           headerTitleStyle: headerStyles.title,
+          headerBackVisible: true,
         }}
       />
 
@@ -39,7 +40,6 @@ export default function YachtDetailsScreen() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* 🖼 Hero image */}
         <View
           style={{
             width: '100%',
@@ -62,17 +62,14 @@ export default function YachtDetailsScreen() {
         <View style={theme.screenPadded}>
 
           {/* Shortcut */}
-          {!!yacht.shortcut && (
-            <View style={{marginBottom:10}}>
-              <Text style={theme.sectionTitle}>
-                Skrót
-              </Text>
-
-              <Text style={theme.bodyText}>
-                {yacht.shortcut}
-              </Text>
-            </View>
-          )}
+          <View style={{marginBottom:10}}>
+            <Text style={theme.sectionTitle}>
+              Skrót
+            </Text>
+            <Text style={theme.bodyText}>
+              {yacht.shortcut && yacht.shortcut.trim() !== '' ? yacht.shortcut : 'Brak skrótu'}
+            </Text>
+          </View>
 
           {/* Type */}
           {!!yacht.type && (

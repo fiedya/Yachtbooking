@@ -28,6 +28,7 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      initialRouteName="calendar"
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
@@ -78,6 +79,8 @@ export default function TabsLayout() {
           ),
         }}
       />
+
+
     <Tabs.Screen
       name="admin"
       options={{
@@ -91,12 +94,6 @@ export default function TabsLayout() {
           ),
       }}
     />
-
-
-      {/* {profile?.role === 'admin' && mode === 'admin' && (
-        <Tabs.Screen name="admin" options={{ title: 'Admin' }} />
-      )} */}
-
     </Tabs>
   );
 }

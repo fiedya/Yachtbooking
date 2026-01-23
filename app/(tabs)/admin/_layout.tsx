@@ -17,6 +17,11 @@ export default function AdminLayout() {
         name="user-details"
         options={{ title: 'User details' }}
       />
+
+            <Stack.Screen
+        name="booking-details"
+        options={{ title: 'Booking details' }}
+      />
     </Stack>
   );
 }

@@ -517,14 +517,56 @@ export default function CalendarScreen() {
         </Text>
 
 
+      {/* Admin Approve/Reject Buttons */}
+      {adminMode === 'admin' && selectedBooking && (
+        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 16, gap: 12 }}>
+          <Pressable
+            style={{
+              backgroundColor: colors.primary,
+              paddingHorizontal: 18,
+              paddingVertical: 8,
+              borderRadius: 6,
+              marginRight: 8,
+              minWidth: 90,
+              alignItems: 'center',
+              opacity: selectedBooking.status === 'approved' ? 0.5 : 1,
+            }}
+            disabled={selectedBooking.status === 'approved'}
+            onPress={async () => {
+              await firestore().collection('bookings').doc(selectedBooking.id).update({ status: 'approved' });
+              setSelectedBooking({ ...selectedBooking, status: 'approved' });
+            }}
+          >
+            <Text style={{ color: colors.white, fontWeight: 'bold' }}>Akceptuj</Text>
+          </Pressable>
+          <Pressable
+            style={{
+              backgroundColor: colors.danger,
+              paddingHorizontal: 18,
+              paddingVertical: 8,
+              borderRadius: 6,
+              minWidth: 90,
+              alignItems: 'center',
+              opacity: selectedBooking.status === 'rejected' ? 0.5 : 1,
+            }}
+            disabled={selectedBooking.status === 'rejected'}
+            onPress={async () => {
+              await firestore().collection('bookings').doc(selectedBooking.id).update({ status: 'rejected' });
+              setSelectedBooking({ ...selectedBooking, status: 'rejected' });
+            }}
+          >
+            <Text style={{ color: colors.white, fontWeight: 'bold' }}>Odrzuc</Text>
+          </Pressable>
+        </View>
+      )}
 
+      
       <Pressable style={{ marginTop: 16, alignSelf: 'flex-end' }} onPress={() => setSelectedBooking(null)}>
         <Text style={theme.link}>Zamknij</Text>
       </Pressable>
-
-      </View>
     </View>
-  )}
+  
+  
   {showWeekPicker && (
     <View style={theme.modalOverlay}>
       <View style={theme.modal}>
@@ -574,5 +616,7 @@ export default function CalendarScreen() {
     </View>
 
     
-  );
+  )}
+  </View>
+  )
 }

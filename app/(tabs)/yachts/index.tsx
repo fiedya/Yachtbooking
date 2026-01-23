@@ -6,13 +6,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  FlatList,
-  Image,
-  Pressable,
-  Text
+    FlatList,
+    Image,
+    Pressable,
+    Text
 } from 'react-native';
-import { useMode } from '../providers/ModeProvider';
-
+import { useMode } from '../../providers/ModeProvider';
 
 export default function YachtsScreen() {
   const [yachts, setYachts] = useState<Yacht[]>([]);
@@ -40,11 +39,10 @@ export default function YachtsScreen() {
             style={theme.card}
             onPress={() =>
               router.push({
-                pathname: '/subtabs/yacht-details',
+                pathname: '/(tabs)/yachts/yacht-details',
                 params: { id: item.id },
               })
             }
-
           >
             <Image
               source={{ uri: item.imageUrl }}
@@ -56,7 +54,7 @@ export default function YachtsScreen() {
       />
       {mode === 'admin' && (
         <Pressable
-          onPress={() => router.push('/subtabs/add-edit-yacht')}
+          onPress={() => router.push('/(tabs)/yachts/add-edit-yacht')}
           style={{
             position: 'absolute',
             right: 20,
@@ -73,8 +71,6 @@ export default function YachtsScreen() {
           <Ionicons name="add" size={28} color="#fff" />
         </Pressable>
       )}
-
     </>
   );
-
 }
