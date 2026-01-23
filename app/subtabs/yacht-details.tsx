@@ -61,7 +61,20 @@ export default function YachtDetailsScreen() {
         {/* 📄 Content */}
         <View style={theme.screenPadded}>
 
-          {/* Description */}
+          {/* Shortcut */}
+          {!!yacht.shortcut && (
+            <View style={{marginBottom:10}}>
+              <Text style={theme.sectionTitle}>
+                Skrót
+              </Text>
+
+              <Text style={theme.bodyText}>
+                {yacht.shortcut}
+              </Text>
+            </View>
+          )}
+
+          {/* Type */}
           {!!yacht.type && (
             <View style={{marginBottom:10}}>
               <Text style={theme.sectionTitle}>

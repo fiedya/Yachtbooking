@@ -1,6 +1,9 @@
+import { getActiveYachts } from '@/src/services/yachtService';
+import { colors } from '@/src/theme/colors';
 import { headerStyles } from '@/src/theme/header';
 import { styles, styles as theme } from '@/src/theme/styles';
 import { Ionicons } from '@expo/vector-icons';
+import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { Stack, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
@@ -70,6 +73,48 @@ function getBookingStyle(
   };
 }
 
+function getOverlappingBookingsForBooking(
+  booking: any,
+  allBookings: any[],
+  day: Date
+) {
+  const start = booking.start.toDate();
+  const end = booking.end.toDate();
+
+  if (!sameDay(start, day)) return [];
+
+  return allBookings.filter(b => {
+    if (b.status !== 'pending') return false;
+    const bStart = b.start.toDate();
+    const bEnd = b.end.toDate();
+    return bStart < end && bEnd > start;
+  });
+}
+
+function getBookingPosition(
+  booking: any,
+  overlappingBookings: any[]
+) {
+  const sorted = overlappingBookings.sort((a, b) => {
+    const aStart = a.start.toDate().getTime();
+    const bStart = b.start.toDate().getTime();
+    if (aStart !== bStart) return aStart - bStart;
+    return (a.id || '').localeCompare(b.id || ''); // consistent ordering
+  });
+  return sorted.findIndex(b => b.id === booking.id);
+}
+
+function getBookingBackgroundColor(booking: any, currentUserId: string | undefined) {
+  const isUserBooking = booking.userId === currentUserId;
+  const isApproved = booking.status === 'approved';
+
+  if (isUserBooking) {
+    return isApproved ? colors.secondary : colors.secondaryLight;
+  } else {
+    return isApproved ? colors.grey : colors.lightGrey;
+  }
+}
+
 /* -----------------------------
    Constants
 -------------------------------- */
@@ -83,6 +128,7 @@ const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 export default function CalendarScreen() {
   const router = useRouter();
+  const user = auth().currentUser;
   const [mode, setMode] = useState<'week' | 'month'>('week');
   const [weekOffset, setWeekOffset] = useState(0);
   const [bookings, setBookings] = useState<any[]>([]);
@@ -90,6 +136,8 @@ export default function CalendarScreen() {
   const [showWeekPicker, setShowWeekPicker] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [yachts, setYachts] = useState<any[]>([]);
+  const [selectedYachtIds, setSelectedYachtIds] = useState<string[]>([]); // empty = all
 
   const today = new Date();
 
@@ -102,6 +150,26 @@ export default function CalendarScreen() {
     () => addDays(baseWeekStart, weekOffset * 7),
     [baseWeekStart, weekOffset]
   );
+
+  // Load yachts
+  useEffect(() => {
+    getActiveYachts().then(data => {
+      console.log('[CALENDAR] getActiveYachts raw data:', data);
+      // Filter to ensure only active yachts are shown
+      const activeYachts = data.filter(y => y.active === true);
+      console.log('[CALENDAR] filtered active yachts:', activeYachts);
+      console.log('[CALENDAR] total yachts count:', activeYachts.length);
+      setYachts(activeYachts);
+    });
+  }, []);
+
+  // Filter bookings by selected yachts
+  const filteredBookings = useMemo(() => {
+    if (selectedYachtIds.length === 0) {
+      return bookings; // show all if no selection
+    }
+    return bookings.filter(b => selectedYachtIds.includes(b.yachtId));
+  }, [bookings, selectedYachtIds]);
 
   useEffect(() => {
     console.log('[CALENDAR] subscribing, key:', refreshKey);
@@ -189,7 +257,7 @@ export default function CalendarScreen() {
                 mode === 'month' && theme.pillActive,
               ]}
             onPress={() => setMode('month')}
-          >
+            >
             <Text
               style={mode === 'month' ? theme.textOnPrimary : theme.textSecondary}
             >
@@ -198,6 +266,64 @@ export default function CalendarScreen() {
           </Pressable>
         </View>
       </View>
+
+      {/* Yacht filter */}
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        style={[theme.cardPadding, theme.gridBorderBottom, { paddingVertical: 12, backgroundColor: colors.white }]}
+      >
+        <Pressable
+          style={[
+            theme.pill,
+            { 
+              marginRight: 8, 
+              backgroundColor: selectedYachtIds.length === 0 ? colors.primary : colors.grey,
+              paddingVertical: 4, 
+              height: '125%' 
+            },
+          ]}
+          onPress={() => setSelectedYachtIds([])}
+        >
+          <Text
+            style={{ color: colors.white }}
+          >
+            Wszystkie
+          </Text>
+        </Pressable>
+
+        {yachts.map(yacht => {
+          const isSelected = selectedYachtIds.includes(yacht.id);
+          return (
+            <Pressable
+              key={yacht.id}
+              style={[
+                theme.pill,
+                { 
+                  marginRight: 8, 
+                  backgroundColor: isSelected ? colors.primary : colors.grey,
+                  paddingVertical: 4, 
+                  height: '125%' 
+                },
+              ]}
+              onPress={() => {
+                setSelectedYachtIds(prev =>
+                  isSelected
+                    ? prev.filter(id => id !== yacht.id)
+                    : [...prev, yacht.id]
+                );
+              }}
+            >
+              <Text
+                style={{ color: colors.white }}
+                numberOfLines={1}
+              >
+                {yacht.name || 'Unnamed'}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
 
       {/* Week jump */}
       {mode === 'week' && (
@@ -277,9 +403,9 @@ export default function CalendarScreen() {
           {HOURS.map((h) => (
             <View key={h} style={styles.row}>
               <View style={[
-                theme.gridCellCenter,
+                theme.gridCellTopCenter,
                 theme.gridBorderRight,
-                { width: 56 },
+                { width: 40 },
               ]}>
                 <Text style={theme.textXs}>
                   {String(h).padStart(2, '0')}:00
@@ -316,17 +442,28 @@ export default function CalendarScreen() {
                       }}
                     />
                     {h === 0 &&
-                      bookings
-                        .filter((b) => b.status === 'pending')
+                      filteredBookings
                         .map((b) => {
                           const layout = getBookingStyle(b, day);
                           if (!layout) return null;
 
+                          const overlaps = getOverlappingBookingsForBooking(b, filteredBookings, day);
+                          const position = getBookingPosition(b, overlaps);
+                          const totalOverlaps = overlaps.length;
+                          const width = 100 / totalOverlaps;
+                          const left = position * width;
+                          const backgroundColor = getBookingBackgroundColor(b, user?.uid);
+
                           return (
                             <Pressable
+                              key={b.id}
                               style={[
                                   theme.absoluteCard,
-                                  { backgroundColor: '#e0e0e0' },
+                                  {
+                                    backgroundColor,
+                                    left: `${left}%`,
+                                    width: `${width}%`,
+                                  },
                                   layout,
                                 ]}
                                 onPress={() => {
@@ -334,8 +471,8 @@ export default function CalendarScreen() {
                                     setSelectedBooking(b);
                                 }}
                             >
-                              <Text style={[theme.textXs, { fontWeight: '600' }]}>{b.yachtName}</Text>
-                              <Text style={theme.textXs}>{b.userName}</Text>
+                              <Text style={[theme.textXs, { fontWeight: '600' }]} numberOfLines={1}>{b.yachtName}</Text>
+                              <Text style={[theme.textXs]} numberOfLines={1}>{b.userName}</Text>
                             </Pressable>
                           );
                         })}

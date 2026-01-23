@@ -62,7 +62,7 @@ export const styles = StyleSheet.create({
   },
 
   link: {
-    color: colors.primaryLight,
+    color: colors.primary,
     fontSize: text.sm,
     fontWeight: '500',
   },
@@ -181,7 +181,7 @@ export const styles = StyleSheet.create({
   avatarText: {
     fontSize: 42,
     fontWeight: '600',
-    color: colors.primaryLight,
+    color: colors.primary,
   },
 
   /* ---------- Modals ---------- */
@@ -208,6 +208,11 @@ gridRow: {
 
 gridCellCenter: {
   justifyContent: 'center',
+  alignItems: 'center',
+},
+
+gridCellTopCenter:{
+  justifyContent: 'flex-start',
   alignItems: 'center',
 },
 
@@ -238,7 +243,7 @@ pillDefault:{
 },
 
 pillActive: {
-  backgroundColor: colors.primaryLight
+  backgroundColor: colors.primary
 },
 
 pillInvisible:{
@@ -264,7 +269,7 @@ highlightBackground: {
 
 highlightText: {
   fontWeight: '600',
-  color: colors.primaryLight,
+  color: colors.primary,
 },
 
 /* ---------- Absolute cards ---------- */

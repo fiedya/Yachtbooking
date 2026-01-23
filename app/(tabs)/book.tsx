@@ -3,6 +3,7 @@ import { createBooking } from '@/src/services/booking.service';
 import { getAvailableYachtIds } from '@/src/services/calendarService';
 import { getUser } from '@/src/services/userService';
 import { getActiveYachts } from '@/src/services/yachtService';
+import { colors } from '@/src/theme/colors';
 import { headerStyles } from '@/src/theme/header';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import auth from '@react-native-firebase/auth';
@@ -377,7 +378,7 @@ const styles = StyleSheet.create({
   },
 
   yachtActive: {
-    borderColor: '#1e5eff',
+    borderColor: colors.primary,
     backgroundColor: '#eef3ff',
   },
 
@@ -387,7 +388,7 @@ const styles = StyleSheet.create({
 
   submit: {
     marginTop: 32,
-    backgroundColor: '#1e5eff',
+    backgroundColor: colors.primary,
     paddingVertical: 16,
     borderRadius: 10,
     alignItems: 'center',
@@ -422,7 +423,7 @@ yachtCard: {
 },
 
 yachtCardActive: {
-  borderColor: '#1e5eff',
+  borderColor: colors.primary,
   backgroundColor: '#eef3ff',
 },
 
@@ -445,7 +446,7 @@ yachtName: {
 
 yachtNameActive: {
   fontWeight: '600',
-  color: '#1e5eff',
+  color: colors.primary,
 },
 
 });

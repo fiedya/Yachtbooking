@@ -16,6 +16,7 @@ export default function AddEditYachtScreen() {
   const [name, setName] = useState('');
   const [type, setType] = useState('');
   const [description, setDescription] = useState('');
+  const [shortcut, setShortcut] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [active, setActive] = useState(true);
@@ -66,6 +67,7 @@ export default function AddEditYachtScreen() {
         name,
         type,
         description,
+        shortcut,
         imageUrl,
         active,
       });
@@ -148,6 +150,17 @@ return (
           value={type}
           onChangeText={setType}
           style={theme.input}
+        />
+      </View>
+
+      {/* Shortcut */}
+      <View style={[theme.card, theme.cardPadding]}>
+        <Text style={theme.title}>Skrót</Text>
+        <TextInput
+          value={shortcut}
+          onChangeText={setShortcut}
+          style={theme.input}
+          placeholder="np. Y1, Sunset"
         />
       </View>
 

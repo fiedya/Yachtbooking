@@ -1,3 +1,4 @@
+import { colors } from './colors';
 
 export const headerStyles = {
   header: {
@@ -14,6 +15,6 @@ export const headerStyles = {
   adminButtonText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#1e5eff',
+    color: colors.primary,
   },
 };

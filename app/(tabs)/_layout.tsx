@@ -1,5 +1,6 @@
 import { User } from '@/src/entities/user';
 import { subscribeToUser } from '@/src/services/userService';
+import { colors } from '@/src/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
 import { Tabs } from 'expo-router';
@@ -30,6 +31,7 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
+        tabBarActiveTintColor: colors.primary,
       }}
     >
       <Tabs.Screen
