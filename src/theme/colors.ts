@@ -1,11 +1,12 @@
 export const colors = {
   primary: '#003366',   // dark blue (club color)
   secondary: '#FF7A00', // orange (club accent)
-  secondaryLight: '#FFE6CD', // light orange
+  secondaryLight: '#FFBB7D', // light orange
   white: '#ffffff',
   grey: '#666666',
   lightGrey: '#e0e0e0',
-
+  black: '#000000',
+  
   background: '#ffffff',
   backgroundSoft: '#f7f9fc',
 
@@ -15,7 +16,7 @@ export const colors = {
   textMuted: '#777777',
 
   danger: '#cc0000',
-  dangerSoft: '#ffe6e6',
+  dangerSoft: '#F1BDBD',
 
   transparent: '#00000000'
 };

@@ -120,8 +120,14 @@ function getBookingBackgroundColor(booking: any, currentUserId: string | undefin
   if (isUserBooking) {
     return isApproved ? colors.secondary : colors.secondaryLight;
   } else {
-    return isApproved ? colors.grey : colors.lightGrey;
+    return isApproved ? colors.primary : colors.lightGrey;
   }
+}
+
+// Returns font color for a booking: white for approved, black for pending/rejected
+function getBookingFontColor(booking: any, currentUserId: string | undefined) {
+  const isApproved = booking.status === 'approved';
+  return isApproved ? colors.white : colors.black;
 }
 
 /* -----------------------------
@@ -263,7 +269,7 @@ export default function CalendarScreen() {
             theme.pill,
             { 
               marginRight: 8, 
-              backgroundColor: selectedYachtIds.length === 0 ? colors.primary : colors.grey,
+              backgroundColor: selectedYachtIds.length === 0 ? colors.primary : colors.lightGrey,
               paddingVertical: 4, 
               height: '125%' 
             },
@@ -286,7 +292,7 @@ export default function CalendarScreen() {
                 theme.pill,
                 { 
                   marginRight: 8, 
-                  backgroundColor: isSelected ? colors.primary : colors.grey,
+                  backgroundColor: isSelected ? colors.primary : colors.lightGrey,
                   paddingVertical: 4, 
                   height: '125%' 
                 },
@@ -439,6 +445,8 @@ export default function CalendarScreen() {
                           const left = position * width;
                           const backgroundColor = getBookingBackgroundColor(b, user?.uid);
 
+                          const fontColor = getBookingFontColor(b, user?.uid);
+
                           return (
                             <Pressable
                               key={b.id}
@@ -457,8 +465,8 @@ export default function CalendarScreen() {
                                     setSelectedBooking(b);
                                 }}
                             >
-                              <Text style={[theme.textXs, { fontWeight: '600' }]}>{b.yachtName}</Text>
-                              <Text style={[theme.textXs]}>{b.userName}</Text>
+                              <Text style={[theme.textXs, { fontWeight: '600', color: fontColor }]}>{b.yachtName}</Text>
+                              <Text style={[theme.textXs, { color: fontColor }]}>{b.userName}</Text>
                             </Pressable>
                           );
                         })}

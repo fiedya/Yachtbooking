@@ -130,9 +130,9 @@ export default function BookingDetailsScreen() {
   const isApproved = booking.status === 'approved';
   const isRejected = booking.status === 'rejected';
 
-  // Calculate time range: 4 hours before start, 4 hours after end
-  const startHour = Math.max(0, (startDate?.getHours?.() ?? 0) - 4);
-  const endHour = Math.min(24, (endDate?.getHours?.() ?? 0) + 4);
+  // Calculate time range: 2 hours before start, 2 hours after end
+  const startHour = Math.max(0, (startDate?.getHours?.() ?? 0) - 2);
+  const endHour = Math.min(24, Math.ceil((endDate?.getHours?.() ?? 0) + (endDate?.getMinutes?.() ?? 0) / 60 + 2));
 
   return (
     <ScrollView 
@@ -191,8 +191,8 @@ export default function BookingDetailsScreen() {
               </View>
 
               {/* Time grid */}
-              {Array.from({ length: HOURS_RANGE }, (_, hourIndex) => {
-                const h = Math.max(0, startDate.getHours() - 4) + hourIndex;
+              {Array.from({ length: endHour - startHour }, (_, hourIndex) => {
+                const h = startHour + hourIndex;
                 return (
                   <View key={h} style={theme.gridRow}>
                     <View style={[
@@ -228,14 +228,21 @@ export default function BookingDetailsScreen() {
                             isBookingDay && theme.highlightBackground,
                           ]}
                         >
-                          {bookingOverlapsCell && h === Math.max(0, startDate.getHours() - 4) && (
+                          {bookingOverlapsCell && (
                             <View
                               style={{
                                 position: 'absolute',
                                 left: 2,
                                 right: 2,
-                                top: (startDate.getMinutes() / 60) * 36,
-                                height: (((endDate.getTime() - startDate.getTime()) / 1000 / 60 / 60) * 36),
+                                top: h === startDate.getHours() ? (startDate.getMinutes() / 60) * 36 : 0,
+                                height: 
+                                  h === startDate.getHours() && h === endDate.getHours()
+                                    ? ((endDate.getHours() - startDate.getHours()) + (endDate.getMinutes() - startDate.getMinutes()) / 60) * 36
+                                    : h === startDate.getHours()
+                                    ? 36 - (startDate.getMinutes() / 60) * 36
+                                    : h === endDate.getHours()
+                                    ? (endDate.getMinutes() / 60) * 36
+                                    : 36,
                                 backgroundColor: colors.secondary,
                                 borderRadius: 4,
                                 opacity: 0.8,
@@ -249,6 +256,8 @@ export default function BookingDetailsScreen() {
                 );
               })}
             </ScrollView>
+
+            {/* Booking Rectangle Overlay - positioned above grid */}
           </View>
         </View>
       )}
