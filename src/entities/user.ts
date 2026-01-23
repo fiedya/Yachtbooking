@@ -5,6 +5,7 @@ export type User = {
   phone: string;
   name: string;
   surname: string;
+  pseudonim: string;
   description: string;
   photoUrl: string | null;
   createdAt: any;

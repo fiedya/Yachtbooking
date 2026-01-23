@@ -55,6 +55,7 @@ export async function createUserIfMissing(
       name: name ?? '',
       surname: surname ?? '',
       description: '',
+      pseudonim: '',
       photoUrl: null,
       role: 'user',
       status: 'to-verify',
@@ -69,6 +70,14 @@ export async function createUserIfMissing(
       // ❗ do NOT update status
     });
   }
+}
+
+export async function updateUserProfile(
+  uid: string,
+  data: { description?: string; pseudonim?: string }
+) {
+  const ref = firestore().collection('users').doc(uid);
+  await ref.update(data);
 }
 
 export function subscribeToUser(

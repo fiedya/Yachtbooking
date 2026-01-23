@@ -111,7 +111,7 @@ export const styles = StyleSheet.create({
   },
 
   buttonDanger: {
-    backgroundColor: colors.danger,
+    backgroundColor: colors.secondary,
   },
 
   buttonText: {
@@ -121,7 +121,7 @@ export const styles = StyleSheet.create({
   },
 
   buttonDangerText: {
-    color: colors.danger,
+    color: colors.white,
   },
 
   /* ---------- Inputs ---------- */

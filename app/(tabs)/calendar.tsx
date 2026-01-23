@@ -9,10 +9,10 @@ import { Stack, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 
 import {
-  Pressable,
-  ScrollView,
-  Text,
-  View
+    Pressable,
+    ScrollView,
+    Text,
+    View
 } from 'react-native';
 
 /* -----------------------------
@@ -463,6 +463,7 @@ export default function CalendarScreen() {
                                     backgroundColor,
                                     left: `${left}%`,
                                     width: `${width}%`,
+                                    overflow: 'hidden',
                                   },
                                   layout,
                                 ]}
@@ -471,8 +472,8 @@ export default function CalendarScreen() {
                                     setSelectedBooking(b);
                                 }}
                             >
-                              <Text style={[theme.textXs, { fontWeight: '600' }]} numberOfLines={1}>{b.yachtName}</Text>
-                              <Text style={[theme.textXs]} numberOfLines={1}>{b.userName}</Text>
+                              <Text style={[theme.textXs, { fontWeight: '600' }]}>{b.yachtName}</Text>
+                              <Text style={[theme.textXs]}>{b.userName}</Text>
                             </Pressable>
                           );
                         })}
