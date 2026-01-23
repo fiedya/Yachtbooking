@@ -1,4 +1,4 @@
-export type UserStatus = 'to_verify' | 'verified' | 'rejected';
+export type UserStatus = 'to-verify' | 'verified' | 'rejected';
 
 export type User = {
   uid: string;                 // Firebase Auth UID (doc ID)

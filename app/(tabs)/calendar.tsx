@@ -2,7 +2,7 @@ import { headerStyles } from '@/src/theme/header';
 import { styles, styles as theme } from '@/src/theme/styles';
 import { Ionicons } from '@expo/vector-icons';
 import firestore from '@react-native-firebase/firestore';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 
 import {
@@ -82,6 +82,7 @@ const HOURS = Array.from({ length: 24 }, (_, i) => i);
 -------------------------------- */
 
 export default function CalendarScreen() {
+  const router = useRouter();
   const [mode, setMode] = useState<'week' | 'month'>('week');
   const [weekOffset, setWeekOffset] = useState(0);
   const [bookings, setBookings] = useState<any[]>([]);
@@ -298,6 +299,22 @@ export default function CalendarScreen() {
                       isToday && theme.highlightBackground,
                     ]}
                   >
+                    <Pressable
+                      style={{ flex: 1 }}
+                      onPress={() => {
+                        const startDate = new Date(day);
+                        startDate.setHours(h, 0, 0, 0);
+                        const endDate = new Date(startDate);
+                        endDate.setHours(h + 1, 0, 0, 0);
+                        router.push({
+                          pathname: '/book',
+                          params: {
+                            startDate: startDate.toISOString(),
+                            endDate: endDate.toISOString(),
+                          },
+                        });
+                      }}
+                    />
                     {h === 0 &&
                       bookings
                         .filter((b) => b.status === 'pending')

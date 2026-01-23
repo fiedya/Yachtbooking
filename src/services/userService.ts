@@ -16,7 +16,7 @@ export async function createOrUpdateUser(
   const ref = firestore().collection('users').doc(uid);
   const snap = await ref.get();
 
-  if (!snap.exists) {
+  if (!snap.exists()) {
     await ref.set({
       uid,
       phone,
@@ -25,7 +25,7 @@ export async function createOrUpdateUser(
       description: '',
       photoUrl: null,
       role: 'user',
-      status: 'to_verify', // ✅ NEW DEFAULT
+      status: 'to-verify',
       onboarded: true,
       createdAt: firestore.FieldValue.serverTimestamp(),
     });
@@ -57,7 +57,7 @@ export async function createUserIfMissing(
       description: '',
       photoUrl: null,
       role: 'user',
-      status: 'to_verify',
+      status: 'to-verify',
       onboarded: !!(name && surname),
       createdAt: firestore.FieldValue.serverTimestamp(),
     });

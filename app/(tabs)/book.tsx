@@ -1,11 +1,12 @@
 import { Yacht } from '@/src/entities/yacht';
 import { createBooking } from '@/src/services/booking.service';
+import { getAvailableYachtIds } from '@/src/services/calendarService';
 import { getUser } from '@/src/services/userService';
 import { getActiveYachts } from '@/src/services/yachtService';
 import { headerStyles } from '@/src/theme/header';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import auth from '@react-native-firebase/auth';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   Alert,
@@ -23,15 +24,42 @@ import {
 export default function BookScreen() {
   const user = auth().currentUser;
   const router = useRouter();
+  const { startDate: paramStartDate, endDate: paramEndDate } = useLocalSearchParams<{ startDate?: string; endDate?: string }>();
+
+  // Initialize dates from params if provided, otherwise use now
+  const initializeDate = () => {
+    if (paramStartDate) {
+      return new Date(paramStartDate);
+    }
+    return new Date();
+  };
+
+  const initializeStartTime = () => {
+    if (paramStartDate) {
+      return new Date(paramStartDate);
+    }
+    return new Date();
+  };
+
+  const initializeEndTime = () => {
+    if (paramEndDate) {
+      return new Date(paramEndDate);
+    }
+    const end = new Date();
+    end.setHours(end.getHours() + 1);
+    return end;
+  };
+
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
 
-  const [date, setDate] = useState(new Date());
-  const [startTime, setStartTime] = useState(new Date());
-  const [endTime, setEndTime] = useState(new Date());
+  const [date, setDate] = useState(initializeDate());
+  const [startTime, setStartTime] = useState(initializeStartTime());
+  const [endTime, setEndTime] = useState(initializeEndTime());
   const [loading, setLoading] = useState(false);
   const [yachts, setYachts] = useState<Yacht[]>([]);
+  const [availableYachtIds, setAvailableYachtIds] = useState<string[]>([]);
   const [yacht, setYacht] = useState<Yacht | null>(null);
   const [bookingName, setBookingName] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
@@ -124,6 +152,25 @@ export default function BookScreen() {
       }
     });
   }, []);
+
+  useEffect(() => {
+    const start = new Date(date);
+    start.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
+
+    const end = new Date(date);
+    end.setHours(endTime.getHours(), endTime.getMinutes(), 0, 0);
+
+    if (end > start) {
+      getAvailableYachtIds(start, end).then(busyIds => {
+        setAvailableYachtIds(busyIds);
+        // If current yacht becomes unavailable, select another one
+        if (yacht && busyIds.includes(yacht.id)) {
+          const availableYacht = yachts.find(y => !busyIds.includes(y.id));
+          setYacht(availableYacht || null);
+        }
+      });
+    }
+  }, [date, startTime, endTime, yachts, yacht]);
 
 
   return (
@@ -228,14 +275,17 @@ export default function BookScreen() {
     >
       {yachts.map(y => {
         const selected = yacht?.id === y.id;
+        const isAvailable = !availableYachtIds.includes(y.id);
 
         return (
           <Pressable
             key={y.id}
-            onPress={() => setYacht(y)}
+            onPress={() => isAvailable && setYacht(y)}
+            disabled={!isAvailable}
             style={[
               styles.yachtCard,
               selected && styles.yachtCardActive,
+              !isAvailable && styles.yachtCardDisabled,
             ]}
           >
             <Image
@@ -244,7 +294,10 @@ export default function BookScreen() {
                   ? { uri: y.imageUrl }
                   : require('@/assets/images/yacht_placeholder.png')
               }
-              style={styles.yachtImage}
+              style={[
+                styles.yachtImage,
+                !isAvailable && { opacity: 0.5 },
+              ]}
               resizeMode="cover"
             />
 
@@ -252,11 +305,17 @@ export default function BookScreen() {
               style={[
                 styles.yachtName,
                 selected && styles.yachtNameActive,
+                !isAvailable && { color: '#999' },
               ]}
               numberOfLines={1}
             >
               {y.name}
             </Text>
+            {!isAvailable && (
+              <Text style={{ fontSize: 10, color: '#cc0000', marginTop: 4, marginLeft: 8, marginBottom: 5 }}>
+                Zajęty
+              </Text>
+            )}
           </Pressable>
         );
       })}
@@ -367,6 +426,10 @@ yachtCardActive: {
   backgroundColor: '#eef3ff',
 },
 
+yachtCardDisabled: {
+  opacity: 0.5,
+},
+
 yachtImage: {
   width: '100%',
   height: 80,
@@ -374,7 +437,8 @@ yachtImage: {
 },
 
 yachtName: {
-  padding: 8,
+  paddingVertical: 4,
+  paddingHorizontal: 8,
   fontSize: 14,
   textAlign: 'center',
 },

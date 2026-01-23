@@ -18,3 +18,21 @@ export function subscribeToBookings(
       onChange(data);
     });
 }
+
+export async function getAvailableYachtIds(
+  start: Date,
+  end: Date
+): Promise<string[]> {
+  const snapshot = await firestore()
+    .collection('bookings')
+    .where('start', '<', end)
+    .where('end', '>', start)
+    .where('status', 'in', ['pending', 'approved'])
+    .get();
+
+  const busyYachtIds = new Set(
+    snapshot.docs.map(doc => doc.data().yachtId)
+  );
+
+  return Array.from(busyYachtIds);
+}

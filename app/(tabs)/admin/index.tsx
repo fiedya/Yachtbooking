@@ -1,7 +1,8 @@
 import { subscribeToUser } from '@/src/services/userService';
+import { headerStyles } from '@/src/theme/header';
 import { styles } from '@/src/theme/styles';
 import auth from '@react-native-firebase/auth';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useMode } from '../../providers/ModeProvider';
@@ -28,10 +29,14 @@ export default function AdminScreen() {
 
   return (
     <View style={styles.screenPadded}>
-      <View style={{ marginBottom: 32 }}>
-        <Text style={styles.title}>Admin panel</Text>
-      </View>
-
+          <Stack.Screen
+            options={{
+              headerShown: true,
+              title: 'Admin',
+              headerStyle: headerStyles.header,
+              headerTitleStyle: headerStyles.title
+            }}
+          />
       <Pressable
         style={[styles.button, { marginBottom: 12 }]}
         onPress={() => router.push('/admin/all-users')}

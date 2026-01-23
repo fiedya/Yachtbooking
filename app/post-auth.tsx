@@ -24,13 +24,19 @@ export default function PostAuthScreen() {
         return;
       }
 
-      // User exists but not onboarded → force onboarding
+      // Not onboarded → onboarding
       if (!userDoc.onboarded) {
         router.replace('/onboarding');
         return;
       }
 
-      // Fully onboarded user
+      // Onboarded but NOT verified → wait screen
+      console.log(userDoc.status)
+      if (userDoc.status !== 'verified') {
+        router.replace('/wait-for-verification');
+        return;
+      }
+
       router.replace('/(tabs)/calendar');
     }
 

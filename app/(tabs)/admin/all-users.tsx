@@ -1,7 +1,8 @@
 import { styles as theme } from '@/src/theme/styles';
 import firestore from '@react-native-firebase/firestore';
+import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { FlatList, Text, View } from 'react-native';
+import { FlatList, Pressable, Text, View } from 'react-native';
 
 type UserRow = {
   uid: string;
@@ -32,11 +33,12 @@ function getStatusPillStyle(status: string) {
 export default function AllUsersScreen() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const router = useRouter();
+  
 useEffect(() => {
   const unsub = firestore()
     .collection('users')
-    .orderBy('createdAt', 'desc')
+    .orderBy('surname', 'desc')
     .onSnapshot(
       snapshot => {
 
@@ -55,8 +57,6 @@ useEffect(() => {
             status: d.status,
           };
         });
-
-        console.log('[ALL USERS] mapped users:', data);
 
         setUsers(data);
         setLoading(false);
@@ -79,6 +79,12 @@ useEffect(() => {
         keyExtractor={item => item.uid}
 
         renderItem={({ item }) => (
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: '/(tabs)/admin/user-details',
+            params: { uid: item.uid },
+        })}>
           <View style={[theme.card, theme.cardPadding]}>
             <View style={[theme.row, { justifyContent: 'space-between' }]}>
               <View>
@@ -95,6 +101,7 @@ useEffect(() => {
               </View>
             </View>
           </View>
+          </Pressable>
         )}
         ListEmptyComponent={
           !loading ? (

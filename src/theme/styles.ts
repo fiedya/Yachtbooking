@@ -111,7 +111,7 @@ export const styles = StyleSheet.create({
   },
 
   buttonDanger: {
-    backgroundColor: colors.dangerSoft,
+    backgroundColor: colors.danger,
   },
 
   buttonText: {

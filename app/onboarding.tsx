@@ -64,7 +64,7 @@ async function handleContinue() {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={theme.screenPadded}>
+      <View style={theme.screen}>
 
     <Text style={theme.title}>Witaj 👋</Text>
     <Text style={theme.textSecondary}>
