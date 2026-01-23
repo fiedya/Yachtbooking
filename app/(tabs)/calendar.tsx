@@ -1,18 +1,20 @@
 import { getActiveYachts } from '@/src/services/yachtService';
 import { colors } from '@/src/theme/colors';
 import { headerStyles } from '@/src/theme/header';
+import { spacing } from '@/src/theme/spacing';
 import { styles, styles as theme } from '@/src/theme/styles';
 import { Ionicons } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { Stack, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
+import { useMode } from '../providers/ModeProvider';
 
 import {
-    Pressable,
-    ScrollView,
-    Text,
-    View
+  Pressable,
+  ScrollView,
+  Text,
+  View
 } from 'react-native';
 
 /* -----------------------------
@@ -76,7 +78,8 @@ function getBookingStyle(
 function getOverlappingBookingsForBooking(
   booking: any,
   allBookings: any[],
-  day: Date
+  day: Date,
+  isAdmin: boolean = false
 ) {
   const start = booking.start.toDate();
   const end = booking.end.toDate();
@@ -84,7 +87,8 @@ function getOverlappingBookingsForBooking(
   if (!sameDay(start, day)) return [];
 
   return allBookings.filter(b => {
-    if (b.status !== 'pending') return false;
+    // Show all statuses for admins, only pending/approved for users
+    if (!isAdmin && b.status === 'rejected') return false;
     const bStart = b.start.toDate();
     const bEnd = b.end.toDate();
     return bStart < end && bEnd > start;
@@ -107,6 +111,11 @@ function getBookingPosition(
 function getBookingBackgroundColor(booking: any, currentUserId: string | undefined) {
   const isUserBooking = booking.userId === currentUserId;
   const isApproved = booking.status === 'approved';
+  const isRejected = booking.status === 'rejected';
+
+  if (isRejected) {
+    return colors.dangerSoft;
+  }
 
   if (isUserBooking) {
     return isApproved ? colors.secondary : colors.secondaryLight;
@@ -129,6 +138,7 @@ const HOURS = Array.from({ length: 24 }, (_, i) => i);
 export default function CalendarScreen() {
   const router = useRouter();
   const user = auth().currentUser;
+  const { mode: adminMode } = useMode();
   const [mode, setMode] = useState<'week' | 'month'>('week');
   const [weekOffset, setWeekOffset] = useState(0);
   const [bookings, setBookings] = useState<any[]>([]);
@@ -163,13 +173,21 @@ export default function CalendarScreen() {
     });
   }, []);
 
-  // Filter bookings by selected yachts
+  // Filter bookings by selected yachts and admin status
   const filteredBookings = useMemo(() => {
-    if (selectedYachtIds.length === 0) {
-      return bookings; // show all if no selection
+    let result = bookings;
+    
+    // Hide rejected bookings for non-admins
+    if (adminMode !== 'admin') {
+      result = result.filter(b => b.status !== 'rejected');
     }
-    return bookings.filter(b => selectedYachtIds.includes(b.yachtId));
-  }, [bookings, selectedYachtIds]);
+    
+    // Filter by yacht selection
+    if (selectedYachtIds.length === 0) {
+      return result; // show all if no yacht selection
+    }
+    return result.filter(b => selectedYachtIds.includes(b.yachtId));
+  }, [bookings, selectedYachtIds, adminMode]);
 
   useEffect(() => {
     console.log('[CALENDAR] subscribing, key:', refreshKey);
@@ -234,39 +252,6 @@ export default function CalendarScreen() {
       }}
     />
 
-      {/* Header */}
-      <View style={[theme.cardPadding, theme.gridBorderBottom]}>
-        <View style={[theme.row, { gap: 8 }]}>
-          <Pressable
-            style={[
-                theme.pill,
-                mode === 'week' && theme.pillActive,
-              ]}
-            onPress={() => setMode('week')}
-          >
-            <Text
-              style={mode === 'week' ? theme.textOnPrimary : theme.textSecondary}
-            >
-              Tydzień
-            </Text>
-          </Pressable>
-
-          <Pressable
-            style={[
-                theme.pill,
-                mode === 'month' && theme.pillActive,
-              ]}
-            onPress={() => setMode('month')}
-            >
-            <Text
-              style={mode === 'month' ? theme.textOnPrimary : theme.textSecondary}
-            >
-              Miesiąc
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-
       {/* Yacht filter */}
       <ScrollView 
         horizontal 
@@ -327,7 +312,7 @@ export default function CalendarScreen() {
 
       {/* Week jump */}
       {mode === 'week' && (
-        <View style={[theme.row, theme.gridBorderBottom, { padding: 12, alignItems: 'center' }]}>
+        <View style={[theme.row, theme.gridBorderBottom, { padding: spacing.xs, alignItems: 'center' }]}>
           
           {/* Previous week */}
           <Pressable
@@ -340,7 +325,7 @@ export default function CalendarScreen() {
           {/* Current week label */}
           <Pressable
             onPress={() => setShowWeekPicker(true)}
-            style={{ flex: 1, alignItems: 'center' }}
+            style={{ flex: 1, alignItems: 'center'}}
           >
             <Text style={theme.textPrimary}>
               {weekLabel(weekStart)}
@@ -368,7 +353,7 @@ export default function CalendarScreen() {
             <View  style={[
               theme.gridCellCenter,
               theme.gridBorderRight,
-              { width: 56 },
+              { width: 40 },
             ]} />
             {days.map((day) => {
               const isToday = sameDay(day, today);
@@ -447,7 +432,7 @@ export default function CalendarScreen() {
                           const layout = getBookingStyle(b, day);
                           if (!layout) return null;
 
-                          const overlaps = getOverlappingBookingsForBooking(b, filteredBookings, day);
+                          const overlaps = getOverlappingBookingsForBooking(b, filteredBookings, day, adminMode === 'admin');
                           const position = getBookingPosition(b, overlaps);
                           const totalOverlaps = overlaps.length;
                           const width = 100 / totalOverlaps;

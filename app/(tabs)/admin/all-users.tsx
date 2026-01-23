@@ -25,7 +25,7 @@ function getStatusLabel(status: string) {
 
 function getStatusPillStyle(status: string) {
   if (status === 'verified') return theme.pillInvisible;
-  if (status === 'to verify') return theme.pillSecondary;
+  if (status === 'to-verify') return theme.pillSecondary;
   if (status === 'rejected') return theme.pillActive;
   return theme.pill;
 }
