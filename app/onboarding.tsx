@@ -50,7 +50,7 @@ async function handleContinue() {
       );
 
       console.log('[ONBOARDING] createOrUpdateUser SUCCESS');
-      router.replace('/(tabs)/calendar');
+      router.replace('/post-auth');
     } catch (e) {
       console.error('[ONBOARDING] ERROR during save', e);
     } finally {
