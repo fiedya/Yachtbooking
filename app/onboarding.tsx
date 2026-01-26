@@ -1,4 +1,5 @@
-import { styles as theme } from '@/src/theme/styles';
+import { colors } from '@/src/theme/colors';
+import { styles, styles as theme } from '@/src/theme/styles';
 import auth from '@react-native-firebase/auth';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -64,37 +65,37 @@ async function handleContinue() {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={theme.screen}>
+      <View style={[theme.screenPadded, {alignContent: 'center', justifyContent: 'center'}]}>
 
-    <Text style={theme.title}>Witaj 👋</Text>
-    <Text style={theme.textSecondary}>
-      Uzupełnij swoje dane, aby kontynuować
+    <Text style={[theme.title, {color: colors.primary}]}>Ahoj!</Text>
+    <Text style={[theme.sectionTitle, {marginBottom: 16}]}>
+      Uzupełnij swoje dane, aby kontynuować:
     </Text>
 
 
-        <View style={{ gap: 12, marginBottom: 32 }}>
+        <View>
+          <Text style={theme.label}>Imię:</Text>
           <TextInput
             placeholder="Imię"
             value={name}
             onChangeText={setName}
-            style={theme.input}
+            style={[theme.input, {marginBottom: 16}]}
               autoCapitalize="words"
+            
           />
 
+          <Text style={theme.label}>Nazwisko:</Text>
           <TextInput
             placeholder="Nazwisko"
             value={surname}
             onChangeText={setSurname}
-            style={theme.input}
+            style={[theme.input, {marginBottom: 16}]}
             autoCapitalize="words"
           />
         </View>
 
     <Pressable
-      style={[
-        theme.button,
-        (!name || !surname) && theme.buttonDisabled,
-      ]}
+      style={[styles.submit, (!name || !surname) && styles.submitDisabled]}
       onPress={handleContinue}
       disabled={!name || !surname || loading}
     >

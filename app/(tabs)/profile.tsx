@@ -1,6 +1,7 @@
+import { Booking } from '@/src/entities/booking';
+import { subscribeToBookings } from '@/src/services/calendarService';
 import { uploadImage } from '@/src/services/imageUploadService';
 import { headerStyles } from '@/src/theme/header';
-import { spacing } from '@/src/theme/spacing';
 import { styles as theme } from '@/src/theme/styles';
 import { pickImageFromGallery } from '@/src/utils/pickImage';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -12,7 +13,7 @@ import { useEffect, useState } from 'react';
 import { Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { User } from '../../src/entities/user';
-import { subscribeToUser, updateUserProfile } from '../../src/services/userService';
+import { getUserPhotoUrl, subscribeToUser, updateUserProfile } from '../../src/services/userService';
 import { useMode } from '../providers/ModeProvider';
 
 export default function ProfileScreen() {
@@ -25,10 +26,21 @@ export default function ProfileScreen() {
   const { mode, toggleMode } = useMode();
   const insets = useSafeAreaInsets();
   const user = auth().currentUser;
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [modalUserPhoto, setModalUserPhoto] = useState<string | null>(null);
+  // Fetch user photo for modal when booking is selected
+  useEffect(() => {
+    if (selectedBooking) {
+      getUserPhotoUrl(selectedBooking.userId).then(setModalUserPhoto);
+    } else {
+      setModalUserPhoto(null);
+    }
+  }, [selectedBooking]);
+
 
   useEffect(() => {
     if (!user) return;
-
     const unsub = subscribeToUser(user.uid, data => {
       setProfile(data);
       if (data) {
@@ -36,10 +48,30 @@ export default function ProfileScreen() {
         setPseudonim(data.pseudonim || '');
       }
     });
-
     return unsub;
   }, [user?.uid]);
 
+  // Subscribe to user's bookings from today onwards
+  useEffect(() => {
+    if (!user?.uid) return;
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    // Far future date
+    const end = new Date();
+    end.setFullYear(end.getFullYear() + 2);
+    const unsub = subscribeToBookings(start, end, (all: Booking[]) => {
+      // Only this user's bookings, only from today onwards
+      const filtered = all
+        .filter((b: Booking) => b.userId === user.uid && b.start.toDate() >= start)
+        .sort((a: Booking, b: Booking) => a.start.toDate() - b.start.toDate());
+      setBookings(filtered);
+    });
+    return () => {
+      if (typeof unsub === 'function') unsub();
+    };
+  }, [user?.uid]);
+
+  
   async function handleLogout() {
     try {
       await auth().signOut();
@@ -122,7 +154,7 @@ export default function ProfileScreen() {
         scrollEnabled={true}
       >
         {/* Avatar placeholder */}
-        <View style={[theme.center, { marginBottom: 16, marginTop: 16 }]}>
+        <View style={[theme.center, { marginBottom: 16 }]}>
           <Pressable
             style={{ marginTop: 8 }}
             onPress={handleChangeAvatar}
@@ -193,6 +225,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* Description */}
+        {/*
         <View style={[theme.card, theme.cardPadding]}>
           <Text style={theme.sectionTitle}>O mnie</Text>
           {editingField === 'description' ? (
@@ -216,19 +249,35 @@ export default function ProfileScreen() {
                   {saving ? 'Zapisywanie...' : 'Zapisz'}
                 </Text>
               </Pressable>
-            </View>
+
+        </View> */}
+
+        {/* Bookings List */}
+        <View style={[theme.card, theme.cardPadding, {marginTop: 16, marginBottom: 16 }]}> 
+          <Text style={theme.title}>Twoje przyszłe rezerwacje</Text>
+          {bookings.length === 0 ? (
+            <Text style={theme.textMuted}>Brak nadchodzących rezerwacji</Text>
           ) : (
-            <Pressable 
-              style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}
-              onPress={() => setEditingField('description')}
-            >
-              <Text style={[theme.textPrimary, { flex: 1 }]}>
-                {description || 'Brak opisu'}
-              </Text>
-              <MaterialIcons name="edit" size={18} color={theme.link.color} style={{ marginLeft: 8 }} />
-            </Pressable>
+            <View>
+              {bookings.map((b) => (
+                <Pressable
+                  key={b.id}
+                  style={{ paddingVertical: 10, borderBottomWidth: 1, borderColor: '#eee' }}
+                  onPress={() => setSelectedBooking(b)}
+                >
+                  <Text style={theme.sectionTitle}>{b.yachtName}</Text>
+                  <Text style={theme.textSecondary}>
+                    {b.start.toDate().toLocaleDateString()} {' '}
+                    {b.start.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {' - '}
+                    {b.end.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </Text>
+                  <Text style={theme.textXs}>Status: {b.status}</Text>
+                </Pressable>
+              ))}
+            </View>
           )}
-        </View>
+          </View>
       </ScrollView>
 
       {/* Actions */}
@@ -243,11 +292,48 @@ export default function ProfileScreen() {
         </Pressable>
       </View>
 
-      <View style={{ marginTop: spacing.md, marginBottom: 0, alignItems: 'center' }}>
+      <View style={{ marginVertical: 2, alignItems: 'center' }}>
         <Text style={theme.versionText}>
           Version {Constants.expoConfig?.version}
         </Text>
       </View>
+
+              {/* Booking Modal (copied from calendar.tsx) */}
+      {selectedBooking && (
+        <View style={theme.modalOverlay}>
+          <View style={theme.modal}>
+            <Text style={theme.title}>{selectedBooking.yachtName}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              {modalUserPhoto ? (
+                <Image
+                  source={{ uri: modalUserPhoto }}
+                  style={{ width: 40, height: 40, borderRadius: 20, marginRight: 10 }}
+                />
+              ) : (
+                <Image
+                  source={require('@/assets/images/user_placeholder.png')}
+                  style={{ width: 40, height: 40, borderRadius: 20, marginRight: 10 }}
+                />
+              )}
+              <Text style={theme.textPrimary}> {selectedBooking.userName}</Text>
+            </View>
+            <Text style={theme.textPrimary}>
+              ⏰{' '}
+              {selectedBooking.start.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {' – '}
+              {selectedBooking.end.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </Text>
+            <Text style={theme.textPrimary}>
+              {'Status: '}
+              {selectedBooking.status}
+            </Text>
+            <Pressable style={{ marginTop: 16, alignSelf: 'flex-end' }} onPress={() => setSelectedBooking(null)}>
+              <Text style={theme.link}>Zamknij</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+      
     </View>
   );
 }

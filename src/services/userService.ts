@@ -1,4 +1,14 @@
+// Get only the user's photoUrl by UID
+
 import firestore from '@react-native-firebase/firestore';
+
+export async function getUserPhotoUrl(uid: string): Promise<string | null> {
+  const ref = firestore().collection('users').doc(uid);
+  const snap = await ref.get();
+  if (!snap.exists) return null;
+  const data = snap.data();
+  return data && data.photoUrl ? data.photoUrl : null;
+}
 
 export async function getUser(uid: string) {
   console.log('[USER SERVICE] getUser uid:', uid);
@@ -67,7 +77,6 @@ export async function createUserIfMissing(
       name,
       surname,
       onboarded: true,
-      // ❗ do NOT update status
     });
   }
 }
@@ -103,7 +112,6 @@ export function subscribeToUser(
               const msg = error?.message ?? '';
 
               if (msg.includes('permission-denied')) {
-                // ✅ Expected during auth bootstrap
                 console.log('[USER SERVICE] Firestore not ready yet');
                 return;
               }

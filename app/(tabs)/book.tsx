@@ -3,8 +3,8 @@ import { createBooking } from '@/src/services/booking.service';
 import { getAvailableYachtIds } from '@/src/services/calendarService';
 import { getUser } from '@/src/services/userService';
 import { getActiveYachts } from '@/src/services/yachtService';
-import { colors } from '@/src/theme/colors';
 import { headerStyles } from '@/src/theme/header';
+import { styles } from '@/src/theme/styles';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import auth from '@react-native-firebase/auth';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -14,7 +14,6 @@ import {
   Image,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View
@@ -330,108 +329,3 @@ export default function BookScreen() {
     </View>
   );
 }
-
-/* -----------------------------
-   Styles
--------------------------------- */
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    marginTop: 15,
-    backgroundColor: '#fff',
-  },
-
-  title: {
-    fontSize: 22,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-
-  label: {
-    marginTop: 16,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-
-  yacht: {
-    marginTop: 8,
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-
-  yachtActive: {
-    borderColor: colors.primary,
-    backgroundColor: '#eef3ff',
-  },
-
-  yachtText: {
-    fontSize: 15,
-  },
-
-  submit: {
-    marginTop: 32,
-    backgroundColor: colors.primary,
-    paddingVertical: 16,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-
-  submitDisabled: {
-    opacity: 0.6,
-  },
-
-  submitText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-
-  pickerButton: {
-    marginTop: 8,
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#fafafa',
-  },
-  yachtCard: {
-    width: 120,
-    marginRight: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#fff',
-    overflow: 'hidden',
-  },
-
-  yachtCardActive: {
-    borderColor: colors.primary,
-    backgroundColor: '#eef3ff',
-  },
-
-  yachtCardDisabled: {
-    opacity: 0.5,
-  },
-
-  yachtImage: {
-    width: '100%',
-    height: 80,
-    backgroundColor: '#eee',
-  },
-
-  yachtName: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    fontSize: 14,
-    textAlign: 'center',
-  },
-
-  yachtNameActive: {
-    fontWeight: '600',
-    color: colors.primary,
-  },
-});

@@ -7,12 +7,12 @@ import { Ionicons } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { Stack, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
 import { useMode } from '../providers/ModeProvider';
 
+import { getUserPhotoUrl } from '@/src/services/userService';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  Animated,
-  PanResponder,
+  Animated, Image, PanResponder,
   Pressable,
   ScrollView,
   Text,
@@ -151,6 +151,16 @@ export default function CalendarScreen() {
   const [weekOffset, setWeekOffset] = useState(0);
   const [bookings, setBookings] = useState<any[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [modalUserPhoto, setModalUserPhoto] = useState<string | null>(null);
+
+    // Fetch user photo for modal when booking is selected
+    useEffect(() => {
+      if (selectedBooking) {
+        getUserPhotoUrl(selectedBooking.userId).then(setModalUserPhoto);
+      } else {
+        setModalUserPhoto(null);
+      }
+    }, [selectedBooking]);
   const [showWeekPicker, setShowWeekPicker] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -241,7 +251,6 @@ export default function CalendarScreen() {
   );
 
   
-    // Slide animation for week change
     const slideAnim = useState(new Animated.Value(0))[0];
     const panResponder = PanResponder.create({
       onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 20,
@@ -534,32 +543,33 @@ export default function CalendarScreen() {
     }
     
     {selectedBooking && (
-    <View style={theme.modalOverlay}>
-      <View style={theme.modal}>
-        <Text style={theme.title}>
-          {selectedBooking.yachtName}
-        </Text>
-
-        <Text style={theme.textPrimary}>
-          👤 {selectedBooking.userName}
-        </Text>
-
-        <Text style={theme.textPrimary}>
-          ⏰{' '}
-          {selectedBooking.start.toDate().toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}{' '}
-          –{' '}
-          {selectedBooking.end.toDate().toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-        </Text>
-        <Text style={theme.textPrimary}>
-          {'Status: '}
-          {selectedBooking.status}
-        </Text>
+      <View style={theme.modalOverlay}>
+        <View style={theme.modal}>
+          <Text style={theme.title}>{selectedBooking.yachtName}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+            {modalUserPhoto ? (
+              <Image
+                source={{ uri: modalUserPhoto }}
+                style={{ width: 40, height: 40, borderRadius: 20, marginRight: 10 }}
+              />
+            ) : (
+              <Image
+                source={require('@/assets/images/user_placeholder.png')}
+                style={{ width: 40, height: 40, borderRadius: 20, marginRight: 10 }}
+              />
+            )}
+            <Text style={theme.textPrimary}> {selectedBooking.userName}</Text>
+          </View>
+          <Text style={theme.textPrimary}>
+            ⏰{' '}
+            {selectedBooking.start.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {' – '}
+            {selectedBooking.end.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </Text>
+          <Text style={theme.textPrimary}>
+            {'Status: '}
+            {selectedBooking.status}
+          </Text>
 
 
       {/* Admin Approve/Reject Buttons */}
