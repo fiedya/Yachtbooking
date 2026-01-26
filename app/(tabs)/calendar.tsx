@@ -11,6 +11,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMode } from '../providers/ModeProvider';
 
 import {
+  Animated,
+  PanResponder,
   Pressable,
   ScrollView,
   Text,
@@ -239,6 +241,43 @@ export default function CalendarScreen() {
   );
 
   
+    // Slide animation for week change
+    const slideAnim = useState(new Animated.Value(0))[0];
+    const panResponder = PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 20,
+      onPanResponderMove: Animated.event([
+        null,
+        { dx: slideAnim }
+      ], { useNativeDriver: false }),
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx < -50) {
+          // Swipe left: next week
+          Animated.timing(slideAnim, {
+            toValue: -400,
+            duration: 200,
+            useNativeDriver: false,
+          }).start(() => {
+            setWeekOffset(o => o + 1);
+            slideAnim.setValue(0);
+          });
+        } else if (gestureState.dx > 50) {
+          // Swipe right: previous week
+          Animated.timing(slideAnim, {
+            toValue: 400,
+            duration: 200,
+            useNativeDriver: false,
+          }).start(() => {
+            setWeekOffset(o => o - 1);
+            slideAnim.setValue(0);
+          });
+        } else {
+          Animated.spring(slideAnim, {
+            toValue: 0,
+            useNativeDriver: false,
+          }).start();
+        }
+      },
+    });
 
   return (
     <View style={theme.screen}>
@@ -262,7 +301,9 @@ export default function CalendarScreen() {
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false}
-        style={[theme.cardPadding, theme.gridBorderBottom, { paddingVertical: 12, backgroundColor: colors.white }]}
+        style={[theme.cardPadding, theme.gridBorderBottom,
+           { backgroundColor: colors.white, paddingVertical: 8, minHeight: 40, maxHeight: 80 }]}
+        contentContainerStyle={{ alignItems: 'center', minHeight: '50%' }}
       >
         <Pressable
           style={[
@@ -270,14 +311,14 @@ export default function CalendarScreen() {
             { 
               marginRight: 8, 
               backgroundColor: selectedYachtIds.length === 0 ? colors.primary : colors.lightGrey,
-              paddingVertical: 4, 
-              height: '125%' 
+              paddingVertical: 4,
+                  height: '125%',
             },
           ]}
           onPress={() => setSelectedYachtIds([])}
         >
           <Text
-            style={{ color: colors.white }}
+            style={{ color: colors.white}}
           >
             Wszystkie
           </Text>
@@ -293,8 +334,7 @@ export default function CalendarScreen() {
                 { 
                   marginRight: 8, 
                   backgroundColor: isSelected ? colors.primary : colors.lightGrey,
-                  paddingVertical: 4, 
-                  height: '125%' 
+                  height: '125%'
                 },
               ]}
               onPress={() => {
@@ -353,8 +393,10 @@ export default function CalendarScreen() {
 
       {/* Calendar */}
       {mode === 'week' ? (
-        <ScrollView>
-          {/* Days header */}
+      <Animated.View
+        style={{ paddingBottom: 137, transform: [{ translateX: slideAnim }] }}
+        {...panResponder.panHandlers}
+      >
           <View style={theme.gridRow}>
             <View  style={[
               theme.gridCellCenter,
@@ -390,6 +432,8 @@ export default function CalendarScreen() {
             })}
           </View>
 
+
+        <ScrollView>
           {/* Time grid */}
           {HOURS.map((h) => (
             <View key={h} style={styles.row}>
@@ -477,6 +521,7 @@ export default function CalendarScreen() {
             </View>
           ))}
         </ScrollView>
+        </Animated.View>
       ) : (
         <View style={[theme.screen, theme.center]}>
           <Text style={theme.textMuted}>

@@ -1,3 +1,4 @@
+
 // src/theme/colors.ts
 
 import { StyleSheet } from 'react-native';
@@ -40,7 +41,8 @@ export const styles = StyleSheet.create({
   },
 
   sectionTitle: {
-    fontSize: text.md,
+    color: colors.primary,
+    fontSize: text.lg,
     fontWeight: '600',
     marginBottom: spacing.xs,
   },
@@ -307,6 +309,41 @@ listItem: {
 listItemActive: {
   backgroundColor: colors.primary,
   borderRadius: 8,
+},
+
+// --- Book screen additions/unification ---
+
+// Yacht card for booking
+yachtCard: {
+  width: 120,
+  marginRight: 12,
+  borderRadius: 12,
+  borderWidth: 1,
+  borderColor: '#ddd',
+  backgroundColor: '#fff',
+  overflow: 'hidden',
+},
+yachtCardActive: {
+  borderColor: colors.primary,
+  backgroundColor: '#eef3ff',
+},
+yachtCardDisabled: {
+  opacity: 0.5,
+},
+yachtImage: {
+  width: '100%',
+  height: 80,
+  backgroundColor: '#eee',
+},
+yachtName: {
+  paddingVertical: 4,
+  paddingHorizontal: 8,
+  fontSize: 14,
+  textAlign: 'center',
+},
+yachtNameActive: {
+  fontWeight: '600',
+  color: colors.primary,
 },
 
 });

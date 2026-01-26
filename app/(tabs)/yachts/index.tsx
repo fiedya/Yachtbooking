@@ -6,10 +6,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-    FlatList,
-    Image,
-    Pressable,
-    Text
+  FlatList,
+  Image,
+  Pressable,
+  Text
 } from 'react-native';
 import { useMode } from '../../providers/ModeProvider';
 
@@ -36,7 +36,8 @@ export default function YachtsScreen() {
         contentContainerStyle={theme.listPadding}
         renderItem={({ item }) => (
           <Pressable
-            style={theme.card}
+             style={[theme.card, { backgroundColor: colors.lightGrey, borderColor: colors.primary, borderWidth: 1 }]}
+            
             onPress={() =>
               router.push({
                 pathname: '/(tabs)/yachts/yacht-details',

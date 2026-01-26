@@ -20,8 +20,6 @@ import {
   View
 } from 'react-native';
 
-
-
 export default function BookScreen() {
   const user = auth().currentUser;
   const router = useRouter();
@@ -65,7 +63,6 @@ export default function BookScreen() {
   const [bookingName, setBookingName] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
 
-
   async function handleBook() {
     if (!user) return;
 
@@ -88,9 +85,7 @@ export default function BookScreen() {
     setLoading(true);
 
     try {
-
       const profile = await getUser(user.uid);
-
       let fullName = '';
 
       if (isAdmin && bookingName.trim()) {
@@ -103,7 +98,6 @@ export default function BookScreen() {
         fullName = user.phoneNumber || '';
       }
 
-
       if (isAdmin && !bookingName.trim()) {
         Alert.alert(
           'Błąd',
@@ -111,7 +105,6 @@ export default function BookScreen() {
         );
         return;
       }
-
 
       await createBooking({
         userId: user.uid,
@@ -124,15 +117,13 @@ export default function BookScreen() {
 
       Alert.alert('Sukces', 'Rezerwacja została zapisana');
       router.replace('/(tabs)/calendar');
-
-
-          } catch (e) {
-            console.error('[BOOKING ERROR]', e);
-            Alert.alert('Błąd', 'Nie udało się zapisać rezerwacji');
-          } finally {
-            setLoading(false);
-          }
-        }
+    } catch (e) {
+      console.error('[BOOKING ERROR]', e);
+      Alert.alert('Błąd', 'Nie udało się zapisać rezerwacji');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -143,7 +134,6 @@ export default function BookScreen() {
       }
     });
   }, [user?.uid]);
-
 
   useEffect(() => {
     getActiveYachts().then(data => {
@@ -173,32 +163,31 @@ export default function BookScreen() {
     }
   }, [date, startTime, endTime, yachts, yacht]);
 
-
   return (
     <View style={styles.container}>
-        <ScrollView>
-     <Stack.Screen
-            options={{
-          headerShown: true,
-          title: 'Nowa rezerwacja',
-          headerStyle: headerStyles.header,
-          headerTitleStyle: headerStyles.title
-        }}
-      />
-      {isAdmin && (
-        <View style={{ marginTop: 16 }}>
-          <Text style={styles.label}>Osoba rezerwująca</Text>
+      <ScrollView>
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            title: 'Nowa rezerwacja',
+            headerStyle: headerStyles.header,
+            headerTitleStyle: headerStyles.title
+          }}
+        />
+        {isAdmin && (
+          <View style={{ marginTop: 16 }}>
+            <Text style={styles.label}>Osoba rezerwująca</Text>
 
-          <TextInput
-            value={bookingName}
-            onChangeText={setBookingName}
-            placeholder="Imię i nazwisko"
-            style={styles.pickerButton}
-          />
-        </View>
-      )}
+            <TextInput
+              value={bookingName}
+              onChangeText={setBookingName}
+              placeholder="Imię i nazwisko"
+              style={styles.pickerButton}
+            />
+          </View>
+        )}
 
-      {/* Date */}
+        {/* Date */}
         <Text style={styles.label}>Data</Text>
 
         <Pressable
@@ -219,116 +208,114 @@ export default function BookScreen() {
           />
         )}
 
+        {/* Start */}
+        <Text style={styles.label}>Od</Text>
 
-      {/* Start */}
-      <Text style={styles.label}>Od</Text>
+        <Pressable
+          style={styles.pickerButton}
+          onPress={() => setShowStartPicker(true)}
+        >
+          <Text>
+            {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </Text>
+        </Pressable>
 
-      <Pressable
-        style={styles.pickerButton}
-        onPress={() => setShowStartPicker(true)}
-      >
-        <Text>
-          {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-        </Text>
-      </Pressable>
+        {showStartPicker && (
+          <DateTimePicker
+            value={startTime}
+            mode="time"
+            onChange={(event, selectedDate) => {
+              setShowStartPicker(false);
+              if (selectedDate) setStartTime(selectedDate);
+            }}
+          />
+        )}
 
-      {showStartPicker && (
-        <DateTimePicker
-          value={startTime}
-          mode="time"
-          onChange={(event, selectedDate) => {
-            setShowStartPicker(false);
-            if (selectedDate) setStartTime(selectedDate);
-          }}
-        />
-      )}
+        {/* End */}
+        <Text style={styles.label}>Do</Text>
 
+        <Pressable
+          style={styles.pickerButton}
+          onPress={() => setShowEndPicker(true)}
+        >
+          <Text>
+            {endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </Text>
+        </Pressable>
 
-      {/* End */}
-      <Text style={styles.label}>Do</Text>
+        {showEndPicker && (
+          <DateTimePicker
+            value={endTime}
+            mode="time"
+            onChange={(event, selectedDate) => {
+              setShowEndPicker(false);
+              if (selectedDate) setEndTime(selectedDate);
+            }}
+          />
+        )}
 
-      <Pressable
-        style={styles.pickerButton}
-        onPress={() => setShowEndPicker(true)}
-      >
-        <Text>
-          {endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-        </Text>
-      </Pressable>
+        <Text style={styles.label}>Jacht</Text>
 
-      {showEndPicker && (
-        <DateTimePicker
-          value={endTime}
-          mode="time"
-          onChange={(event, selectedDate) => {
-            setShowEndPicker(false);
-            if (selectedDate) setEndTime(selectedDate);
-          }}
-        />
-      )}
-
-  <Text style={styles.label}>Jacht</Text>
-
-  <View style={{ marginTop: 8 }}>
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-    >
-      {yachts.map(y => {
-        const selected = yacht?.id === y.id;
-        const isAvailable = !availableYachtIds.includes(y.id);
-
-        return (
-          <Pressable
-            key={y.id}
-            onPress={() => isAvailable && setYacht(y)}
-            disabled={!isAvailable}
-            style={[
-              styles.yachtCard,
-              selected && styles.yachtCardActive,
-              !isAvailable && styles.yachtCardDisabled,
-            ]}
+        <View style={{ marginTop: 8 }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
           >
-            <Image
-              source={
-                y.imageUrl
-                  ? { uri: y.imageUrl }
-                  : require('@/assets/images/yacht_placeholder.png')
-              }
-              style={[
-                styles.yachtImage,
-                !isAvailable && { opacity: 0.5 },
-              ]}
-              resizeMode="cover"
-            />
+            {yachts.map(y => {
+              const selected = yacht?.id === y.id;
+              const isAvailable = !availableYachtIds.includes(y.id);
 
-            <Text
-              style={[
-                styles.yachtName,
-                selected && styles.yachtNameActive,
-                !isAvailable && { color: '#999' },
-              ]}
-              numberOfLines={1}
-            >
-              {y.name}
+              return (
+                <Pressable
+                  key={y.id}
+                  onPress={() => isAvailable && setYacht(y)}
+                  disabled={!isAvailable}
+                  style={[
+                    styles.yachtCard,
+                    selected && styles.yachtCardActive,
+                    !isAvailable && styles.yachtCardDisabled,
+                  ]}
+                >
+                  <Image
+                    source={
+                      y.imageUrl
+                        ? { uri: y.imageUrl }
+                        : require('@/assets/images/yacht_placeholder.png')
+                    }
+                    style={[
+                      styles.yachtImage,
+                      !isAvailable && { opacity: 0.5 },
+                    ]}
+                    resizeMode="cover"
+                  />
+
+                  <Text
+                    style={[
+                      styles.yachtName,
+                      selected && styles.yachtNameActive,
+                      !isAvailable && { color: '#999' },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {y.name}
+                  </Text>
+                  {!isAvailable && (
+                    <Text style={{ fontSize: 10, color: '#cc0000', marginTop: 4, marginLeft: 8, marginBottom: 5 }}>
+                      Zajęty
+                    </Text>
+                  )}
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+
+          {yachts.length === 0 && (
+            <Text style={{ color: '#999', marginTop: 8 }}>
+              Brak dostępnych jachtów
             </Text>
-            {!isAvailable && (
-              <Text style={{ fontSize: 10, color: '#cc0000', marginTop: 4, marginLeft: 8, marginBottom: 5 }}>
-                Zajęty
-              </Text>
-            )}
-          </Pressable>
-        );
-      })}
-    </ScrollView>
-
-    {yachts.length === 0 && (
-      <Text style={{ color: '#999', marginTop: 8 }}>
-        Brak dostępnych jachtów
-      </Text>
-    )}
-  </View>
-</ScrollView>
+          )}
+        </View>
+      </ScrollView>
 
       {/* Submit */}
       <Pressable
@@ -343,7 +330,6 @@ export default function BookScreen() {
     </View>
   );
 }
-
 
 /* -----------------------------
    Styles
@@ -411,42 +397,41 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     backgroundColor: '#fafafa',
-},
-yachtCard: {
-  width: 120,
-  marginRight: 12,
-  borderRadius: 12,
-  borderWidth: 1,
-  borderColor: '#ddd',
-  backgroundColor: '#fff',
-  overflow: 'hidden',
-},
+  },
+  yachtCard: {
+    width: 120,
+    marginRight: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: '#fff',
+    overflow: 'hidden',
+  },
 
-yachtCardActive: {
-  borderColor: colors.primary,
-  backgroundColor: '#eef3ff',
-},
+  yachtCardActive: {
+    borderColor: colors.primary,
+    backgroundColor: '#eef3ff',
+  },
 
-yachtCardDisabled: {
-  opacity: 0.5,
-},
+  yachtCardDisabled: {
+    opacity: 0.5,
+  },
 
-yachtImage: {
-  width: '100%',
-  height: 80,
-  backgroundColor: '#eee',
-},
+  yachtImage: {
+    width: '100%',
+    height: 80,
+    backgroundColor: '#eee',
+  },
 
-yachtName: {
-  paddingVertical: 4,
-  paddingHorizontal: 8,
-  fontSize: 14,
-  textAlign: 'center',
-},
+  yachtName: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    fontSize: 14,
+    textAlign: 'center',
+  },
 
-yachtNameActive: {
-  fontWeight: '600',
-  color: colors.primary,
-},
-
+  yachtNameActive: {
+    fontWeight: '600',
+    color: colors.primary,
+  },
 });
