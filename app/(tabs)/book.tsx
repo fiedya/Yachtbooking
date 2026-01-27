@@ -1,8 +1,7 @@
 import { Yacht } from '@/src/entities/yacht';
 import { createBooking } from '@/src/services/booking.service';
 import { getAvailableYachtIds } from '@/src/services/calendarService';
-import { subscribeToSettings } from '@/src/services/settingsService';
-import { getUser } from '@/src/services/userService';
+import { getUser, subscribeToUser } from '@/src/services/userService';
 import { getActiveYachts } from '@/src/services/yachtService';
 import { headerStyles } from '@/src/theme/header';
 import { styles } from '@/src/theme/styles';
@@ -19,12 +18,13 @@ import {
   TextInput,
   View
 } from 'react-native';
+import { useMode } from '../providers/ModeProvider';
 
 export default function BookScreen() {
   const user = auth().currentUser;
   const router = useRouter();
   const { startDate: paramStartDate, endDate: paramEndDate } = useLocalSearchParams<{ startDate?: string; endDate?: string }>();
-
+const { mode: adminMode } = useMode();
   // Initialize dates from params if provided, otherwise use now
   const initializeDate = () => {
     if (paramStartDate) {
@@ -63,11 +63,12 @@ export default function BookScreen() {
   const [bookingName, setBookingName] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [settings, setSettings] = useState<{ usePseudonims: boolean }>({ usePseudonims: false });
-  // Subscribe to user settings
+  // Subscribe to user preferences in user doc
   useEffect(() => {
     if (!user) return;
-    const unsub = subscribeToSettings(user.uid, s => {
-      setSettings({ usePseudonims: s?.usePseudonims ?? false });
+    const unsub = subscribeToUser(user.uid, data => {
+      const prefs = data?.preferences ?? { usePseudonims: false, useYachtShortcuts: false };
+      setSettings({ usePseudonims: prefs.usePseudonims ?? false });
     });
     return unsub;
   }, [user?.uid]);
@@ -97,7 +98,7 @@ export default function BookScreen() {
       const profile = await getUser(user.uid);
       let fullName = '';
 
-      if (isAdmin && bookingName.trim()) {
+      if (adminMode === 'admin' && bookingName.trim()) {
         // admin booking for outsider
         fullName = bookingName.trim();
       } else if (profile) {
@@ -111,7 +112,7 @@ export default function BookScreen() {
         fullName = user.phoneNumber || '';
       }
 
-      if (isAdmin && !bookingName.trim()) {
+      if (adminMode === 'admin' && !bookingName.trim()) {
         Alert.alert(
           'Błąd',
           'Podaj imię i nazwisko osoby rezerwującej'
@@ -187,7 +188,7 @@ export default function BookScreen() {
             headerTitleStyle: headerStyles.title
           }}
         />
-        {isAdmin && (
+        {adminMode === 'admin' && (
           <View style={{ marginTop: 16 }}>
             <Text style={styles.label}>Osoba rezerwująca</Text>
 

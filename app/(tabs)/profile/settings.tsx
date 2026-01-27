@@ -3,7 +3,7 @@ import { subscribeToUser, updateUserPreferences } from '@/src/services/userServi
 import { colors } from '@/src/theme/colors';
 import { styles as theme } from '@/src/theme/styles';
 import { useEffect, useState } from 'react';
-import { Switch, Text, View, Alert } from 'react-native';
+import { Alert, Switch, Text, View } from 'react-native';
 
 export default function SettingsScreen() {
   const { user } = useAuth();

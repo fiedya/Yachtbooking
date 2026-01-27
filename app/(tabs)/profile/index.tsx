@@ -131,7 +131,7 @@ export default function ProfileScreen() {
 
 
   return (
-        <View style={[theme.screen, {paddingHorizontal: 16}]}>
+        <View style={[theme.screen, {paddingTop: 24, paddingHorizontal: 16}]}>
       <Stack.Screen
         options={{
           headerShown: true,

@@ -4,14 +4,13 @@ import auth from '@react-native-firebase/auth';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  Text,
-  TextInput,
-  View
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    Text,
+    TextInput,
+    View
 } from 'react-native';
-import { createOrUpdateSettings } from '../src/services/settingsService';
 import { createOrUpdateUser } from '../src/services/userService';
 
 
@@ -49,7 +48,7 @@ async function handleContinue() {
         name.trim(),
         surname.trim()
       );
-      await createOrUpdateSettings(user.uid);
+      // No need to create separate settings, preferences are in user doc
       console.log('[ONBOARDING] createOrUpdateUser & createDefaultSettings SUCCESS');
       router.replace('/post-auth');
     } catch (e) {

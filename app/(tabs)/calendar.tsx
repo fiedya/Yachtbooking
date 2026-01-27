@@ -1,4 +1,4 @@
-import { subscribeToSettings } from '@/src/services/settingsService';
+import { subscribeToUser } from '@/src/services/userService';
 import { getActiveYachts } from '@/src/services/yachtService';
 import { colors } from '@/src/theme/colors';
 import { headerStyles } from '@/src/theme/header';
@@ -145,7 +145,7 @@ const HOURS = Array.from({ length: 24 }, (_, i) => i);
 -------------------------------- */
 
 export default function CalendarScreen() {
-    // User settings state
+    // User preferences state
     const [settings, setSettings] = useState({ useYachtShortcuts: false });
 
   const router = useRouter();
@@ -157,12 +157,13 @@ export default function CalendarScreen() {
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
   const [modalUserPhoto, setModalUserPhoto] = useState<string | null>(null);
   
-    // Subscribe to user settings
+    // Subscribe to user preferences in user doc
     useEffect(() => {
       const user = auth().currentUser;
       if (!user) return;
-      const unsub = subscribeToSettings(user.uid, s => {
-        setSettings({ useYachtShortcuts: s?.useYachtShortcuts ?? false });
+      const unsub = subscribeToUser(user.uid, data => {
+        const prefs = data?.preferences ?? { usePseudonims: false, useYachtShortcuts: false };
+        setSettings({ useYachtShortcuts: prefs.useYachtShortcuts ?? false });
       });
       return unsub;
     }, []);
