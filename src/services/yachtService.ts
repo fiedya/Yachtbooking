@@ -1,3 +1,9 @@
+export async function updateYacht(id: string, data: Partial<Omit<Yacht, 'id' | 'createdAt'>>) {
+  return firestore()
+    .collection('yachts')
+    .doc(id)
+    .update(data);
+}
 // src/services/yachtService.ts
 
 import firestore from '@react-native-firebase/firestore';

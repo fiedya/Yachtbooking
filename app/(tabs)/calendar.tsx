@@ -1,5 +1,6 @@
 import { subscribeToUser } from '@/src/services/userService';
 import { getActiveYachts } from '@/src/services/yachtService';
+import { getYachtById, subscribeToYachts } from '@/src/services/yachtService';
 import { colors } from '@/src/theme/colors';
 import { headerStyles } from '@/src/theme/header';
 import { spacing } from '@/src/theme/spacing';
@@ -220,7 +221,7 @@ export default function CalendarScreen() {
 
   // Load yachts and build id->shortcut/name map
   useEffect(() => {
-    getActiveYachts().then(data => {
+    const unsub = subscribeToYachts((data) => {
       const activeYachts = data.filter(y => y.active === true);
       setYachts(activeYachts);
       // Build map for quick lookup
@@ -230,6 +231,7 @@ export default function CalendarScreen() {
       });
       setYachtMap(map);
     });
+    return unsub;
   }, []);
 
   // Filter bookings by selected yachts and admin status
