@@ -147,6 +147,7 @@ const HOURS = Array.from({ length: 24 }, (_, i) => i);
 export default function CalendarScreen() {
     // User preferences state
     const [settings, setSettings] = useState({ useYachtShortcuts: false });
+    const [yachtMap, setYachtMap] = useState<{ [id: string]: { name: string; shortcut?: string } }>({});
 
   const router = useRouter();
   const user = auth().currentUser;
@@ -217,13 +218,17 @@ export default function CalendarScreen() {
     [baseWeekStart, weekOffset]
   );
 
-  // Load yachts
+  // Load yachts and build id->shortcut/name map
   useEffect(() => {
     getActiveYachts().then(data => {
-      
-      // Filter to ensure only active yachts are shown
       const activeYachts = data.filter(y => y.active === true);
       setYachts(activeYachts);
+      // Build map for quick lookup
+      const map: { [id: string]: { name: string; shortcut?: string } } = {};
+      activeYachts.forEach(y => {
+        map[y.id] = { name: y.name, shortcut: y.shortcut };
+      });
+      setYachtMap(map);
     });
   }, []);
 
@@ -536,6 +541,9 @@ export default function CalendarScreen() {
 
                           const fontColor = getBookingFontColor(b, user?.uid);
 
+                          // Show shortcut if enabled and available
+                          const yachtInfo = yachtMap[b.yachtId] || { name: b.yachtName };
+                          const displayYacht = settings.useYachtShortcuts && yachtInfo.shortcut ? yachtInfo.shortcut : yachtInfo.name;
                           return (
                             <Pressable
                               key={b.id}
@@ -554,7 +562,7 @@ export default function CalendarScreen() {
                                     setSelectedBooking(b);
                                 }}
                             >
-                              <Text style={[theme.textXs, { fontWeight: '600', color: fontColor }]}>{b.yachtName}</Text>
+                              <Text style={[theme.textXs, { fontWeight: '600', color: fontColor }]}>{displayYacht}</Text>
                               <Text style={[theme.textXs, { color: fontColor }]}>{b.userName}</Text>
                             </Pressable>
                           );

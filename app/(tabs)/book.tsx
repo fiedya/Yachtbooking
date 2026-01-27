@@ -24,7 +24,7 @@ export default function BookScreen() {
   const user = auth().currentUser;
   const router = useRouter();
   const { startDate: paramStartDate, endDate: paramEndDate } = useLocalSearchParams<{ startDate?: string; endDate?: string }>();
-const { mode: adminMode } = useMode();
+  const { mode: adminMode } = useMode();
   // Initialize dates from params if provided, otherwise use now
   const initializeDate = () => {
     if (paramStartDate) {
@@ -100,7 +100,7 @@ const { mode: adminMode } = useMode();
 
       if (adminMode === 'admin' && bookingName.trim()) {
         // admin booking for outsider
-        fullName = bookingName.trim();
+        fullName = !bookingName.trim() ? `${profile!.name} ${profile!.surname}` : bookingName.trim();
       } else if (profile) {
         // normal user booking
         if (settings.usePseudonims && profile.pseudonim) {
@@ -112,13 +112,14 @@ const { mode: adminMode } = useMode();
         fullName = user.phoneNumber || '';
       }
 
-      if (adminMode === 'admin' && !bookingName.trim()) {
-        Alert.alert(
-          'Błąd',
-          'Podaj imię i nazwisko osoby rezerwującej'
-        );
-        return;
-      }
+      // if (adminMode === 'admin' && !bookingName.trim()) {
+      //   if(bookingName.trim() === '')
+      //   Alert.alert(
+      //     'Błąd',
+      //     'Podaj imię i nazwisko osoby rezerwującej'
+      //   );
+      //   return;
+      // }
 
       await createBooking({
         userId: user.uid,
