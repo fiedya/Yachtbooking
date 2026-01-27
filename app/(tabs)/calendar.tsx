@@ -1,3 +1,4 @@
+import { subscribeToSettings } from '@/src/services/settingsService';
 import { getActiveYachts } from '@/src/services/yachtService';
 import { colors } from '@/src/theme/colors';
 import { headerStyles } from '@/src/theme/header';
@@ -144,6 +145,18 @@ const HOURS = Array.from({ length: 24 }, (_, i) => i);
 -------------------------------- */
 
 export default function CalendarScreen() {
+    // User settings state
+    const [settings, setSettings] = useState({ useYachtShortcuts: false });
+
+    // Subscribe to user settings
+    useEffect(() => {
+      const user = auth().currentUser;
+      if (!user) return;
+      const unsub = subscribeToSettings(user.uid, s => {
+        setSettings({ useYachtShortcuts: s?.useYachtShortcuts ?? false });
+      });
+      return unsub;
+    }, []);
   const router = useRouter();
   const user = auth().currentUser;
   const { mode: adminMode } = useMode();
@@ -182,11 +195,9 @@ export default function CalendarScreen() {
   // Load yachts
   useEffect(() => {
     getActiveYachts().then(data => {
-      console.log('[CALENDAR] getActiveYachts raw data:', data);
+      
       // Filter to ensure only active yachts are shown
       const activeYachts = data.filter(y => y.active === true);
-      console.log('[CALENDAR] filtered active yachts:', activeYachts);
-      console.log('[CALENDAR] total yachts count:', activeYachts.length);
       setYachts(activeYachts);
     });
   }, []);
@@ -358,7 +369,7 @@ export default function CalendarScreen() {
                 style={{ color: colors.white }}
                 numberOfLines={1}
               >
-                {yacht.name || 'Unnamed'}
+                {settings.useYachtShortcuts && yacht.shortcut ? yacht.shortcut : (yacht.name || 'Unnamed')}
               </Text>
             </Pressable>
           );

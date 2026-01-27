@@ -12,9 +12,9 @@ import { Stack, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { User } from '../../src/entities/user';
-import { getUserPhotoUrl, subscribeToUser, updateUserProfile } from '../../src/services/userService';
-import { useMode } from '../providers/ModeProvider';
+import { User } from '../../../src/entities/user';
+import { getUserPhotoUrl, subscribeToUser, updateUserProfile } from '../../../src/services/userService';
+import { useMode } from '../../providers/ModeProvider';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -131,24 +131,33 @@ export default function ProfileScreen() {
 
 
   return (
-    <View style={theme.screenPadded}>
+        <View style={[theme.screen, {paddingHorizontal: 16}]}>
       <Stack.Screen
         options={{
           headerShown: true,
           title: 'Profil',
           headerStyle: headerStyles.header,
           headerTitleStyle: headerStyles.title,
-          headerRight: () =>
-            profile.role === 'admin' ? (
-              <Pressable onPress={toggleMode} style={headerStyles.adminButton}>
-                <Text style={headerStyles.adminButtonText}>
-                  {mode === 'admin' ? 'User' : 'Admin'}
-                </Text>
+          headerRight: () =>(
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              {profile.role === 'admin' && (
+                <Pressable onPress={toggleMode} style={headerStyles.adminButton}>
+                  <Text style={headerStyles.adminButtonText}>
+                    {mode === 'admin' ? 'User' : 'Admin'}
+                  </Text>
+                </Pressable>
+              )}
+              <Pressable
+                onPress={() => router.push('/(tabs)/profile/settings')}
+                style={{ marginLeft: 12, padding: 4 }}
+                accessibilityLabel="Ustawienia"
+              >
+                <MaterialIcons name="settings" size={26} color="#003366" />
               </Pressable>
-            ) : null,
+            </View>
+          ),
         }}
       />
-
       <ScrollView 
         showsVerticalScrollIndicator={false}
         scrollEnabled={true}

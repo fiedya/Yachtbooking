@@ -1,5 +1,11 @@
 export type UserStatus = 'to-verify' | 'verified' | 'rejected';
 
+
+export type UserPreferences = {
+  usePseudonims: boolean;
+  useYachtShortcuts: boolean;
+};
+
 export type User = {
   uid: string;                 // Firebase Auth UID (doc ID)
   phone: string;
@@ -11,4 +17,5 @@ export type User = {
   createdAt: any;
   role: 'user' | 'admin';
   status: UserStatus;
+  preferences?: UserPreferences;
 };

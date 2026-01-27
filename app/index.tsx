@@ -13,8 +13,9 @@ export default function Index() {
     );
   }
 
+  console.log('[INDEX] Current user:', user);
   if (user) {
-    return <Redirect href="/(tabs)/calendar" />;
+    return <Redirect href="/post-auth" />;
   }
 
   return <Redirect href="/auth" />;

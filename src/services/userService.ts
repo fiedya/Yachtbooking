@@ -17,6 +17,7 @@ export async function getUser(uid: string) {
   const snap = await ref.get();
   return snap.exists() ? snap.data() : null;
 }
+
 export async function createOrUpdateUser(
   uid: string,
   phone: string,
@@ -38,6 +39,10 @@ export async function createOrUpdateUser(
       status: 'to-verify',
       onboarded: true,
       createdAt: firestore.FieldValue.serverTimestamp(),
+      preferences: {
+        usePseudonims: false,
+        useYachtShortcuts: false,
+      },
     });
   } else {
     await ref.update({
@@ -71,6 +76,10 @@ export async function createUserIfMissing(
       status: 'to-verify',
       onboarded: !!(name && surname),
       createdAt: firestore.FieldValue.serverTimestamp(),
+      preferences: {
+        usePseudonims: false,
+        useYachtShortcuts: false,
+      },
     });
   } else if (name && surname) {
     await ref.update({
@@ -80,6 +89,12 @@ export async function createUserIfMissing(
     });
   }
 }
+
+  // Update user preferences
+  export async function updateUserPreferences(uid: string, preferences: Partial<{ usePseudonims: boolean; useYachtShortcuts: boolean }>) {
+    const ref = firestore().collection('users').doc(uid);
+    await ref.set({ preferences }, { merge: true });
+  }
 
 export async function updateUserProfile(
   uid: string,

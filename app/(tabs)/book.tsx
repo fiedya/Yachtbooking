@@ -1,6 +1,7 @@
 import { Yacht } from '@/src/entities/yacht';
 import { createBooking } from '@/src/services/booking.service';
 import { getAvailableYachtIds } from '@/src/services/calendarService';
+import { subscribeToSettings } from '@/src/services/settingsService';
 import { getUser } from '@/src/services/userService';
 import { getActiveYachts } from '@/src/services/yachtService';
 import { headerStyles } from '@/src/theme/header';
@@ -61,6 +62,15 @@ export default function BookScreen() {
   const [yacht, setYacht] = useState<Yacht | null>(null);
   const [bookingName, setBookingName] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [settings, setSettings] = useState<{ usePseudonims: boolean }>({ usePseudonims: false });
+  // Subscribe to user settings
+  useEffect(() => {
+    if (!user) return;
+    const unsub = subscribeToSettings(user.uid, s => {
+      setSettings({ usePseudonims: s?.usePseudonims ?? false });
+    });
+    return unsub;
+  }, [user?.uid]);
 
   async function handleBook() {
     if (!user) return;
@@ -92,7 +102,11 @@ export default function BookScreen() {
         fullName = bookingName.trim();
       } else if (profile) {
         // normal user booking
-        fullName = `${profile.name} ${profile.surname}`;
+        if (settings.usePseudonims && profile.pseudonim) {
+          fullName = profile.pseudonim;
+        } else {
+          fullName = `${profile.name} ${profile.surname}`;
+        }
       } else {
         fullName = user.phoneNumber || '';
       }

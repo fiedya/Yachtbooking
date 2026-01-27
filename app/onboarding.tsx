@@ -11,6 +11,7 @@ import {
   TextInput,
   View
 } from 'react-native';
+import { createOrUpdateSettings } from '../src/services/settingsService';
 import { createOrUpdateUser } from '../src/services/userService';
 
 
@@ -48,8 +49,8 @@ async function handleContinue() {
         name.trim(),
         surname.trim()
       );
-
-      console.log('[ONBOARDING] createOrUpdateUser SUCCESS');
+      await createOrUpdateSettings(user.uid);
+      console.log('[ONBOARDING] createOrUpdateUser & createDefaultSettings SUCCESS');
       router.replace('/post-auth');
     } catch (e) {
       console.error('[ONBOARDING] ERROR during save', e);
