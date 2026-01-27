@@ -148,6 +148,15 @@ export default function CalendarScreen() {
     // User settings state
     const [settings, setSettings] = useState({ useYachtShortcuts: false });
 
+  const router = useRouter();
+  const user = auth().currentUser;
+  const { mode: adminMode } = useMode();
+  const [mode, setMode] = useState<'week' | 'month'>('week');
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [modalUserPhoto, setModalUserPhoto] = useState<string | null>(null);
+  
     // Subscribe to user settings
     useEffect(() => {
       const user = auth().currentUser;
@@ -157,14 +166,29 @@ export default function CalendarScreen() {
       });
       return unsub;
     }, []);
-  const router = useRouter();
+
+    useEffect(() => {
   const user = auth().currentUser;
-  const { mode: adminMode } = useMode();
-  const [mode, setMode] = useState<'week' | 'month'>('week');
-  const [weekOffset, setWeekOffset] = useState(0);
-  const [bookings, setBookings] = useState<any[]>([]);
-  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
-  const [modalUserPhoto, setModalUserPhoto] = useState<string | null>(null);
+  if (!user) return;
+
+  console.log('[DEBUG] checking firestore access for user', user.uid);
+
+  firestore()
+    .collection('settings')
+    .doc(user.uid)
+    .get()
+    .then(() => console.log('[DEBUG] settings OK'))
+    .catch(e => console.log('[DEBUG] settings FAIL', e.code));
+
+  firestore()
+    .collection('bookings')
+    .limit(1)
+    .get()
+    .then(() => console.log('[DEBUG] bookings OK'))
+    .catch(e => console.log('[DEBUG] bookings FAIL', e.code));
+}, []);
+
+
 
     // Fetch user photo for modal when booking is selected
     useEffect(() => {

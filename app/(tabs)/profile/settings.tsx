@@ -3,7 +3,7 @@ import { subscribeToUser, updateUserPreferences } from '@/src/services/userServi
 import { colors } from '@/src/theme/colors';
 import { styles as theme } from '@/src/theme/styles';
 import { useEffect, useState } from 'react';
-import { Switch, Text, View } from 'react-native';
+import { Switch, Text, View, Alert } from 'react-native';
 
 export default function SettingsScreen() {
   const { user } = useAuth();
@@ -12,10 +12,13 @@ export default function SettingsScreen() {
     useYachtShortcuts: false,
   });
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
     if (!user) return;
+    console.log('[Settings] Subscribing to user', user.uid);
     const unsub = subscribeToUser(user.uid, data => {
+      console.log('[Settings] User data from Firestore', data);
       setPrefs({
         usePseudonims: data?.preferences?.usePseudonims ?? false,
         useYachtShortcuts: data?.preferences?.useYachtShortcuts ?? false,
@@ -26,8 +29,22 @@ export default function SettingsScreen() {
   }, [user]);
 
   const handleToggle = (key: 'usePseudonims' | 'useYachtShortcuts') => async (value: boolean) => {
+    console.log(`[Settings] Toggle ${key} to`, value);
     setPrefs(p => ({ ...p, [key]: value }));
-    if (user) await updateUserPreferences(user.uid, { [key]: value });
+    setUpdating(u => ({ ...u, [key]: true }));
+    try {
+      if (user) {
+        console.log('[Settings] Calling updateUserPreferences', user.uid, { [key]: value });
+        await updateUserPreferences(user.uid, { [key]: value });
+        console.log('[Settings] updateUserPreferences success');
+      }
+    } catch (e) {
+      console.log('[Settings] updateUserPreferences error', e);
+      setPrefs(p => ({ ...p, [key]: !value })); // revert
+      Alert.alert('Błąd', 'Nie udało się zapisać ustawienia. Spróbuj ponownie.');
+    } finally {
+      setUpdating(u => ({ ...u, [key]: false }));
+    }
   };
 
   if (loading) return <View style={{ flex: 1, justifyContent: 'center' }}><Text>Ładowanie…</Text></View>;
@@ -41,6 +58,7 @@ export default function SettingsScreen() {
             onValueChange={handleToggle('usePseudonims')}
             trackColor={{ false: colors.lightGrey, true: colors.primary }}
             thumbColor={prefs.usePseudonims ? colors.primary : colors.primaryLight}
+            disabled={!!updating.usePseudonims}
           />
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -50,6 +68,7 @@ export default function SettingsScreen() {
             onValueChange={handleToggle('useYachtShortcuts')}
             trackColor={{ false: colors.lightGrey, true: colors.primary }}
             thumbColor={prefs.useYachtShortcuts ? colors.primary : colors.primaryLight}
+            disabled={!!updating.useYachtShortcuts}
           />
         </View>
     </View>
