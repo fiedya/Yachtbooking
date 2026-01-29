@@ -13,6 +13,11 @@ export default function ProfileLayout() {
         options={{ title: 'Settings' }}
       />
 
+      <Stack.Screen
+        name="app-versioning"
+        options={{ title: 'App Versioning' }}
+      />
+
     </Stack>
   );
 }

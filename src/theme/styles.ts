@@ -72,9 +72,10 @@ export const styles = StyleSheet.create({
     },
 
   versionText: {
-    fontSize: 11,
+    fontSize: 14,
     color: '#999',
-    margin: 0
+    margin: 0,
+    paddingVertical: 4,
     },
 
         heroImage: {

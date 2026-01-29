@@ -131,7 +131,7 @@ export default function ProfileScreen() {
 
 
   return (
-        <View style={[theme.screen, {paddingTop: 24, paddingHorizontal: 16}]}>
+        <View style={[theme.screen, {paddingHorizontal: 16}]}>
       <Stack.Screen
         options={{
           headerShown: true,
@@ -302,9 +302,11 @@ export default function ProfileScreen() {
       </View>
 
       <View style={{ marginVertical: 2, alignItems: 'center' }}>
-        <Text style={theme.versionText}>
-          Version {Constants.expoConfig?.version}
-        </Text>
+        <Pressable onPress={() => router.push('/(tabs)/profile/app-versioning')}>
+          <Text style={[theme.versionText, { textDecorationLine: 'underline', color: theme.link.color }]}> 
+            Version {Constants.expoConfig?.version}
+          </Text>
+        </Pressable>
       </View>
 
               {/* Booking Modal (copied from calendar.tsx) */}
