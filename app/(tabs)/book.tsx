@@ -182,9 +182,7 @@ export default function BookScreen() {
   }, [user?.uid]);
 
   useEffect(() => {
-    // If editing, pass bookingId to getActiveYachts to ensure the yacht is available
-    const bookingIdToUse = edit && bookingId ? bookingId : undefined;
-    getActiveYachts(bookingIdToUse).then(data => {
+    getActiveYachts().then(data => {
       setYachts(data);
       if (data.length > 0) {
         setYacht(data[0]); // default selection

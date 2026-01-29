@@ -7,7 +7,8 @@
       "Poprawiono błędy weryfikacji numeru telefonu przy rejestracji oraz przekierowywania użytkowników po zalogowaniu",
       "Dodano ustawienia użytkownika - Uzywaj pseudonimu oraz używaj skrótów jachtów, domyślnie wyłączone",
       "Poprawiono, by Osoba rezerwująca w bookingu była edytowalna tylko przez administratorów",
-      "Dodano ekran historii wersji aplikacji otwieralny z numeru wersji w profilu."
+      "Dodano ekran historii wersji aplikacji otwieralny z numeru wersji w profilu.",
+      "Dodano edytowanie bookingów przez administratorów"
     ]
   }
 ]
