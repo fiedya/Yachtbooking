@@ -1,6 +1,5 @@
 import { subscribeToUser } from '@/src/services/userService';
-import { getActiveYachts } from '@/src/services/yachtService';
-import { getYachtById, subscribeToYachts } from '@/src/services/yachtService';
+import { subscribeToYachts } from '@/src/services/yachtService';
 import { colors } from '@/src/theme/colors';
 import { headerStyles } from '@/src/theme/header';
 import { spacing } from '@/src/theme/spacing';
@@ -591,7 +590,27 @@ export default function CalendarScreen() {
     {selectedBooking && (
       <View style={theme.modalOverlay}>
         <View style={theme.modal}>
-          <Text style={theme.title}>{selectedBooking.yachtName}</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={theme.title}>{selectedBooking.yachtName}</Text>
+            {adminMode === 'admin' && (
+              <Pressable
+                onPress={() => {
+                  setSelectedBooking(null);
+                  router.push({
+                    pathname: '/(tabs)/book',
+                    params: {
+                      bookingId: selectedBooking.id,
+                      edit: '1',
+                    },
+                  });
+                }}
+                style={{ marginLeft: 8 }}
+                accessibilityLabel="Edytuj rezerwację"
+              >
+                <Ionicons name="pencil" size={24} color={colors.primary} />
+              </Pressable>
+            )}
+          </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
             {modalUserPhoto ? (
               <Image

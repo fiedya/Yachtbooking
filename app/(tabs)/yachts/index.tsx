@@ -55,7 +55,7 @@ export default function YachtsScreen() {
       />
       {mode === 'admin' && (
         <Pressable
-          onPress={() => router.push('/(tabs)/yachts/add-edit-yacht')}
+          onPress={() => router.push('/(tabs)/yachts/add-yacht')}
           style={{
             position: 'absolute',
             right: 20,

@@ -9,7 +9,7 @@ export default function YachtsLayout() {
       />
 
       <Stack.Screen
-        name="add-edit-yacht"
+        name="add-yacht"
         options={{ title: 'Add/Edit Yacht' }}
       />
 

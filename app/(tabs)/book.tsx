@@ -7,6 +7,7 @@ import { headerStyles } from '@/src/theme/header';
 import { styles } from '@/src/theme/styles';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -23,7 +24,7 @@ import { useMode } from '../providers/ModeProvider';
 export default function BookScreen() {
   const user = auth().currentUser;
   const router = useRouter();
-  const { startDate: paramStartDate, endDate: paramEndDate } = useLocalSearchParams<{ startDate?: string; endDate?: string }>();
+  const { startDate: paramStartDate, endDate: paramEndDate, bookingId, edit } = useLocalSearchParams<{ startDate?: string; endDate?: string; bookingId?: string; edit?: string }>();
   const { mode: adminMode } = useMode();
   // Initialize dates from params if provided, otherwise use now
   const initializeDate = () => {
@@ -63,6 +64,35 @@ export default function BookScreen() {
   const [bookingName, setBookingName] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [settings, setSettings] = useState<{ usePseudonims: boolean }>({ usePseudonims: false });
+  const [editingBooking, setEditingBooking] = useState<any>(null);
+    // If in edit mode and bookingId is present, fetch booking data
+    useEffect(() => {
+      if (edit && bookingId && adminMode === 'admin') {
+        firestore().collection('bookings').doc(bookingId).get().then(doc => {
+          if (doc.exists()) {
+            const data = doc.data();
+            if (!data) return;
+            setEditingBooking({ ...data, id: doc.id });
+            // Pre-fill form fields
+            setBookingName(data.userName || '');
+            if (data.start && typeof data.start.toDate === 'function') {
+              setDate(data.start.toDate());
+              setStartTime(data.start.toDate());
+            }
+            if (data.end && typeof data.end.toDate === 'function') {
+              setEndTime(data.end.toDate());
+            }
+            if (data.yachtId && data.yachtName) {
+              setYacht({
+                id: data.yachtId,
+                name: data.yachtName,
+                // fallback for imageUrl, etc. will be handled by yacht list
+              } as Yacht);
+            }
+          }
+        });
+      }
+    }, [edit, bookingId, adminMode]);
   // Subscribe to user preferences in user doc
   useEffect(() => {
     if (!user) return;
@@ -99,10 +129,8 @@ export default function BookScreen() {
       let fullName = '';
 
       if (adminMode === 'admin' && bookingName.trim()) {
-        // admin booking for outsider
-        fullName = !bookingName.trim() ? `${profile!.name} ${profile!.surname}` : bookingName.trim();
+        fullName = bookingName.trim();
       } else if (profile) {
-        // normal user booking
         if (settings.usePseudonims && profile.pseudonim) {
           fullName = profile.pseudonim;
         } else {
@@ -112,25 +140,28 @@ export default function BookScreen() {
         fullName = user.phoneNumber || '';
       }
 
-      // if (adminMode === 'admin' && !bookingName.trim()) {
-      //   if(bookingName.trim() === '')
-      //   Alert.alert(
-      //     'Błąd',
-      //     'Podaj imię i nazwisko osoby rezerwującej'
-      //   );
-      //   return;
-      // }
-
-      await createBooking({
-        userId: user.uid,
-        userName: fullName,
-        yachtId: yacht.id,
-        yachtName: yacht.name,
-        start,
-        end,
-      });
-
-      Alert.alert('Sukces', 'Rezerwacja została zapisana');
+      if (edit && bookingId && adminMode === 'admin') {
+        // Update existing booking
+        await firestore().collection('bookings').doc(bookingId).update({
+          userName: fullName,
+          yachtId: yacht.id,
+          yachtName: yacht.name,
+          start,
+          end,
+        });
+        Alert.alert('Sukces', 'Rezerwacja została zaktualizowana');
+      } else {
+        // New booking
+        await createBooking({
+          userId: user.uid,
+          userName: fullName,
+          yachtId: yacht.id,
+          yachtName: yacht.name,
+          start,
+          end,
+        });
+        Alert.alert('Sukces', 'Rezerwacja została zapisana');
+      }
       router.replace('/(tabs)/calendar');
     } catch (e) {
       console.error('[BOOKING ERROR]', e);
@@ -151,13 +182,15 @@ export default function BookScreen() {
   }, [user?.uid]);
 
   useEffect(() => {
-    getActiveYachts().then(data => {
+    // If editing, pass bookingId to getActiveYachts to ensure the yacht is available
+    const bookingIdToUse = edit && bookingId ? bookingId : undefined;
+    getActiveYachts(bookingIdToUse).then(data => {
       setYachts(data);
       if (data.length > 0) {
         setYacht(data[0]); // default selection
       }
     });
-  }, []);
+  }, [edit, bookingId]);
 
   useEffect(() => {
     const start = new Date(date);
@@ -167,7 +200,8 @@ export default function BookScreen() {
     end.setHours(endTime.getHours(), endTime.getMinutes(), 0, 0);
 
     if (end > start) {
-      getAvailableYachtIds(start, end).then(busyIds => {
+      const editingId = edit && bookingId ? bookingId : undefined;
+      getAvailableYachtIds(start, end, editingId).then(busyIds => {
         setAvailableYachtIds(busyIds);
         // If current yacht becomes unavailable, select another one
         if (yacht && busyIds.includes(yacht.id)) {
@@ -192,7 +226,6 @@ export default function BookScreen() {
         {adminMode === 'admin' && (
           <View style={{ marginTop: 16 }}>
             <Text style={styles.label}>Osoba rezerwująca</Text>
-
             <TextInput
               value={bookingName}
               onChangeText={setBookingName}
@@ -201,17 +234,14 @@ export default function BookScreen() {
             />
           </View>
         )}
-
         {/* Date */}
         <Text style={styles.label}>Data</Text>
-
         <Pressable
           style={styles.pickerButton}
           onPress={() => setShowDatePicker(true)}
         >
           <Text>{date.toLocaleDateString()}</Text>
         </Pressable>
-
         {showDatePicker && (
           <DateTimePicker
             value={date}
@@ -222,10 +252,8 @@ export default function BookScreen() {
             }}
           />
         )}
-
         {/* Start */}
         <Text style={styles.label}>Od</Text>
-
         <Pressable
           style={styles.pickerButton}
           onPress={() => setShowStartPicker(true)}
@@ -234,7 +262,6 @@ export default function BookScreen() {
             {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </Text>
         </Pressable>
-
         {showStartPicker && (
           <DateTimePicker
             value={startTime}
@@ -245,10 +272,8 @@ export default function BookScreen() {
             }}
           />
         )}
-
         {/* End */}
         <Text style={styles.label}>Do</Text>
-
         <Pressable
           style={styles.pickerButton}
           onPress={() => setShowEndPicker(true)}
@@ -257,7 +282,6 @@ export default function BookScreen() {
             {endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </Text>
         </Pressable>
-
         {showEndPicker && (
           <DateTimePicker
             value={endTime}
@@ -268,9 +292,7 @@ export default function BookScreen() {
             }}
           />
         )}
-
         <Text style={styles.label}>Jacht</Text>
-
         <View style={{ marginTop: 8 }}>
           <ScrollView
             horizontal
@@ -279,7 +301,6 @@ export default function BookScreen() {
             {yachts.map(y => {
               const selected = yacht?.id === y.id;
               const isAvailable = !availableYachtIds.includes(y.id);
-
               return (
                 <Pressable
                   key={y.id}
@@ -303,7 +324,6 @@ export default function BookScreen() {
                     ]}
                     resizeMode="cover"
                   />
-
                   <Text
                     style={[
                       styles.yachtName,
@@ -323,7 +343,6 @@ export default function BookScreen() {
               );
             })}
           </ScrollView>
-
           {yachts.length === 0 && (
             <Text style={{ color: '#999', marginTop: 8 }}>
               Brak dostępnych jachtów
@@ -331,7 +350,6 @@ export default function BookScreen() {
           )}
         </View>
       </ScrollView>
-
       {/* Submit */}
       <Pressable
         style={[styles.submit, loading && styles.submitDisabled]}

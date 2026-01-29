@@ -313,7 +313,27 @@ export default function ProfileScreen() {
       {selectedBooking && (
         <View style={theme.modalOverlay}>
           <View style={theme.modal}>
-            <Text style={theme.title}>{selectedBooking.yachtName}</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={theme.title}>{selectedBooking.yachtName}</Text>
+              {profile?.role === 'admin' && (
+                <Pressable
+                  onPress={() => {
+                    setSelectedBooking(null);
+                    router.push({
+                      pathname: '/(tabs)/book',
+                      params: {
+                        bookingId: selectedBooking.id,
+                        edit: '1',
+                      },
+                    });
+                  }}
+                  style={{ marginLeft: 8 }}
+                  accessibilityLabel="Edytuj rezerwację"
+                >
+                  <MaterialIcons name="edit" size={24} color={theme.link.color} />
+                </Pressable>
+              )}
+            </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
               {modalUserPhoto ? (
                 <Image

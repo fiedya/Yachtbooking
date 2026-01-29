@@ -3,9 +3,11 @@
     "version": "0.0.4",
     "date": "2026-01-29",
     "notes": [
-      "Dodano ekran historii wersji aplikacji.",
-      "Przycisk wersji w profilu otwiera szczegóły zmian.",
-      "Poprawiono sortowanie wersji (najnowsza na górze)."
+      "Poprawiono wygląd bookingów i kalendarza (zdjęcie uzytkownika, stylowanie okien)",
+      "Poprawiono błędy weryfikacji numeru telefonu przy rejestracji oraz przekierowywania użytkowników po zalogowaniu",
+      "Dodano ustawienia użytkownika - Uzywaj pseudonimu oraz używaj skrótów jachtów, domyślnie wyłączone",
+      "Poprawiono, by Osoba rezerwująca w bookingu była edytowalna tylko przez administratorów",
+      "Dodano ekran historii wersji aplikacji otwieralny z numeru wersji w profilu."
     ]
   }
 ]
