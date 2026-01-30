@@ -1,11 +1,10 @@
-import * as ImagePicker from 'expo-image-picker';
+import * as ImagePicker from "expo-image-picker";
 
 export async function pickImageFromGallery(): Promise<string | null> {
-  const { status } =
-    await ImagePicker.requestMediaLibraryPermissionsAsync();
+  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-  if (status !== 'granted') {
-    alert('Brak dostępu do galerii');
+  if (status !== "granted") {
+    alert("Brak dostępu do galerii");
     return null;
   }
 

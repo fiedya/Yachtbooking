@@ -1,7 +1,7 @@
 // app/providers/ModeProvider.tsx
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState } from "react";
 
-type Mode = 'user' | 'admin';
+type Mode = "user" | "admin";
 
 type ModeContextType = {
   mode: Mode;
@@ -12,10 +12,10 @@ type ModeContextType = {
 const ModeContext = createContext<ModeContextType | null>(null);
 
 export function ModeProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setMode] = useState<Mode>('user');
+  const [mode, setMode] = useState<Mode>("user");
 
   function toggleMode() {
-    setMode(prev => (prev === 'admin' ? 'user' : 'admin'));
+    setMode((prev) => (prev === "admin" ? "user" : "admin"));
   }
 
   return (
@@ -28,7 +28,7 @@ export function ModeProvider({ children }: { children: React.ReactNode }) {
 export function useMode() {
   const ctx = useContext(ModeContext);
   if (!ctx) {
-    throw new Error('useMode must be used inside ModeProvider');
+    throw new Error("useMode must be used inside ModeProvider");
   }
   return ctx;
 }

@@ -1,7 +1,7 @@
-import { headerStyles } from '@/src/theme/header';
-import { styles as theme } from '@/src/theme/styles';
-import { Stack } from 'expo-router';
-import { View } from 'react-native';
+import { headerStyles } from "@/src/theme/header";
+import { styles as theme } from "@/src/theme/styles";
+import { Stack } from "expo-router";
+import { View } from "react-native";
 
 export default function NewsScreen() {
   return (
@@ -9,11 +9,11 @@ export default function NewsScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Informacje',
+          title: "Informacje",
           headerStyle: headerStyles.header,
-          headerTitleStyle: headerStyles.title
+          headerTitleStyle: headerStyles.title,
         }}
       />
-      </View>
+    </View>
   );
 }

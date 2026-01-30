@@ -1,15 +1,15 @@
-import { Yacht } from '@/src/entities/yacht';
-import { createBooking } from '@/src/services/booking.service';
-import { getAvailableYachtIds } from '@/src/services/calendarService';
-import { getUser, subscribeToUser } from '@/src/services/userService';
-import { getActiveYachts } from '@/src/services/yachtService';
-import { headerStyles } from '@/src/theme/header';
-import { styles } from '@/src/theme/styles';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { Yacht } from "@/src/entities/yacht";
+import { createBooking } from "@/src/services/booking.service";
+import { getAvailableYachtIds } from "@/src/services/calendarService";
+import { getUser, subscribeToUser } from "@/src/services/userService";
+import { getActiveYachts } from "@/src/services/yachtService";
+import { headerStyles } from "@/src/theme/header";
+import { styles } from "@/src/theme/styles";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Image,
@@ -17,69 +17,80 @@ import {
   ScrollView,
   Text,
   TextInput,
-  View
-} from 'react-native';
-import { useMode } from '../providers/ModeProvider';
+  View,
+} from "react-native";
+import { useMode } from "../providers/ModeProvider";
 
 export default function BookScreen() {
   const user = auth().currentUser;
   const router = useRouter();
-  const { startDate: paramStartDate, endDate: paramEndDate, bookingId, edit } = useLocalSearchParams<{ startDate?: string; endDate?: string; bookingId?: string; edit?: string }>();
+  const {
+    startDate: paramStartDate,
+    endDate: paramEndDate,
+    bookingId,
+    edit,
+  } = useLocalSearchParams<{
+    startDate?: string;
+    endDate?: string;
+    bookingId?: string;
+    edit?: string;
+  }>();
   const { mode: adminMode } = useMode();
   // Initialize dates from params if provided, otherwise use now
-  const initializeDate = () => {
-    if (paramStartDate) {
-      return new Date(paramStartDate);
-    }
-    return new Date();
-  };
-
-  const initializeStartTime = () => {
-    if (paramStartDate) {
-      return new Date(paramStartDate);
-    }
-    return new Date();
-  };
-
-  const initializeEndTime = () => {
-    if (paramEndDate) {
-      return new Date(paramEndDate);
-    }
-    const end = new Date();
-    end.setHours(end.getHours() + 1);
-    return end;
-  };
+  // Helper to extract date and time from ISO string
+  const getDatePart = (iso?: string) => (iso ? new Date(iso) : new Date());
+  const getTimePart = (iso?: string) => (iso ? new Date(iso) : new Date());
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
 
-  const [date, setDate] = useState(initializeDate());
-  const [startTime, setStartTime] = useState(initializeStartTime());
-  const [endTime, setEndTime] = useState(initializeEndTime());
+  // If params provided, use them to prefill fields
+  const [date, setDate] = useState(() => getDatePart(paramStartDate));
+  const [startTime, setStartTime] = useState(() => getTimePart(paramStartDate));
+  const [endTime, setEndTime] = useState(() => getTimePart(paramEndDate));
+
   const [loading, setLoading] = useState(false);
   const [yachts, setYachts] = useState<Yacht[]>([]);
   const [availableYachtIds, setAvailableYachtIds] = useState<string[]>([]);
   const [yacht, setYacht] = useState<Yacht | null>(null);
-  const [bookingName, setBookingName] = useState('');
+  const [bookingName, setBookingName] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
-  const [settings, setSettings] = useState<{ usePseudonims: boolean }>({ usePseudonims: false });
+  const [settings, setSettings] = useState<{ usePseudonims: boolean }>({
+    usePseudonims: false,
+  });
   const [editingBooking, setEditingBooking] = useState<any>(null);
-    // If in edit mode and bookingId is present, fetch booking data
-    useEffect(() => {
-      if (edit && bookingId && adminMode === 'admin') {
-        firestore().collection('bookings').doc(bookingId).get().then(doc => {
+
+  // Update fields if navigation params change (e.g., user clicks a new slot)
+  useEffect(() => {
+    if (paramStartDate) {
+      const d = new Date(paramStartDate);
+      setDate(d);
+      setStartTime(d);
+    }
+    if (paramEndDate) {
+      setEndTime(new Date(paramEndDate));
+    }
+  }, [paramStartDate, paramEndDate]);
+
+  useEffect(() => {
+    if (edit && bookingId && adminMode === "admin") {
+      firestore()
+        .collection("bookings")
+        .doc(bookingId)
+        .get()
+        .then((doc) => {
           if (doc.exists()) {
             const data = doc.data();
             if (!data) return;
             setEditingBooking({ ...data, id: doc.id });
             // Pre-fill form fields
-            setBookingName(data.userName || '');
-            if (data.start && typeof data.start.toDate === 'function') {
+            setBookingName(data.userName || "");
+            if (data.start && typeof data.start.toDate === "function") {
               setDate(data.start.toDate());
               setStartTime(data.start.toDate());
             }
-            if (data.end && typeof data.end.toDate === 'function') {
+            if (data.end && typeof data.end.toDate === "function") {
               setEndTime(data.end.toDate());
             }
             if (data.yachtId && data.yachtName) {
@@ -91,13 +102,16 @@ export default function BookScreen() {
             }
           }
         });
-      }
-    }, [edit, bookingId, adminMode]);
+    }
+  }, [edit, bookingId, adminMode]);
   // Subscribe to user preferences in user doc
   useEffect(() => {
     if (!user) return;
-    const unsub = subscribeToUser(user.uid, data => {
-      const prefs = data?.preferences ?? { usePseudonims: false, useYachtShortcuts: false };
+    const unsub = subscribeToUser(user.uid, (data) => {
+      const prefs = data?.preferences ?? {
+        usePseudonims: false,
+        useYachtShortcuts: false,
+      };
       setSettings({ usePseudonims: prefs.usePseudonims ?? false });
     });
     return unsub;
@@ -113,12 +127,12 @@ export default function BookScreen() {
     end.setHours(endTime.getHours(), endTime.getMinutes(), 0, 0);
 
     if (end <= start) {
-      Alert.alert('Błąd', 'Godzina zakończenia musi być późniejsza');
+      Alert.alert("Błąd", "Godzina zakończenia musi być późniejsza");
       return;
     }
 
     if (!yacht) {
-      Alert.alert('Błąd', 'Nie wybrano jachtu');
+      Alert.alert("Błąd", "Nie wybrano jachtu");
       return;
     }
 
@@ -126,9 +140,9 @@ export default function BookScreen() {
 
     try {
       const profile = await getUser(user.uid);
-      let fullName = '';
+      let fullName = "";
 
-      if (adminMode === 'admin' && bookingName.trim()) {
+      if (adminMode === "admin" && bookingName.trim()) {
         fullName = bookingName.trim();
       } else if (profile) {
         if (settings.usePseudonims && profile.pseudonim) {
@@ -137,19 +151,19 @@ export default function BookScreen() {
           fullName = `${profile.name} ${profile.surname}`;
         }
       } else {
-        fullName = user.phoneNumber || '';
+        fullName = user.phoneNumber || "";
       }
 
-      if (edit && bookingId && adminMode === 'admin') {
+      if (edit && bookingId && adminMode === "admin") {
         // Update existing booking
-        await firestore().collection('bookings').doc(bookingId).update({
+        await firestore().collection("bookings").doc(bookingId).update({
           userName: fullName,
           yachtId: yacht.id,
           yachtName: yacht.name,
           start,
           end,
         });
-        Alert.alert('Sukces', 'Rezerwacja została zaktualizowana');
+        Alert.alert("Sukces", "Rezerwacja została zaktualizowana");
       } else {
         // New booking
         await createBooking({
@@ -160,12 +174,12 @@ export default function BookScreen() {
           start,
           end,
         });
-        Alert.alert('Sukces', 'Rezerwacja została zapisana');
+        Alert.alert("Sukces", "Rezerwacja została zapisana");
       }
-      router.replace('/(tabs)/calendar');
+      router.replace("/(tabs)/calendar");
     } catch (e) {
-      console.error('[BOOKING ERROR]', e);
-      Alert.alert('Błąd', 'Nie udało się zapisać rezerwacji');
+      console.error("[BOOKING ERROR]", e);
+      Alert.alert("Błąd", "Nie udało się zapisać rezerwacji");
     } finally {
       setLoading(false);
     }
@@ -174,15 +188,15 @@ export default function BookScreen() {
   useEffect(() => {
     if (!user) return;
 
-    getUser(user.uid).then(profile => {
-      if (profile?.role === 'admin') {
+    getUser(user.uid).then((profile) => {
+      if (profile?.role === "admin") {
         setIsAdmin(true);
       }
     });
   }, [user?.uid]);
 
   useEffect(() => {
-    getActiveYachts().then(data => {
+    getActiveYachts().then((data) => {
       setYachts(data);
       if (data.length > 0) {
         setYacht(data[0]); // default selection
@@ -199,11 +213,11 @@ export default function BookScreen() {
 
     if (end > start) {
       const editingId = edit && bookingId ? bookingId : undefined;
-      getAvailableYachtIds(start, end, editingId).then(busyIds => {
+      getAvailableYachtIds(start, end, editingId).then((busyIds) => {
         setAvailableYachtIds(busyIds);
         // If current yacht becomes unavailable, select another one
         if (yacht && busyIds.includes(yacht.id)) {
-          const availableYacht = yachts.find(y => !busyIds.includes(y.id));
+          const availableYacht = yachts.find((y) => !busyIds.includes(y.id));
           setYacht(availableYacht || null);
         }
       });
@@ -216,12 +230,12 @@ export default function BookScreen() {
         <Stack.Screen
           options={{
             headerShown: true,
-            title: 'Nowa rezerwacja',
+            title: "Nowa rezerwacja",
             headerStyle: headerStyles.header,
-            headerTitleStyle: headerStyles.title
+            headerTitleStyle: headerStyles.title,
           }}
         />
-        {adminMode === 'admin' && (
+        {adminMode === "admin" && (
           <View style={{ marginTop: 16 }}>
             <Text style={styles.label}>Osoba rezerwująca</Text>
             <TextInput
@@ -257,7 +271,10 @@ export default function BookScreen() {
           onPress={() => setShowStartPicker(true)}
         >
           <Text>
-            {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {startTime.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
           </Text>
         </Pressable>
         {showStartPicker && (
@@ -277,7 +294,10 @@ export default function BookScreen() {
           onPress={() => setShowEndPicker(true)}
         >
           <Text>
-            {endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {endTime.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
           </Text>
         </Pressable>
         {showEndPicker && (
@@ -292,11 +312,8 @@ export default function BookScreen() {
         )}
         <Text style={styles.label}>Jacht</Text>
         <View style={{ marginTop: 8 }}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-          >
-            {yachts.map(y => {
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {yachts.map((y) => {
               const selected = yacht?.id === y.id;
               const isAvailable = !availableYachtIds.includes(y.id);
               return (
@@ -314,7 +331,7 @@ export default function BookScreen() {
                     source={
                       y.imageUrl
                         ? { uri: y.imageUrl }
-                        : require('@/assets/images/yacht_placeholder.png')
+                        : require("@/assets/images/yacht_placeholder.png")
                     }
                     style={[
                       styles.yachtImage,
@@ -326,14 +343,22 @@ export default function BookScreen() {
                     style={[
                       styles.yachtName,
                       selected && styles.yachtNameActive,
-                      !isAvailable && { color: '#999' },
+                      !isAvailable && { color: "#999" },
                     ]}
                     numberOfLines={1}
                   >
                     {y.name}
                   </Text>
                   {!isAvailable && (
-                    <Text style={{ fontSize: 10, color: '#cc0000', marginTop: 4, marginLeft: 8, marginBottom: 5 }}>
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        color: "#cc0000",
+                        marginTop: 4,
+                        marginLeft: 8,
+                        marginBottom: 5,
+                      }}
+                    >
                       Zajęty
                     </Text>
                   )}
@@ -342,7 +367,7 @@ export default function BookScreen() {
             })}
           </ScrollView>
           {yachts.length === 0 && (
-            <Text style={{ color: '#999', marginTop: 8 }}>
+            <Text style={{ color: "#999", marginTop: 8 }}>
               Brak dostępnych jachtów
             </Text>
           )}
@@ -355,7 +380,7 @@ export default function BookScreen() {
         disabled={loading}
       >
         <Text style={styles.submitText}>
-          {loading ? 'Zapisywanie…' : 'Zarezerwuj'}
+          {loading ? "Zapisywanie…" : "Zarezerwuj"}
         </Text>
       </Pressable>
     </View>

@@ -1,21 +1,14 @@
-import auth from '@react-native-firebase/auth';
+import auth from "@react-native-firebase/auth";
 
-export function onAuthStateChanged(
-  callback: (user: any | null) => void
-) {
+export function onAuthStateChanged(callback: (user: any | null) => void) {
   return auth().onAuthStateChanged(callback);
 }
 
-export async function signInWithPhone(
-  phoneNumber: string
-) {
+export async function signInWithPhone(phoneNumber: string) {
   return auth().signInWithPhoneNumber(phoneNumber);
 }
 
-export async function confirmCode(
-  confirmation: any,
-  code: string
-) {
+export async function confirmCode(confirmation: any, code: string) {
   return confirmation.confirm(code);
 }
 

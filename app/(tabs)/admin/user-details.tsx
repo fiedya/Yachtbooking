@@ -1,8 +1,8 @@
-import { styles as theme } from '@/src/theme/styles';
-import firestore from '@react-native-firebase/firestore';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { styles as theme } from "@/src/theme/styles";
+import firestore from "@react-native-firebase/firestore";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { Alert, Pressable, Text, View } from "react-native";
 
 type UserDetails = {
   uid: string;
@@ -21,9 +21,9 @@ export default function UserDetailsScreen() {
     if (!uid) return;
 
     const unsub = firestore()
-      .collection('users')
+      .collection("users")
       .doc(uid)
-      .onSnapshot(doc => {
+      .onSnapshot((doc) => {
         if (!doc.exists) return;
 
         const d = doc.data()!;
@@ -47,25 +47,25 @@ export default function UserDetailsScreen() {
     );
   }
 
-  function updateStatus(nextStatus: 'verified' | 'rejected') {
+  function updateStatus(nextStatus: "verified" | "rejected") {
     Alert.alert(
-      'Potwierdź',
+      "Potwierdź",
       `Na pewno chcesz oznaczyć tego użytkownika nowym statusem: ${nextStatus}?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Confirm',
-          style: 'destructive',
+          text: "Confirm",
+          style: "destructive",
           onPress: async () => {
             await firestore()
-              .collection('users')
+              .collection("users")
               .doc(user?.uid)
               .update({ status: nextStatus });
 
             router.back();
           },
         },
-      ]
+      ],
     );
   }
 
@@ -82,19 +82,19 @@ export default function UserDetailsScreen() {
         <Text style={theme.textPrimary}>{user.status}</Text>
       </View>
 
-      {user.status !== 'verified' && (
+      {user.status !== "verified" && (
         <Pressable
           style={[theme.button, { marginBottom: 12 }]}
-          onPress={() => updateStatus('verified')}
+          onPress={() => updateStatus("verified")}
         >
           <Text style={theme.buttonText}>Przyjmij</Text>
         </Pressable>
       )}
 
-      {user.status !== 'rejected' && (
+      {user.status !== "rejected" && (
         <Pressable
           style={[theme.button, theme.buttonDanger]}
-          onPress={() => updateStatus('rejected')}
+          onPress={() => updateStatus("rejected")}
         >
           <Text style={theme.buttonText}>Odrzuć</Text>
         </Pressable>

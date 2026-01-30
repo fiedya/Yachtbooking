@@ -1,6 +1,6 @@
-import { AuthProvider } from '@/app/providers/AuthProvider';
-import { Stack } from 'expo-router';
-import { ModeProvider } from './providers/ModeProvider';
+import { AuthProvider } from "@/app/providers/AuthProvider";
+import { Stack } from "expo-router";
+import { ModeProvider } from "./providers/ModeProvider";
 
 export default function RootLayout() {
   return (

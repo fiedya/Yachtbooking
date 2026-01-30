@@ -1,4 +1,4 @@
-export type YachtStatus = 'available' | 'maintenance' | 'disabled';
+export type YachtStatus = "available" | "maintenance" | "disabled";
 
 // export type YachtType =
 //   | 'sailboat'

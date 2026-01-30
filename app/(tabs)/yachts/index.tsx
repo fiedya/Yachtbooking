@@ -1,17 +1,12 @@
-import { Yacht } from '@/src/entities/yacht';
-import { subscribeToYachts } from '@/src/services/yachtService';
-import { colors } from '@/src/theme/colors';
-import { styles as theme } from '@/src/theme/styles';
-import { Ionicons } from '@expo/vector-icons';
-import { router, Stack } from 'expo-router';
-import { useEffect, useState } from 'react';
-import {
-  FlatList,
-  Image,
-  Pressable,
-  Text
-} from 'react-native';
-import { useMode } from '../../providers/ModeProvider';
+import { Yacht } from "@/src/entities/yacht";
+import { subscribeToYachts } from "@/src/services/yachtService";
+import { colors } from "@/src/theme/colors";
+import { styles as theme } from "@/src/theme/styles";
+import { Ionicons } from "@expo/vector-icons";
+import { router, Stack } from "expo-router";
+import { useEffect, useState } from "react";
+import { FlatList, Image, Pressable, Text } from "react-native";
+import { useMode } from "../../providers/ModeProvider";
 
 export default function YachtsScreen() {
   const [yachts, setYachts] = useState<Yacht[]>([]);
@@ -26,7 +21,7 @@ export default function YachtsScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Jachty',
+          title: "Jachty",
         }}
       />
 
@@ -36,36 +31,39 @@ export default function YachtsScreen() {
         contentContainerStyle={theme.listPadding}
         renderItem={({ item }) => (
           <Pressable
-             style={[theme.card, { backgroundColor: colors.lightGrey, borderColor: colors.primary, borderWidth: 1 }]}
-            
+            style={[
+              theme.card,
+              {
+                backgroundColor: colors.lightGrey,
+                borderColor: colors.primary,
+                borderWidth: 1,
+              },
+            ]}
             onPress={() =>
               router.push({
-                pathname: '/(tabs)/yachts/yacht-details',
+                pathname: "/(tabs)/yachts/yacht-details",
                 params: { id: item.id },
               })
             }
           >
-            <Image
-              source={{ uri: item.imageUrl }}
-              style={theme.cardImage}
-            />
+            <Image source={{ uri: item.imageUrl }} style={theme.cardImage} />
             <Text style={theme.cardTitle}>{item.name}</Text>
           </Pressable>
         )}
       />
-      {mode === 'admin' && (
+      {mode === "admin" && (
         <Pressable
-          onPress={() => router.push('/(tabs)/yachts/add-yacht')}
+          onPress={() => router.push("/(tabs)/yachts/add-yacht")}
           style={{
-            position: 'absolute',
+            position: "absolute",
             right: 20,
             bottom: 20,
             width: 56,
             height: 56,
             borderRadius: 28,
             backgroundColor: colors.primary,
-            alignItems: 'center',
-            justifyContent: 'center',
+            alignItems: "center",
+            justifyContent: "center",
             elevation: 4,
           }}
         >

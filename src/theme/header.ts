@@ -1,8 +1,8 @@
-import { colors } from './colors';
+import { colors } from "./colors";
 
 export const headerStyles = {
   header: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   title: {
     fontSize: 20,
@@ -14,7 +14,7 @@ export const headerStyles = {
   },
   adminButtonText: {
     fontSize: 14,
-    fontWeight: '600' as const,
+    fontWeight: "600" as const,
     color: colors.primary,
   },
 };

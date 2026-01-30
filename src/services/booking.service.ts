@@ -1,4 +1,4 @@
-import firestore from '@react-native-firebase/firestore';
+import firestore from "@react-native-firebase/firestore";
 
 export async function createBooking(params: {
   userId: string;
@@ -9,7 +9,7 @@ export async function createBooking(params: {
   end: Date;
 }) {
   return firestore()
-    .collection('bookings')
+    .collection("bookings")
     .add({
       userId: params.userId,
       userName: params.userName,
@@ -17,7 +17,7 @@ export async function createBooking(params: {
       yachtName: params.yachtName,
       start: firestore.Timestamp.fromDate(params.start),
       end: firestore.Timestamp.fromDate(params.end),
-      status: 'pending',
+      status: "pending",
       createdAt: firestore.FieldValue.serverTimestamp(),
     });
 }

@@ -24,9 +24,7 @@
       "output": "static",
       "favicon": "./assets/images/icon.png"
     },
-    "plugins": [
-      "@react-native-community/datetimepicker"
-    ],
+    "plugins": ["@react-native-community/datetimepicker"],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
@@ -45,6 +43,5 @@
     "runtimeVersion": {
       "policy": "appVersion"
     }
-    
   }
 }

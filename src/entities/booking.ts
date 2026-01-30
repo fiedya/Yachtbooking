@@ -1,4 +1,3 @@
-
 export type Booking = {
   id: string;
   userId: string;
@@ -7,6 +6,6 @@ export type Booking = {
   yachtName: string;
   start: any;
   end: any;
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
   createdAt: any;
 };

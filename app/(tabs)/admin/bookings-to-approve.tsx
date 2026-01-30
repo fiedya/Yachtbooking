@@ -1,9 +1,9 @@
-import { styles as theme } from '@/src/theme/styles';
-import firestore from '@react-native-firebase/firestore';
-import dayjs from 'dayjs';
-import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { FlatList, Pressable, Text, View } from 'react-native';
+import { styles as theme } from "@/src/theme/styles";
+import firestore from "@react-native-firebase/firestore";
+import dayjs from "dayjs";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { FlatList, Pressable, Text, View } from "react-native";
 
 type BookingRow = {
   id: string;
@@ -21,17 +21,17 @@ export default function BookingsToApproveScreen() {
 
   useEffect(() => {
     const unsub = firestore()
-      .collection('bookings')
-      .where('status', '==', 'pending')
-      .orderBy('start', 'asc')
+      .collection("bookings")
+      .where("status", "==", "pending")
+      .orderBy("start", "asc")
       .onSnapshot(
-        snapshot => {
+        (snapshot) => {
           if (!snapshot) {
-            console.log('[BOOKINGS TO APPROVE] snapshot is null');
+            console.log("[BOOKINGS TO APPROVE] snapshot is null");
             return;
           }
 
-          const data = snapshot.docs.map(doc => {
+          const data = snapshot.docs.map((doc) => {
             const d = doc.data();
             return {
               id: doc.id,
@@ -46,9 +46,12 @@ export default function BookingsToApproveScreen() {
           setBookings(data);
           setLoading(false);
         },
-        error => {
-          console.error('[BOOKINGS TO APPROVE] snapshot error:', error?.message ?? error);
-        }
+        (error) => {
+          console.error(
+            "[BOOKINGS TO APPROVE] snapshot error:",
+            error?.message ?? error,
+          );
+        },
       );
 
     return unsub;
@@ -59,12 +62,12 @@ export default function BookingsToApproveScreen() {
       <FlatList
         contentContainerStyle={theme.listPadding}
         data={bookings}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <Pressable
             onPress={() =>
               router.push({
-                pathname: '/(tabs)/admin/booking-details',
+                pathname: "/(tabs)/admin/booking-details",
                 params: { bookingId: item.id },
               })
             }
@@ -73,7 +76,8 @@ export default function BookingsToApproveScreen() {
               <Text style={theme.textPrimary}>{item.yachtName}</Text>
               <Text style={theme.textSecondary}>{item.userName}</Text>
               <Text style={theme.textMuted}>
-                {dayjs(item.start?.toDate?.()).format('DD MMM YYYY')} - {dayjs(item.end?.toDate?.()).format('DD MMM YYYY')}
+                {dayjs(item.start?.toDate?.()).format("DD MMM YYYY")} -{" "}
+                {dayjs(item.end?.toDate?.()).format("DD MMM YYYY")}
               </Text>
             </View>
           </Pressable>

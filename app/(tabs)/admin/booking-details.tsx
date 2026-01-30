@@ -1,10 +1,10 @@
-import { colors } from '@/src/theme/colors';
-import { styles as theme } from '@/src/theme/styles';
-import firestore from '@react-native-firebase/firestore';
-import dayjs from 'dayjs';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { colors } from "@/src/theme/colors";
+import { styles as theme } from "@/src/theme/styles";
+import firestore from "@react-native-firebase/firestore";
+import dayjs from "dayjs";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 
 /* Date helpers */
 function startOfWeek(date: Date) {
@@ -29,19 +29,14 @@ function sameDay(a: Date, b: Date) {
   );
 }
 
-function getBookingStyle(
-  booking: any,
-  day: Date
-) {
+function getBookingStyle(booking: any, day: Date) {
   const start = booking.start.toDate();
   const end = booking.end.toDate();
 
   if (!sameDay(start, day)) return null;
 
-  const startMinutes =
-    start.getHours() * 60 + start.getMinutes();
-  const endMinutes =
-    end.getHours() * 60 + end.getMinutes();
+  const startMinutes = start.getHours() * 60 + start.getMinutes();
+  const endMinutes = end.getHours() * 60 + end.getMinutes();
 
   return {
     top: (startMinutes / 60) * 36,
@@ -70,9 +65,9 @@ export default function BookingDetailsScreen() {
     if (!bookingId) return;
 
     const unsub = firestore()
-      .collection('bookings')
+      .collection("bookings")
       .doc(bookingId)
-      .onSnapshot(doc => {
+      .onSnapshot((doc) => {
         if (!doc.exists) return;
 
         const d = doc.data()!;
@@ -97,46 +92,47 @@ export default function BookingDetailsScreen() {
     );
   }
 
-  function updateStatus(nextStatus: 'approved' | 'rejected') {
-    const actionLabel = nextStatus === 'approved' ? 'zaakceptować' : 'odrzucić';
-    Alert.alert(
-      'Potwierdź',
-      `Na pewno chcesz ${actionLabel} ten booking?`,
-      [
-        { text: 'Anuluj', style: 'cancel' },
-        {
-          text: 'Potwierdź',
-          style: 'destructive',
-          onPress: async () => {
-            setUpdating(true);
-            try {
-              await firestore()
-                .collection('bookings')
-                .doc(booking?.id)
-                .update({ status: nextStatus });
+  function updateStatus(nextStatus: "approved" | "rejected") {
+    const actionLabel = nextStatus === "approved" ? "zaakceptować" : "odrzucić";
+    Alert.alert("Potwierdź", `Na pewno chcesz ${actionLabel} ten booking?`, [
+      { text: "Anuluj", style: "cancel" },
+      {
+        text: "Potwierdź",
+        style: "destructive",
+        onPress: async () => {
+          setUpdating(true);
+          try {
+            await firestore()
+              .collection("bookings")
+              .doc(booking?.id)
+              .update({ status: nextStatus });
 
-              router.back();
-            } finally {
-              setUpdating(false);
-            }
-          },
+            router.back();
+          } finally {
+            setUpdating(false);
+          }
         },
-      ]
-    );
+      },
+    ]);
   }
 
   const startDate = booking.start?.toDate?.();
   const endDate = booking.end?.toDate?.();
-  const isApproved = booking.status === 'approved';
-  const isRejected = booking.status === 'rejected';
+  const isApproved = booking.status === "approved";
+  const isRejected = booking.status === "rejected";
 
   // Calculate time range: 2 hours before start, 2 hours after end
   const startHour = Math.max(0, (startDate?.getHours?.() ?? 0) - 2);
-  const endHour = Math.min(24, Math.ceil((endDate?.getHours?.() ?? 0) + (endDate?.getMinutes?.() ?? 0) / 60 + 2));
+  const endHour = Math.min(
+    24,
+    Math.ceil(
+      (endDate?.getHours?.() ?? 0) + (endDate?.getMinutes?.() ?? 0) / 60 + 2,
+    ),
+  );
 
   return (
-    <ScrollView 
-      style={theme.screenPadded} 
+    <ScrollView
+      style={theme.screenPadded}
       showsVerticalScrollIndicator={true}
       contentContainerStyle={{ paddingBottom: 80 }}
     >
@@ -148,22 +144,33 @@ export default function BookingDetailsScreen() {
       <View style={{ marginVertical: 24 }}>
         <Text style={theme.textMuted}>Daty rezerwacji</Text>
         <Text style={theme.textPrimary}>
-          {dayjs(startDate).format('DD MMM YYYY HH:mm')} - {dayjs(endDate).format('DD MMM YYYY HH:mm')}
+          {dayjs(startDate).format("DD MMM YYYY HH:mm")} -{" "}
+          {dayjs(endDate).format("DD MMM YYYY HH:mm")}
         </Text>
       </View>
 
       {/* Mini Calendar - Time Grid (matching main calendar style) */}
       {startDate && endDate && (
-        <View style={{ marginVertical: 16, borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: colors.border }}>
-        <View style={{ position: 'relative' }}>
+        <View
+          style={{
+            marginVertical: 16,
+            borderRadius: 8,
+            overflow: "hidden",
+            borderWidth: 1,
+            borderColor: colors.border,
+          }}
+        >
+          <View style={{ position: "relative" }}>
             <ScrollView scrollEventThrottle={16}>
               {/* Days header */}
               <View style={[theme.gridRow]}>
-                <View style={[
-                  theme.gridCellCenter,
-                  theme.gridBorderRight,
-                  { width: 40 },
-                ]} />
+                <View
+                  style={[
+                    theme.gridCellCenter,
+                    theme.gridBorderRight,
+                    { width: 40 },
+                  ]}
+                />
                 {Array.from({ length: 7 }, (_, dayIndex) => {
                   const dayDate = addDays(startOfWeek(startDate), dayIndex);
 
@@ -179,11 +186,23 @@ export default function BookingDetailsScreen() {
                         isBookingDay && theme.highlightBackground,
                       ]}
                     >
-                      <Text style={isBookingDay ? theme.highlightText : theme.textSecondary}>
-                        {dayjs(dayDate).format('ddd')}
+                      <Text
+                        style={
+                          isBookingDay
+                            ? theme.highlightText
+                            : theme.textSecondary
+                        }
+                      >
+                        {dayjs(dayDate).format("ddd")}
                       </Text>
-                      <Text style={isBookingDay ? theme.highlightText : theme.textSecondary}>
-                        {dayjs(dayDate).format('DD')}
+                      <Text
+                        style={
+                          isBookingDay
+                            ? theme.highlightText
+                            : theme.textSecondary
+                        }
+                      >
+                        {dayjs(dayDate).format("DD")}
                       </Text>
                     </View>
                   );
@@ -195,13 +214,15 @@ export default function BookingDetailsScreen() {
                 const h = startHour + hourIndex;
                 return (
                   <View key={h} style={theme.gridRow}>
-                    <View style={[
-                      theme.gridCellTopCenter,
-                      theme.gridBorderRight,
-                      { width: 40 },
-                    ]}>
+                    <View
+                      style={[
+                        theme.gridCellTopCenter,
+                        theme.gridBorderRight,
+                        { width: 40 },
+                      ]}
+                    >
                       <Text style={theme.textXs}>
-                        {String(h).padStart(2, '0')}:00
+                        {String(h).padStart(2, "0")}:00
                       </Text>
                     </View>
 
@@ -215,7 +236,10 @@ export default function BookingDetailsScreen() {
                       const cellEnd = new Date(cellStart);
                       cellEnd.setHours(h + 1, 0, 0, 0);
 
-                      const bookingOverlapsCell = isBookingDay && startDate < cellEnd && endDate > cellStart;
+                      const bookingOverlapsCell =
+                        isBookingDay &&
+                        startDate < cellEnd &&
+                        endDate > cellStart;
 
                       return (
                         <View
@@ -224,25 +248,39 @@ export default function BookingDetailsScreen() {
                           style={[
                             theme.gridBorderRight,
                             theme.gridBorderBottom,
-                            { flex: 1, height: 36, position: 'relative', overflow: 'hidden' },
+                            {
+                              flex: 1,
+                              height: 36,
+                              position: "relative",
+                              overflow: "hidden",
+                            },
                             isBookingDay && theme.highlightBackground,
                           ]}
                         >
                           {bookingOverlapsCell && (
                             <View
                               style={{
-                                position: 'absolute',
+                                position: "absolute",
                                 left: 2,
                                 right: 2,
-                                top: h === startDate.getHours() ? (startDate.getMinutes() / 60) * 36 : 0,
-                                height: 
-                                  h === startDate.getHours() && h === endDate.getHours()
-                                    ? ((endDate.getHours() - startDate.getHours()) + (endDate.getMinutes() - startDate.getMinutes()) / 60) * 36
+                                top:
+                                  h === startDate.getHours()
+                                    ? (startDate.getMinutes() / 60) * 36
+                                    : 0,
+                                height:
+                                  h === startDate.getHours() &&
+                                  h === endDate.getHours()
+                                    ? (endDate.getHours() -
+                                        startDate.getHours() +
+                                        (endDate.getMinutes() -
+                                          startDate.getMinutes()) /
+                                          60) *
+                                      36
                                     : h === startDate.getHours()
-                                    ? 36 - (startDate.getMinutes() / 60) * 36
-                                    : h === endDate.getHours()
-                                    ? (endDate.getMinutes() / 60) * 36
-                                    : 36,
+                                      ? 36 - (startDate.getMinutes() / 60) * 36
+                                      : h === endDate.getHours()
+                                        ? (endDate.getMinutes() / 60) * 36
+                                        : 36,
                                 backgroundColor: colors.secondary,
                                 borderRadius: 4,
                                 opacity: 0.8,
@@ -271,24 +309,31 @@ export default function BookingDetailsScreen() {
       {/* Buttons */}
       {!isApproved && (
         <Pressable
-          style={[theme.button, { marginBottom: 12, opacity: updating ? 0.5 : 1 }]}
-          onPress={() => updateStatus('approved')}
+          style={[
+            theme.button,
+            { marginBottom: 12, opacity: updating ? 0.5 : 1 },
+          ]}
+          onPress={() => updateStatus("approved")}
           disabled={updating}
         >
           <Text style={theme.buttonText}>
-            {updating ? 'Przetwarzanie...' : 'Akceptuj'}
+            {updating ? "Przetwarzanie..." : "Akceptuj"}
           </Text>
         </Pressable>
       )}
 
       {!isRejected && (
         <Pressable
-          style={[theme.button, theme.buttonDanger, { opacity: updating ? 0.5 : 1 }]}
-          onPress={() => updateStatus('rejected')}
+          style={[
+            theme.button,
+            theme.buttonDanger,
+            { opacity: updating ? 0.5 : 1 },
+          ]}
+          onPress={() => updateStatus("rejected")}
           disabled={updating}
         >
           <Text style={theme.buttonDangerText}>
-            {updating ? 'Przetwarzanie...' : 'Odrzuć'}
+            {updating ? "Przetwarzanie..." : "Odrzuć"}
           </Text>
         </Pressable>
       )}

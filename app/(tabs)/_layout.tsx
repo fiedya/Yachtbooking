@@ -1,12 +1,11 @@
-import { User } from '@/src/entities/user';
-import { subscribeToUser } from '@/src/services/userService';
-import { colors } from '@/src/theme/colors';
-import { Ionicons } from '@expo/vector-icons';
-import auth from '@react-native-firebase/auth';
-import { Tabs } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { useMode } from '../providers/ModeProvider';
-
+import { User } from "@/src/entities/user";
+import { subscribeToUser } from "@/src/services/userService";
+import { colors } from "@/src/theme/colors";
+import { Ionicons } from "@expo/vector-icons";
+import auth from "@react-native-firebase/auth";
+import { Tabs } from "expo-router";
+import { useEffect, useState } from "react";
+import { useMode } from "../providers/ModeProvider";
 
 export default function TabsLayout() {
   const { mode } = useMode();
@@ -18,13 +17,12 @@ export default function TabsLayout() {
   useEffect(() => {
     if (!user) return;
 
-    const unsub = subscribeToUser(user.uid, data => {
+    const unsub = subscribeToUser(user.uid, (data) => {
       setProfile(data);
     });
 
     return unsub;
   }, [user?.uid]);
-
 
   return (
     <Tabs
@@ -80,20 +78,17 @@ export default function TabsLayout() {
         }}
       />
 
-
-    <Tabs.Screen
-      name="admin"
-      options={{
-        title: 'Admin',
-        href:
-          profile?.role === 'admin' && mode === 'admin'
-            ? undefined
-            : null,
-        tabBarIcon: ({ color, size }) => (
+      <Tabs.Screen
+        name="admin"
+        options={{
+          title: "Admin",
+          href:
+            profile?.role === "admin" && mode === "admin" ? undefined : null,
+          tabBarIcon: ({ color, size }) => (
             <Ionicons name="key-outline" size={size} color={color} />
           ),
-      }}
-    />
+        }}
+      />
     </Tabs>
   );
 }
