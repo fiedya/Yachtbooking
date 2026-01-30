@@ -36,7 +36,7 @@ export async function createOrUpdateUser(
       description: "",
       photoUrl: null,
       role: "user",
-      status: "to-verify",
+      status: 0, // UserStatus.ToVerify
       onboarded: true,
       createdAt: firestore.FieldValue.serverTimestamp(),
       preferences: {
@@ -72,7 +72,7 @@ export async function createUserIfMissing(
       pseudonim: "",
       photoUrl: null,
       role: "user",
-      status: "to-verify",
+      status: 0, // UserStatus.ToVerify
       onboarded: !!(name && surname),
       createdAt: firestore.FieldValue.serverTimestamp(),
       preferences: {

@@ -29,29 +29,39 @@ export default function AppVersioningScreen() {
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
       <Stack.Screen options={{ title: "Historia wersji" }} />
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.header}>Historia wersji aplikacji</Text>
         <Text style={styles.currentVersion}>
           Aktualna wersja: {Constants.expoConfig?.version}
         </Text>
         {error && <Text style={styles.error}>{error}</Text>}
-        {versions.map((v, idx) => (
-          <View key={v.version} style={styles.card}>
-            <Text style={styles.version}>
-              v{v.version} <Text style={styles.date}>({v.date})</Text>
-            </Text>
-            {Array.isArray(v.notes) ? (
-              <View style={styles.notesList}>
-                {v.notes.map((note: string, i: number) => (
-                  <Text key={i} style={styles.noteItem}>
-                    • {note}
-                  </Text>
-                ))}
-              </View>
-            ) : (
-              <Text style={styles.noteItem}>{v.notes}</Text>
-            )}
-          </View>
-        ))}
+        {versions.map((v, idx) => {
+          // Remove (aktualna) if present for comparison
+          const cleanVersion = v.version.replace(/\s*\(aktualna\)/, "");
+          const isCurrent = cleanVersion === Constants.expoConfig?.version;
+          return (
+            <View
+              key={v.version}
+              style={[
+                styles.card,
+                isCurrent && { borderWidth: 2, borderColor: '#FF7A00' },
+              ]}
+            >
+              <Text style={styles.version}>
+                v{v.version} <Text style={styles.date}>({v.date})</Text>
+              </Text>
+              {Array.isArray(v.notes) ? (
+                <View style={styles.notesList}>
+                  {v.notes.map((note: string, i: number) => (
+                    <Text key={i} style={styles.noteItem}>
+                      • {note}
+                    </Text>
+                  ))}
+                </View>
+              ) : (
+                <Text style={styles.noteItem}>{v.notes}</Text>
+              )}
+            </View>
+          );
+        })}
       </ScrollView>
     </View>
   );

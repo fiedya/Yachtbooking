@@ -1,3 +1,4 @@
+import { UserStatus } from "@/src/entities/user";
 import { styles as theme } from "@/src/theme/styles";
 import firestore from "@react-native-firebase/firestore";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -9,7 +10,7 @@ type UserDetails = {
   name: string;
   surname: string;
   phone: string;
-  status: string;
+  status: UserStatus;
 };
 
 export default function UserDetailsScreen() {
@@ -47,7 +48,7 @@ export default function UserDetailsScreen() {
     );
   }
 
-  function updateStatus(nextStatus: "verified" | "rejected") {
+  function updateStatus(nextStatus: UserStatus.Verified | UserStatus.Rejected) {
     Alert.alert(
       "Potwierdź",
       `Na pewno chcesz oznaczyć tego użytkownika nowym statusem: ${nextStatus}?`,
@@ -82,19 +83,19 @@ export default function UserDetailsScreen() {
         <Text style={theme.textPrimary}>{user.status}</Text>
       </View>
 
-      {user.status !== "verified" && (
+      {user.status !== 1 && (
         <Pressable
           style={[theme.button, { marginBottom: 12 }]}
-          onPress={() => updateStatus("verified")}
+          onPress={() => updateStatus(UserStatus.Verified)}
         >
           <Text style={theme.buttonText}>Przyjmij</Text>
         </Pressable>
       )}
 
-      {user.status !== "rejected" && (
+      {user.status !== 2 && (
         <Pressable
           style={[theme.button, theme.buttonDanger]}
-          onPress={() => updateStatus("rejected")}
+          onPress={() => updateStatus(UserStatus.Rejected)}
         >
           <Text style={theme.buttonText}>Odrzuć</Text>
         </Pressable>

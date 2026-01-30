@@ -1,3 +1,5 @@
+import { UserStatus } from "@/src/entities/user";
+import { getUserStatusLabel } from "@/src/helpers/enumHelper";
 import { styles as theme } from "@/src/theme/styles";
 import firestore from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
@@ -9,24 +11,15 @@ type UserRow = {
   name: string;
   surname: string;
   phone: string;
-  status: string;
+  status: UserStatus;
 };
 
-function getStatusLabel(status: string) {
-  switch (status) {
-    case "verified":
-      return "Verified";
-    case "rejected":
-      return "Rejected";
-    default:
-      return "To verify";
-  }
-}
+const getStatusLabel = getUserStatusLabel;
 
-function getStatusPillStyle(status: string) {
-  if (status === "verified") return theme.pillInvisible;
-  if (status === "to-verify") return theme.pillSecondary;
-  if (status === "rejected") return theme.pillActive;
+function getStatusPillStyle(status: UserStatus) {
+  if (status === UserStatus.Verified) return theme.pillInvisible;
+  if (status === UserStatus.ToVerify) return theme.pillSecondary;
+  if (status === UserStatus.Rejected) return theme.pillActive;
   return theme.pill;
 }
 
@@ -38,7 +31,7 @@ export default function UsersToVerifyScreen() {
   useEffect(() => {
     const unsub = firestore()
       .collection("users")
-      .where("status", "==", "to-verify")
+      .where("status", "==", UserStatus.ToVerify)
       .orderBy("surname", "desc")
       .onSnapshot(
         (snapshot) => {
@@ -54,7 +47,7 @@ export default function UsersToVerifyScreen() {
               name: d.name,
               surname: d.surname,
               phone: d.phone,
-              status: d.status,
+              status: d.status as UserStatus,
             };
           });
 

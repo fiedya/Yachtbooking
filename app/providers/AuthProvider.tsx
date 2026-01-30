@@ -31,7 +31,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         unsubscribeUserDoc = undefined;
       }
 
-      if (!u) {
+      // If user is missing or uid is undefined/null, treat as signed out
+      if (!u || !u.uid) {
         setUser(null);
         setMode("user"); // ✅ reset on logout
         setLoading(false);

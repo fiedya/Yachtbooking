@@ -29,17 +29,45 @@ export default function PostAuthScreen() {
         return;
       }
 
-      const userDoc = await getUser(user.uid);
+      try {
+        await user.reload();
+      } catch (e) {
+        console.log("[POST-AUTH] User reload failed, signing out.", e);
+        await auth().signOut();
+        router.replace("/auth");
+        return;
+      }
+      const currentUser = auth().currentUser;
+      if (!currentUser) {
+        console.log("[POST-AUTH] User no longer exists in Firebase Auth, signing out.");
+        await auth().signOut();
+        router.replace("/auth");
+        return;
+      }
+
+
+      const userDoc = await getUser(currentUser.uid);
+      if (!userDoc) {
+        console.log("[POST-AUTH] User doc missing in Firestore, routing to onboarding.");
+        router.replace("/onboarding");
+        return;
+      }
 
       console.log("[POST-AUTH] userDoc!.onboarded:", userDoc?.onboarded);
-      if (!userDoc || !userDoc.onboarded) {
+      if (!userDoc.onboarded) {
         router.replace("/onboarding");
         return;
       }
 
       console.log("[POST-AUTH] userDoc!.status:", userDoc?.status);
 
-      if (userDoc.status !== "verified") {
+
+      await auth().currentUser?.getIdToken(true);
+
+
+
+
+      if (userDoc.status === 0 /* ToVerify */) {
         router.replace("/wait-for-verification");
         return;
       }
@@ -53,6 +81,17 @@ export default function PostAuthScreen() {
     decide();
   }, [authReady]);
 
+        
+    useEffect(() => {
+      (async () => {
+        const user = auth().currentUser;
+        console.log("UID:", user?.uid);
+
+        const token = await user?.getIdTokenResult(true);
+        console.log("TOKEN CLAIMS:", token?.claims);
+      })();
+    }, []);
+    
   return (
     <View style={{ flex: 1, justifyContent: "center" }}>
       <ActivityIndicator size="large" />

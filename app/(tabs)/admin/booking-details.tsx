@@ -119,7 +119,7 @@ export default function BookingDetailsScreen() {
   const startDate = booking.start?.toDate?.();
   const endDate = booking.end?.toDate?.();
   const isApproved = booking.status === "approved";
-  const isRejected = booking.status === "rejected";
+  const isRejected = booking.status === "rejected"//UserStatus.Rejected;
 
   // Calculate time range: 2 hours before start, 2 hours after end
   const startHour = Math.max(0, (startDate?.getHours?.() ?? 0) - 2);

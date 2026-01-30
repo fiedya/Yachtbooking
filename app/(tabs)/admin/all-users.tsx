@@ -1,3 +1,5 @@
+import { UserStatus } from "@/src/entities/user";
+import { getUserStatusLabel } from "@/src/helpers/enumHelper";
 import { styles as theme } from "@/src/theme/styles";
 import firestore from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
@@ -9,24 +11,15 @@ type UserRow = {
   name: string;
   surname: string;
   phone: string;
-  status: string;
+  status: UserStatus;
 };
 
-function getStatusLabel(status: string) {
-  switch (status) {
-    case "verified":
-      return "Verified";
-    case "rejected":
-      return "Rejected";
-    default:
-      return "To verify";
-  }
-}
+const getStatusLabel = getUserStatusLabel;
 
-function getStatusPillStyle(status: string) {
-  if (status === "verified") return theme.pillInvisible;
-  if (status === "to-verify") return theme.pillSecondary;
-  if (status === "rejected") return theme.pillActive;
+function getStatusPillStyle(status: UserStatus) {
+  if (status === UserStatus.Verified) return theme.pillInvisible;
+  if (status === UserStatus.ToVerify) return theme.pillSecondary;
+  if (status === UserStatus.Rejected) return theme.pillActive;
   return theme.pill;
 }
 
@@ -35,38 +28,44 @@ export default function AllUsersScreen() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    const unsub = firestore()
-      .collection("users")
-      .orderBy("surname", "desc")
-      .onSnapshot(
-        (snapshot) => {
-          if (!snapshot) {
-            console.log("[ALL USERS] snapshot is null");
-            return;
-          }
+useEffect(() => {
+  setLoading(true);
 
-          const data = snapshot.docs.map((doc) => {
-            const d = doc.data();
-            return {
-              uid: doc.id,
-              name: d.name,
-              surname: d.surname,
-              phone: d.phone,
-              status: d.status,
-            };
-          });
+  const unsub = firestore()
+    .collection("users")
+    .orderBy("surname", "desc")
+    .onSnapshot(
+      snapshot => {
+        // 🚫 Ignore cached snapshots
+        if (snapshot.metadata.fromCache) {
+          console.log("[ALL USERS] cached snapshot ignored");
+          return;
+        }
 
-          setUsers(data);
-          setLoading(false);
-        },
-        (error) => {
-          console.error("[ALL USERS] snapshot error:", error?.message ?? error);
-        },
-      );
+        const users = snapshot.docs.map(doc => {
+          const d = doc.data();
+          return {
+            uid: doc.id,
+            name: d.name,
+            surname: d.surname,
+            phone: d.phone,
+            status: d.status,
+          };
+        });
 
-    return unsub;
-  }, []);
+        console.log("[ALL USERS] server users:", users.length);
+        setUsers(users);
+        setLoading(false);
+      },
+      error => {
+        console.error("[ALL USERS] snapshot error:", error);
+        setLoading(false);
+      }
+    );
+
+  return unsub;
+}, []);
+
 
   return (
     <View style={theme.screen}>

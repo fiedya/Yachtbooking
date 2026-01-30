@@ -1,4 +1,8 @@
-export type UserStatus = "to-verify" | "verified" | "rejected";
+export enum UserStatus {
+  ToVerify = 0,
+  Verified = 1,
+  Rejected = 2,
+}
 
 export type UserPreferences = {
   usePseudonims: boolean;

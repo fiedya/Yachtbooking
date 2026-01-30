@@ -1,6 +1,6 @@
 [
   {
-    "version": "0.0.4",
+    "version": "0.0.4 (aktualna)",
     "date": "2026-01-29",
     "notes": [
       "Poprawiono wygląd bookingów i kalendarza (zdjęcie uzytkownika, stylowanie okien)",
@@ -16,7 +16,10 @@
     "date": "2026-01-29",
     "notes": [
       "Poprawiono otwieranie nowej rezerwacji przez kliknięcie w kalendarz",
-      "Dodano prostokącik wybranej godziny w kalendarzu przy tworzeniu nowej rezerwacji"
+      "Dodano prostokącik wybranej godziny w kalendarzu przy tworzeniu nowej rezerwacji",
+      "Refactor admin mode - teraz tryb admina jest globalny i można go przełączać w profilu. Reszta adminowskich miejsc jest dostępna przez tryb, nie rolę",
+      "Statusy jachtów, użytkowników i rezerwacji są teraz enumami w kodzie, a nie stringami",
+      "Wyświetlenie która wersja aplikacji jest aktualna w ekranie historii wersji"
     ]
   }
 ]
