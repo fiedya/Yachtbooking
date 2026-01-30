@@ -216,6 +216,17 @@ export default function BookScreen() {
     }
   }, [date, startTime, endTime, yachts, yacht]);
 
+  const snapToQuarter = (date: Date) => {
+  const snapped = Math.round(date.getMinutes() / 15) * 15
+
+  const fixed = new Date(date)
+  fixed.setMinutes(snapped)
+  fixed.setSeconds(0)
+  fixed.setMilliseconds(0)
+
+  return fixed
+}
+
   return (
     <View style={styles.container}>
       <ScrollView>
@@ -274,8 +285,19 @@ export default function BookScreen() {
             mode="time"
             display={Platform.OS === "android" ? "spinner" : "default"}
             onChange={(event, selectedDate) => {
-              setShowStartPicker(false);
-              if (selectedDate) setStartTime(selectedDate);
+              if (event.type === "dismissed") {
+                setShowStartPicker(false)
+                return
+              }
+
+              if (selectedDate) {
+                const snapped = snapToQuarter(selectedDate)
+                setStartTime(snapped)
+              }
+
+              if (Platform.OS === "android") {
+                setShowStartPicker(false)
+              }
             }}
           />
         )}
@@ -298,8 +320,19 @@ export default function BookScreen() {
             mode="time"
             display={Platform.OS === "android" ? "spinner" : "default"}
             onChange={(event, selectedDate) => {
-              setShowEndPicker(false);
-              if (selectedDate) setEndTime(selectedDate);
+              if (event.type === "dismissed") {
+                setShowEndPicker(false)
+                return
+              }
+
+              if (selectedDate) {
+                const snapped = snapToQuarter(selectedDate)
+                setEndTime(snapped)
+              }
+
+              if (Platform.OS === "android") {
+                setShowEndPicker(false)
+              }
             }}
           />
         )}
