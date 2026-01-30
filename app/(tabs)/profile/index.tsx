@@ -30,6 +30,7 @@ import { useMode } from "../../providers/ModeProvider";
 export default function ProfileScreen() {
   const router = useRouter();
   const [profile, setProfile] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [editingField, setEditingField] = useState<
     "pseudonim" | "description" | null
   >(null);
@@ -42,7 +43,16 @@ export default function ProfileScreen() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
   const [modalUserPhoto, setModalUserPhoto] = useState<string | null>(null);
-  // Fetch user photo for modal when booking is selected
+  
+    useEffect(() => {
+    const user = auth().currentUser;
+    if (!user) return;
+    const unsub = subscribeToUser(user.uid, (profile) => {
+      setIsAdmin(profile?.role === "admin" && mode === "admin");
+    });
+    return unsub;
+  }, [mode]);
+
   useEffect(() => {
     if (selectedBooking) {
       getUserPhotoUrl(selectedBooking.userId).then(setModalUserPhoto);
@@ -371,7 +381,7 @@ export default function ProfileScreen() {
               }}
             >
               <Text style={theme.title}>{selectedBooking.yachtName}</Text>
-              {profile?.role === "admin" && (
+              {isAdmin && (
                 <Pressable
                   onPress={() => {
                     setSelectedBooking(null);

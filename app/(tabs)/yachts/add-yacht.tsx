@@ -1,3 +1,5 @@
+import { useMode } from "@/app/providers/ModeProvider";
+import { YachtStatus } from "@/src/entities/yacht";
 import { uploadImage } from "@/src/services/imageUploadService";
 import { subscribeToUser } from "@/src/services/userService";
 import { addYacht } from "@/src/services/yachtService";
@@ -19,6 +21,8 @@ import {
 export default function AddEditYachtScreen() {
   const router = useRouter();
 
+  const { mode } = useMode();
+  const [isAdmin, setIsAdmin] = useState(false);
   const [name, setName] = useState("");
   const [type, setType] = useState("");
   const [description, setDescription] = useState("");
@@ -26,6 +30,16 @@ export default function AddEditYachtScreen() {
   const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [active, setActive] = useState(true);
+  const [status, setStatus] = useState<YachtStatus>(YachtStatus.Available);
+
+    useEffect(() => {
+    const user = auth().currentUser;
+    if (!user) return;
+    const unsub = subscribeToUser(user.uid, (profile) => {
+      setIsAdmin(profile?.role === "admin" && mode === "admin");
+    });
+    return unsub;
+  }, [mode]);
 
   useEffect(() => {
     const user = auth().currentUser;
@@ -35,7 +49,7 @@ export default function AddEditYachtScreen() {
     }
 
     const unsub = subscribeToUser(user.uid, (profile) => {
-      if (profile.role !== "admin") {
+      if (!isAdmin) {
         router.replace("/(tabs)/calendar");
       }
     });
@@ -71,6 +85,7 @@ export default function AddEditYachtScreen() {
         shortcut,
         imageUrl,
         active,
+        status,
       });
 
       router.back();
@@ -133,16 +148,46 @@ export default function AddEditYachtScreen() {
           </Pressable>
         </View>
 
-        {/* Name */}
+        {/* Status */}
         <View style={[theme.card, theme.cardPadding]}>
-          <Text style={theme.title}>Nazwa jachtu</Text>
-          <TextInput value={name} onChangeText={setName} style={theme.input} />
+          <Text style={theme.title}>Status</Text>
+          <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+            <Pressable
+              onPress={() => setStatus(YachtStatus.Available)}
+              style={[theme.pill, status === YachtStatus.Available && theme.pillActive]}
+            >
+              <Text style={status === YachtStatus.Available ? theme.textOnPrimary : theme.textSecondary}>
+                Dostępny
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setStatus(YachtStatus.Maintenance)}
+              style={[theme.pill, status === YachtStatus.Maintenance && theme.pillActive]}
+            >
+              <Text style={status === YachtStatus.Maintenance ? theme.textOnPrimary : theme.textSecondary}>
+                Serwis
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setStatus(YachtStatus.Disabled)}
+              style={[theme.pill, status === YachtStatus.Disabled && theme.pillActive]}
+            >
+              <Text style={status === YachtStatus.Disabled ? theme.textOnPrimary : theme.textSecondary}>
+                Wyłączony
+              </Text>
+            </Pressable>
+          </View>
         </View>
-
-        {/* Type */}
+        
+        {/* Nazwa */}
         <View style={[theme.card, theme.cardPadding]}>
-          <Text style={theme.title}>Typ</Text>
-          <TextInput value={type} onChangeText={setType} style={theme.input} />
+          <Text style={theme.title}>Nazwa</Text>
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            style={theme.input}
+            placeholder="np. Y1, Sunset"
+          />
         </View>
 
         {/* Shortcut */}
@@ -153,6 +198,17 @@ export default function AddEditYachtScreen() {
             onChangeText={setShortcut}
             style={theme.input}
             placeholder="np. Y1, Sunset"
+          />
+        </View>
+
+        {/* Typ */}
+        <View style={[theme.card, theme.cardPadding]}>
+          <Text style={theme.title}>Typ</Text>
+          <TextInput
+            value={type}
+            onChangeText={setType}
+            style={theme.input}
+            placeholder=""
           />
         </View>
 
@@ -168,23 +224,6 @@ export default function AddEditYachtScreen() {
             numberOfLines={4}
             textAlignVertical="top"
           />
-        </View>
-
-        {/* Status */}
-        <View style={[theme.card, theme.cardPadding]}>
-          <Text style={theme.title}>Status</Text>
-          <Pressable
-            onPress={() => setActive((a) => !a)}
-            style={[
-              theme.pill,
-              active ? theme.pillActive : undefined,
-              { alignSelf: "flex-start" },
-            ]}
-          >
-            <Text style={active ? theme.textOnPrimary : theme.textSecondary}>
-              {active ? "Aktywny" : "Nieaktywny"}
-            </Text>
-          </Pressable>
         </View>
       </ScrollView>
 

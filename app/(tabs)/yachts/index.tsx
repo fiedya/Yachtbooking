@@ -1,20 +1,39 @@
-import { Yacht } from "@/src/entities/yacht";
+import { Yacht, YachtStatus } from "@/src/entities/yacht";
+import { subscribeToUser } from "@/src/services/userService";
 import { subscribeToYachts } from "@/src/services/yachtService";
 import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";
 import { Ionicons } from "@expo/vector-icons";
+import auth from "@react-native-firebase/auth";
 import { router, Stack } from "expo-router";
 import { useEffect, useState } from "react";
-import { FlatList, Image, Pressable, Text } from "react-native";
+import { FlatList, Image, Pressable, Switch, Text, View } from "react-native";
 import { useMode } from "../../providers/ModeProvider";
 
 export default function YachtsScreen() {
   const [yachts, setYachts] = useState<Yacht[]>([]);
+  const [showAll, setShowAll] = useState(false);
   const { mode } = useMode();
+  const [isAdmin, setIsAdmin] = useState(false);
   useEffect(() => {
-    const unsubscribe = subscribeToYachts(setYachts);
-    return unsubscribe;
-  }, []);
+    // Assume user is available from context or auth
+    const user = auth().currentUser;
+    if (!user) return;
+    const unsub = subscribeToUser(user.uid, (profile) => {
+      setIsAdmin(profile?.role === "admin" && mode === "admin");
+    });
+    return unsub;
+  }, [mode]);
+  useEffect(() => {
+    const unsub = subscribeToYachts((allYachts) => {
+      if (showAll) {
+        setYachts(allYachts);
+      } else {
+        setYachts(allYachts.filter(y => y.status !== YachtStatus.Disabled));
+      }
+    });
+    return unsub;
+  }, [showAll]);
 
   return (
     <>
@@ -22,6 +41,19 @@ export default function YachtsScreen() {
         options={{
           headerShown: true,
           title: "Jachty",
+          headerRight: isAdmin
+            ? () => (
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 8 }}>
+                  <Text style={{ color: colors.primary, fontWeight: 'bold', marginRight: 8 }}>wszystkie</Text>
+                  <Switch
+                    value={showAll}
+                    onValueChange={setShowAll}
+                    trackColor={{ false: colors.lightGrey, true: colors.primary }}
+                    thumbColor={showAll ? colors.primary : colors.primaryLight}
+                  />
+                </View>
+              )
+            : undefined,
         }}
       />
 
@@ -51,7 +83,7 @@ export default function YachtsScreen() {
           </Pressable>
         )}
       />
-      {mode === "admin" && (
+      {isAdmin && (
         <Pressable
           onPress={() => router.push("/(tabs)/yachts/add-yacht")}
           style={{

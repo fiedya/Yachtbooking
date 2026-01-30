@@ -11,18 +11,18 @@ export default function TabsLayout() {
   const { mode } = useMode();
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const user = auth().currentUser;
 
-  useEffect(() => {
+    useEffect(() => {
+    const user = auth().currentUser;
     if (!user) return;
-
-    const unsub = subscribeToUser(user.uid, (data) => {
-      setProfile(data);
+    const unsub = subscribeToUser(user.uid, (profile) => {
+      setIsAdmin(profile?.role === "admin" && mode === "admin");
     });
-
     return unsub;
-  }, [user?.uid]);
+  }, [mode]);
 
   return (
     <Tabs
@@ -83,7 +83,7 @@ export default function TabsLayout() {
         options={{
           title: "Admin",
           href:
-            profile?.role === "admin" && mode === "admin" ? undefined : null,
+            isAdmin ? undefined : null,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="key-outline" size={size} color={color} />
           ),

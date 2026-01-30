@@ -7,7 +7,7 @@ export async function updateYacht(
 // src/services/yachtService.ts
 
 import firestore from "@react-native-firebase/firestore";
-import { Yacht } from "../entities/yacht";
+import { Yacht, YachtStatus } from "../entities/yacht";
 
 /**
  * One-time fetch of all yachts
@@ -66,13 +66,12 @@ export async function getYachtById(id: string): Promise<Yacht | null> {
 }
 
 export async function addYacht(
-  data: Omit<Yacht, "id" | "createdAt"> & { active?: boolean },
+  data: Omit<Yacht, "id" | "createdAt">,
 ) {
   return firestore()
     .collection("yachts")
     .add({
       ...data,
-      active: data.active ?? true, // ✅ default true
       createdAt: firestore.FieldValue.serverTimestamp(),
     });
 }
@@ -81,12 +80,36 @@ export async function setYachtActive(yachtId: string, active: boolean) {
   return firestore().collection("yachts").doc(yachtId).update({ active });
 }
 
-export async function getActiveYachts(): Promise<Yacht[]> {
+
+// Get only available yachts (status === YachtStatus.Available)
+export async function getAvailableYachts(): Promise<Yacht[]> {
   const snap = await firestore()
     .collection("yachts")
-    .where("active", "==", true)
+    .where("status", "==", YachtStatus.Available)
     .get();
+  return snap.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Yacht[];
+}
 
+// Get all yachts except Disabled (status !== YachtStatus.Disabled)
+export async function getOurYachts(): Promise<Yacht[]> {
+  const snap = await firestore()
+    .collection("yachts")
+    .where("status", "!=", YachtStatus.Disabled)
+    .get();
+  return snap.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Yacht[];
+}
+
+// Get all yachts (admin)
+export async function getAllYachts(): Promise<Yacht[]> {
+  const snap = await firestore()
+    .collection("yachts")
+    .get();
   return snap.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),

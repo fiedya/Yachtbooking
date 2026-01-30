@@ -10,5 +10,13 @@
       "Dodano ekran historii wersji aplikacji otwieralny z numeru wersji w profilu.",
       "Dodano edytowanie bookingów przez administratorów"
     ]
+  },
+  {
+    "version": "0.0.5",
+    "date": "2026-01-29",
+    "notes": [
+      "Poprawiono otwieranie nowej rezerwacji przez kliknięcie w kalendarz",
+      "Dodano prostokącik wybranej godziny w kalendarzu przy tworzeniu nowej rezerwacji"
+    ]
   }
 ]

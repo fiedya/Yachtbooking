@@ -8,8 +8,8 @@ import { Ionicons } from "@expo/vector-icons";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import { Stack, useRouter } from "expo-router";
-import { useMode } from "../providers/ModeProvider";
 
+import { User } from "@/src/entities/user";
 import { getUserPhotoUrl } from "@/src/services/userService";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -21,6 +21,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useMode } from "../providers/ModeProvider";
 
 /* -----------------------------
    Date helpers
@@ -153,12 +154,23 @@ export default function CalendarScreen() {
 
   const router = useRouter();
   const user = auth().currentUser;
-  const { mode: adminMode } = useMode();
-  const [mode, setMode] = useState<"week" | "month">("week");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const { mode } = useMode();
+  const [weekmode, setWeekmode] = useState<"week" | "month">("week");
   const [weekOffset, setWeekOffset] = useState(0);
   const [bookings, setBookings] = useState<any[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
   const [modalUserPhoto, setModalUserPhoto] = useState<string | null>(null);
+  const [profile, setProfile] = useState<User | null>(null);
+
+  useEffect(() => {
+    const user = auth().currentUser;
+    if (!user) return;
+    const unsub = subscribeToUser(user.uid, (profile) => {
+      setIsAdmin(profile?.role === "admin" && mode === "admin");
+    });
+    return unsub;
+  }, [mode]);
 
   // Subscribe to user preferences in user doc
   useEffect(() => {
@@ -238,7 +250,7 @@ export default function CalendarScreen() {
     let result = bookings;
 
     // Hide rejected bookings for non-admins
-    if (adminMode !== "admin") {
+    if (!isAdmin) {
       result = result.filter((b) => b.status !== "rejected");
     }
 
@@ -247,7 +259,7 @@ export default function CalendarScreen() {
       return result; // show all if no yacht selection
     }
     return result.filter((b) => selectedYachtIds.includes(b.yachtId));
-  }, [bookings, selectedYachtIds, adminMode]);
+  }, [bookings, selectedYachtIds, isAdmin]);
 
   useEffect(() => {
     console.log("[CALENDAR] subscribing, key:", refreshKey);
@@ -416,7 +428,7 @@ export default function CalendarScreen() {
       </ScrollView>
 
       {/* Week jump */}
-      {mode === "week" && (
+      {weekmode === "week" && (
         <View
           style={[
             theme.row,
@@ -452,7 +464,7 @@ export default function CalendarScreen() {
       )}
 
       {/* Calendar */}
-      {mode === "week" ? (
+      {weekmode === "week" ? (
         <Animated.View
           style={{ paddingBottom: 137, transform: [{ translateX: slideAnim }] }}
           {...panResponder.panHandlers}
@@ -572,7 +584,7 @@ export default function CalendarScreen() {
                             b,
                             filteredBookings,
                             day,
-                            adminMode === "admin",
+                            isAdmin,
                           );
                           const position = getBookingPosition(b, overlaps);
                           const totalOverlaps = overlaps.length;
@@ -651,7 +663,7 @@ export default function CalendarScreen() {
               }}
             >
               <Text style={theme.title}>{selectedBooking.yachtName}</Text>
-              {adminMode === "admin" && (
+              {isAdmin && (
                 <Pressable
                   onPress={() => {
                     setSelectedBooking(null);
@@ -716,7 +728,7 @@ export default function CalendarScreen() {
             </Text>
 
             {/* Admin Approve/Reject Buttons */}
-            {adminMode === "admin" && selectedBooking && (
+            {isAdmin && selectedBooking && (
               <View
                 style={{
                   flexDirection: "row",

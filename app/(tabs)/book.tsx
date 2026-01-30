@@ -2,7 +2,7 @@ import { Yacht } from "@/src/entities/yacht";
 import { createBooking } from "@/src/services/booking.service";
 import { getAvailableYachtIds } from "@/src/services/calendarService";
 import { getUser, subscribeToUser } from "@/src/services/userService";
-import { getActiveYachts } from "@/src/services/yachtService";
+import { getAvailableYachts } from "@/src/services/yachtService";
 import { headerStyles } from "@/src/theme/header";
 import { styles } from "@/src/theme/styles";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -35,33 +35,27 @@ export default function BookScreen() {
     bookingId?: string;
     edit?: string;
   }>();
-  const { mode: adminMode } = useMode();
-  // Initialize dates from params if provided, otherwise use now
-  // Helper to extract date and time from ISO string
-  const getDatePart = (iso?: string) => (iso ? new Date(iso) : new Date());
-  const getTimePart = (iso?: string) => (iso ? new Date(iso) : new Date());
+    const { mode } = useMode();
+    const [isAdmin, setIsAdmin] = useState(false);
+    const getDatePart = (iso?: string) => (iso ? new Date(iso) : new Date());
+    const getTimePart = (iso?: string) => (iso ? new Date(iso) : new Date());
 
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showStartPicker, setShowStartPicker] = useState(false);
-  const [showEndPicker, setShowEndPicker] = useState(false);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showStartPicker, setShowStartPicker] = useState(false);
+    const [showEndPicker, setShowEndPicker] = useState(false);
+    const [date, setDate] = useState(() => getDatePart(paramStartDate));
+    const [startTime, setStartTime] = useState(() => getTimePart(paramStartDate));
+    const [endTime, setEndTime] = useState(() => getTimePart(paramEndDate));
 
-  // If params provided, use them to prefill fields
-  const [date, setDate] = useState(() => getDatePart(paramStartDate));
-  const [startTime, setStartTime] = useState(() => getTimePart(paramStartDate));
-  const [endTime, setEndTime] = useState(() => getTimePart(paramEndDate));
-
-  const [loading, setLoading] = useState(false);
-  const [yachts, setYachts] = useState<Yacht[]>([]);
-  const [availableYachtIds, setAvailableYachtIds] = useState<string[]>([]);
-  const [yacht, setYacht] = useState<Yacht | null>(null);
-  const [bookingName, setBookingName] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [settings, setSettings] = useState<{ usePseudonims: boolean }>({
-    usePseudonims: false,
-  });
-  const [editingBooking, setEditingBooking] = useState<any>(null);
-
-  // Update fields if navigation params change (e.g., user clicks a new slot)
+    const [loading, setLoading] = useState(false);
+    const [yachts, setYachts] = useState<Yacht[]>([]);
+    const [availableYachtIds, setAvailableYachtIds] = useState<string[]>([]);
+    const [yacht, setYacht] = useState<Yacht | null>(null);
+    const [bookingName, setBookingName] = useState("");
+    const [settings, setSettings] = useState<{ usePseudonims: boolean }>({
+      usePseudonims: false,
+    });
+    const [editingBooking, setEditingBooking] = useState<any>(null);
   useEffect(() => {
     if (paramStartDate) {
       const d = new Date(paramStartDate);
@@ -74,7 +68,16 @@ export default function BookScreen() {
   }, [paramStartDate, paramEndDate]);
 
   useEffect(() => {
-    if (edit && bookingId && adminMode === "admin") {
+    const user = auth().currentUser;
+    if (!user) return;
+    const unsub = subscribeToUser(user.uid, (profile) => {
+      setIsAdmin(profile?.role === "admin" && mode === "admin");
+    });
+    return unsub;
+  }, [mode]);
+
+  useEffect(() => {
+    if (edit && bookingId && isAdmin) {
       firestore()
         .collection("bookings")
         .doc(bookingId)
@@ -97,14 +100,13 @@ export default function BookScreen() {
               setYacht({
                 id: data.yachtId,
                 name: data.yachtName,
-                // fallback for imageUrl, etc. will be handled by yacht list
               } as Yacht);
             }
           }
         });
     }
-  }, [edit, bookingId, adminMode]);
-  // Subscribe to user preferences in user doc
+  }, [edit, bookingId, isAdmin]);
+
   useEffect(() => {
     if (!user) return;
     const unsub = subscribeToUser(user.uid, (data) => {
@@ -142,7 +144,7 @@ export default function BookScreen() {
       const profile = await getUser(user.uid);
       let fullName = "";
 
-      if (adminMode === "admin" && bookingName.trim()) {
+      if (isAdmin && bookingName.trim()) {
         fullName = bookingName.trim();
       } else if (profile) {
         if (settings.usePseudonims && profile.pseudonim) {
@@ -154,7 +156,7 @@ export default function BookScreen() {
         fullName = user.phoneNumber || "";
       }
 
-      if (edit && bookingId && adminMode === "admin") {
+      if (edit && bookingId && isAdmin) {
         // Update existing booking
         await firestore().collection("bookings").doc(bookingId).update({
           userName: fullName,
@@ -185,21 +187,12 @@ export default function BookScreen() {
     }
   }
 
-  useEffect(() => {
-    if (!user) return;
-
-    getUser(user.uid).then((profile) => {
-      if (profile?.role === "admin") {
-        setIsAdmin(true);
-      }
-    });
-  }, [user?.uid]);
 
   useEffect(() => {
-    getActiveYachts().then((data) => {
+    getAvailableYachts().then((data) => {
       setYachts(data);
       if (data.length > 0) {
-        setYacht(data[0]); // default selection
+        setYacht(data[0]);
       }
     });
   }, [edit, bookingId]);
@@ -235,7 +228,7 @@ export default function BookScreen() {
             headerTitleStyle: headerStyles.title,
           }}
         />
-        {adminMode === "admin" && (
+        {isAdmin && (
           <View style={{ marginTop: 16 }}>
             <Text style={styles.label}>Osoba rezerwująca</Text>
             <TextInput
@@ -246,7 +239,6 @@ export default function BookScreen() {
             />
           </View>
         )}
-        {/* Date */}
         <Text style={styles.label}>Data</Text>
         <Pressable
           style={styles.pickerButton}

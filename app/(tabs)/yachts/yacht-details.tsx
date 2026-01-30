@@ -1,8 +1,11 @@
 import { Yacht } from "@/src/entities/yacht";
+import { getYachtStatusLabel } from "@/src/helpers/enumHelper";
+import { subscribeToUser } from "@/src/services/userService";
 import { getYachtById, updateYacht } from "@/src/services/yachtService";
 import { headerStyles } from "@/src/theme/header";
 import { styles as theme } from "@/src/theme/styles";
 import { MaterialIcons } from "@expo/vector-icons";
+import auth from "@react-native-firebase/auth";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -13,8 +16,11 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useMode } from "../../providers/ModeProvider";
 
 export default function YachtDetailsScreen() {
+  const { mode } = useMode();
+  const [isAdmin, setIsAdmin] = useState(false);
   const { id } = useLocalSearchParams<{ id: string }>();
   const [yacht, setYacht] = useState<Yacht | null>(null);
   const [editingField, setEditingField] = useState<
@@ -27,6 +33,15 @@ export default function YachtDetailsScreen() {
     if (!id || typeof id !== "string") return;
     getYachtById(id).then(setYacht);
   }, [id]);
+
+  useEffect(() => {
+    const user = auth().currentUser;
+    if (!user) return;
+    const unsub = subscribeToUser(user.uid, (profile) => {
+      setIsAdmin(profile?.role === "admin" && mode === "admin");
+    });
+    return unsub;
+  }, [mode]);
 
   const startEdit = (field: "shortcut" | "type" | "description") => {
     setEditingField(field);
@@ -95,7 +110,7 @@ export default function YachtDetailsScreen() {
           {/* Shortcut */}
           <View style={{ marginVertical: 10 }}>
             <Text style={theme.sectionTitle}>Skrót</Text>
-            {editingField === "shortcut" ? (
+            {editingField === "shortcut" && isAdmin ? (
               <View style={{ gap: 8 }}>
                 <TextInput
                   value={fieldValue}
@@ -130,19 +145,22 @@ export default function YachtDetailsScreen() {
                   alignItems: "center",
                   justifyContent: "space-between",
                 }}
-                onPress={() => startEdit("shortcut")}
+                onPress={isAdmin ? () => startEdit("shortcut") : undefined}
+                disabled={!isAdmin}
               >
-                <Text style={[theme.bodyText, { flex: 1 }]}>
+                <Text style={[theme.bodyText, { flex: 1 }]}> 
                   {yacht.shortcut && yacht.shortcut.trim() !== ""
                     ? yacht.shortcut
                     : "Brak skrótu"}
                 </Text>
-                <MaterialIcons
-                  name="edit"
-                  size={18}
-                  color={theme.link.color}
-                  style={{ marginLeft: 8 }}
-                />
+                {isAdmin && (
+                  <MaterialIcons
+                    name="edit"
+                    size={18}
+                    color={theme.link.color}
+                    style={{ marginLeft: 8 }}
+                  />
+                )}
               </Pressable>
             )}
           </View>
@@ -150,7 +168,7 @@ export default function YachtDetailsScreen() {
           {/* Type */}
           <View style={{ marginBottom: 10 }}>
             <Text style={theme.sectionTitle}>Typ</Text>
-            {editingField === "type" ? (
+            {editingField === "type" && isAdmin ? (
               <View style={{ gap: 8 }}>
                 <TextInput
                   value={fieldValue}
@@ -185,25 +203,28 @@ export default function YachtDetailsScreen() {
                   alignItems: "center",
                   justifyContent: "space-between",
                 }}
-                onPress={() => startEdit("type")}
+                onPress={isAdmin ? () => startEdit("type") : undefined}
+                disabled={!isAdmin}
               >
-                <Text style={[theme.bodyText, { flex: 1 }]}>
+                <Text style={[theme.bodyText, { flex: 1 }]}> 
                   {yacht.type || "Brak typu"}
                 </Text>
-                <MaterialIcons
-                  name="edit"
-                  size={18}
-                  color={theme.link.color}
-                  style={{ marginLeft: 8 }}
-                />
+                {isAdmin && (
+                  <MaterialIcons
+                    name="edit"
+                    size={18}
+                    color={theme.link.color}
+                    style={{ marginLeft: 8 }}
+                  />
+                )}
               </Pressable>
             )}
           </View>
 
-          {/* Description */}
+          {/* Description & Status */}
           <View>
             <Text style={theme.sectionTitle}>Opis</Text>
-            {editingField === "description" ? (
+            {editingField === "description" && isAdmin ? (
               <View style={{ gap: 8 }}>
                 <TextInput
                   value={fieldValue}
@@ -241,17 +262,23 @@ export default function YachtDetailsScreen() {
                   alignItems: "center",
                   justifyContent: "space-between",
                 }}
-                onPress={() => startEdit("description")}
+                onPress={isAdmin ? () => startEdit("description") : undefined}
+                disabled={!isAdmin}
               >
-                <Text style={[theme.bodyText, { flex: 1 }]}>
-                  {yacht.description || "Brak opisu"}
-                </Text>
-                <MaterialIcons
-                  name="edit"
-                  size={18}
-                  color={theme.link.color}
-                  style={{ marginLeft: 8 }}
-                />
+                <View style={{ flex: 1 }}>
+                  <Text style={theme.bodyText}>
+                    {yacht.description || "Brak opisu"}
+                  </Text>
+                  <Text style={[theme.bodyText, { marginTop: 8, color: '#666' }]}>Status: {getYachtStatusLabel(yacht.status)}</Text>
+                </View>
+                {isAdmin && (
+                  <MaterialIcons
+                    name="edit"
+                    size={18}
+                    color={theme.link.color}
+                    style={{ marginLeft: 8 }}
+                  />
+                )}
               </Pressable>
             )}
           </View>
