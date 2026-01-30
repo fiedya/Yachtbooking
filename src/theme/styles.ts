@@ -11,6 +11,7 @@ export const styles = StyleSheet.create({
 
   screenPadded: {
     flex: 1,
+    paddingTop: spacing.xs,
     paddingHorizontal: spacing.md,
     backgroundColor: colors.background,
   },
@@ -190,13 +191,14 @@ export const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "center",
     alignItems: "center",
+    padding: 0
   },
 
   modal: {
     width: "80%",
     backgroundColor: colors.white,
     borderRadius: radius.lg,
-    padding: spacing.lg,
+    padding: spacing.md,
   },
 
   /* ---------- Grid & table layouts ---------- */

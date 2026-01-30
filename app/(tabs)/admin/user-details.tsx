@@ -1,4 +1,5 @@
 import { UserStatus } from "@/src/entities/user";
+import { getUserStatusLabel } from "@/src/helpers/enumHelper";
 import { styles as theme } from "@/src/theme/styles";
 import firestore from "@react-native-firebase/firestore";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -80,7 +81,7 @@ export default function UserDetailsScreen() {
 
       <View style={{ marginVertical: 24 }}>
         <Text style={theme.textMuted}>Current status</Text>
-        <Text style={theme.textPrimary}>{user.status}</Text>
+        <Text style={theme.textPrimary}>{getUserStatusLabel(user.status)}</Text>
       </View>
 
       {user.status !== 1 && (

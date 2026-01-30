@@ -1,3 +1,5 @@
+import { BookingStatus } from "@/src/entities/booking";
+import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
 import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";
 import firestore from "@react-native-firebase/firestore";
@@ -52,7 +54,7 @@ type BookingDetails = {
   userName: string;
   start: any;
   end: any;
-  status: string;
+  status: BookingStatus;
 };
 
 export default function BookingDetailsScreen() {
@@ -92,8 +94,8 @@ export default function BookingDetailsScreen() {
     );
   }
 
-  function updateStatus(nextStatus: "approved" | "rejected") {
-    const actionLabel = nextStatus === "approved" ? "zaakceptować" : "odrzucić";
+  function updateStatus(nextStatus: BookingStatus.Approved | BookingStatus.Rejected) {
+    const actionLabel = nextStatus === BookingStatus.Approved ? "zaakceptować" : "odrzucić";
     Alert.alert("Potwierdź", `Na pewno chcesz ${actionLabel} ten booking?`, [
       { text: "Anuluj", style: "cancel" },
       {
@@ -118,8 +120,8 @@ export default function BookingDetailsScreen() {
 
   const startDate = booking.start?.toDate?.();
   const endDate = booking.end?.toDate?.();
-  const isApproved = booking.status === "approved";
-  const isRejected = booking.status === "rejected"//UserStatus.Rejected;
+  const isApproved = booking.status === BookingStatus.Approved;
+  const isRejected = booking.status === BookingStatus.Rejected;
 
   // Calculate time range: 2 hours before start, 2 hours after end
   const startHour = Math.max(0, (startDate?.getHours?.() ?? 0) - 2);
@@ -303,7 +305,7 @@ export default function BookingDetailsScreen() {
       {/* Status */}
       <View style={{ marginVertical: 16 }}>
         <Text style={theme.textMuted}>Current status</Text>
-        <Text style={theme.textPrimary}>{booking.status}</Text>
+        <Text style={theme.textPrimary}>{getBookingStatusLabel(booking.status)}</Text>
       </View>
 
       {/* Buttons */}
@@ -313,7 +315,7 @@ export default function BookingDetailsScreen() {
             theme.button,
             { marginBottom: 12, opacity: updating ? 0.5 : 1 },
           ]}
-          onPress={() => updateStatus("approved")}
+          onPress={() => updateStatus(BookingStatus.Approved)}
           disabled={updating}
         >
           <Text style={theme.buttonText}>
@@ -329,7 +331,7 @@ export default function BookingDetailsScreen() {
             theme.buttonDanger,
             { opacity: updating ? 0.5 : 1 },
           ]}
-          onPress={() => updateStatus("rejected")}
+          onPress={() => updateStatus(BookingStatus.Rejected)}
           disabled={updating}
         >
           <Text style={theme.buttonDangerText}>

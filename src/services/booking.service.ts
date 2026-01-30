@@ -1,3 +1,4 @@
+import { BookingStatus } from "@/src/entities/booking";
 import firestore from "@react-native-firebase/firestore";
 
 export async function createBooking(params: {
@@ -17,7 +18,7 @@ export async function createBooking(params: {
       yachtName: params.yachtName,
       start: firestore.Timestamp.fromDate(params.start),
       end: firestore.Timestamp.fromDate(params.end),
-      status: "pending",
+      status: BookingStatus.Pending,
       createdAt: firestore.FieldValue.serverTimestamp(),
     });
 }

@@ -1,3 +1,4 @@
+import { BookingStatus } from "@/src/entities/booking";
 import { styles as theme } from "@/src/theme/styles";
 import firestore from "@react-native-firebase/firestore";
 import dayjs from "dayjs";
@@ -22,7 +23,7 @@ export default function BookingsToApproveScreen() {
   useEffect(() => {
     const unsub = firestore()
       .collection("bookings")
-      .where("status", "==", "pending")
+      .where("status", "==", BookingStatus.Pending)
       .orderBy("start", "asc")
       .onSnapshot(
         (snapshot) => {

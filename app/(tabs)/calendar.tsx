@@ -9,7 +9,9 @@ import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import { Stack, useRouter } from "expo-router";
 
+import { BookingStatus } from "@/src/entities/booking";
 import { User } from "@/src/entities/user";
+import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
 import { getUserPhotoUrl } from "@/src/services/userService";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -89,7 +91,7 @@ function getOverlappingBookingsForBooking(
 
   return allBookings.filter((b) => {
     // Show all statuses for admins, only pending/approved for users
-    if (!isAdmin && b.status === "rejected") return false;
+    if (!isAdmin && b.status === BookingStatus.Rejected) return false;
     const bStart = b.start.toDate();
     const bEnd = b.end.toDate();
     return bStart < end && bEnd > start;
@@ -111,8 +113,8 @@ function getBookingBackgroundColor(
   currentUserId: string | undefined,
 ) {
   const isUserBooking = booking.userId === currentUserId;
-  const isApproved = booking.status === "approved";
-  const isRejected = booking.status === "rejected";
+  const isApproved = booking.status === BookingStatus.Approved;
+  const isRejected = booking.status === BookingStatus.Rejected;
 
   if (isRejected) {
     return colors.dangerSoft;
@@ -125,9 +127,8 @@ function getBookingBackgroundColor(
   }
 }
 
-// Returns font color for a booking: white for approved, black for pending/rejected
 function getBookingFontColor(booking: any, currentUserId: string | undefined) {
-  const isApproved = booking.status === "approved";
+  const isApproved = booking.status === BookingStatus.Approved;
   return isApproved ? colors.white : colors.black;
 }
 
@@ -244,19 +245,15 @@ export default function CalendarScreen() {
     });
     return unsub;
   }, []);
-
-  // Filter bookings by selected yachts and admin status
   const filteredBookings = useMemo(() => {
     let result = bookings;
 
-    // Hide rejected bookings for non-admins
     if (!isAdmin) {
-      result = result.filter((b) => b.status !== "rejected");
+      result = result.filter((b) => b.status !== BookingStatus.Rejected);
     }
 
-    // Filter by yacht selection
     if (selectedYachtIds.length === 0) {
-      return result; // show all if no yacht selection
+      return result;
     }
     return result.filter((b) => selectedYachtIds.includes(b.yachtId));
   }, [bookings, selectedYachtIds, isAdmin]);
@@ -653,8 +650,14 @@ export default function CalendarScreen() {
       )}
 
       {selectedBooking && (
-        <View style={theme.modalOverlay}>
-          <View style={theme.modal}>
+        <Pressable
+          style={theme.modalOverlay}
+          onPress={() => setSelectedBooking(null)}
+        >
+          <Pressable
+            style={theme.modal}
+            onPress={(e) => e.stopPropagation()}
+          >
             <View
               style={{
                 flexDirection: "row",
@@ -712,7 +715,8 @@ export default function CalendarScreen() {
               )}
               <Text style={theme.textPrimary}> {selectedBooking.userName}</Text>
             </View>
-            <Text style={theme.textPrimary}>
+            <Text style={[theme.textPrimary, {
+                marginBottom: 8,}]}>
               ⏰{" "}
               {selectedBooking.start
                 .toDate()
@@ -722,9 +726,10 @@ export default function CalendarScreen() {
                 .toDate()
                 .toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </Text>
-            <Text style={theme.textPrimary}>
+            <Text style={[theme.textPrimary, {
+                marginBottom: 8}]}>
               {"Status: "}
-              {selectedBooking.status}
+              {getBookingStatusLabel(selectedBooking.status)}
             </Text>
 
             {/* Admin Approve/Reject Buttons */}
@@ -733,7 +738,6 @@ export default function CalendarScreen() {
                 style={{
                   flexDirection: "row",
                   justifyContent: "center",
-                  marginTop: 16,
                   gap: 12,
                 }}
               >
@@ -746,17 +750,17 @@ export default function CalendarScreen() {
                     marginRight: 8,
                     minWidth: 90,
                     alignItems: "center",
-                    opacity: selectedBooking.status === "approved" ? 0.5 : 1,
+                    opacity: selectedBooking.status === BookingStatus.Approved ? 0.5 : 1,
                   }}
-                  disabled={selectedBooking.status === "approved"}
+                  disabled={selectedBooking.status === BookingStatus.Approved}
                   onPress={async () => {
                     await firestore()
                       .collection("bookings")
                       .doc(selectedBooking.id)
-                      .update({ status: "approved" });
+                      .update({ status: BookingStatus.Approved });
                     setSelectedBooking({
                       ...selectedBooking,
-                      status: "approved",
+                      status: BookingStatus.Approved,
                     });
                   }}
                 >
@@ -772,17 +776,17 @@ export default function CalendarScreen() {
                     borderRadius: 6,
                     minWidth: 90,
                     alignItems: "center",
-                    opacity: selectedBooking.status === "rejected" ? 0.5 : 1,
+                    opacity: selectedBooking.status === BookingStatus.Rejected ? 0.5 : 1,
                   }}
-                  disabled={selectedBooking.status === "rejected"}
+                  disabled={selectedBooking.status === BookingStatus.Rejected}
                   onPress={async () => {
                     await firestore()
                       .collection("bookings")
                       .doc(selectedBooking.id)
-                      .update({ status: "rejected" });
+                      .update({ status: BookingStatus.Rejected });
                     setSelectedBooking({
                       ...selectedBooking,
-                      status: "rejected",
+                      status: BookingStatus.Rejected,
                     });
                   }}
                 >
@@ -799,7 +803,7 @@ export default function CalendarScreen() {
             >
               <Text style={theme.link}>Zamknij</Text>
             </Pressable>
-          </View>
+          </Pressable>
 
           {showWeekPicker && (
             <View style={theme.modalOverlay}>
@@ -846,7 +850,7 @@ export default function CalendarScreen() {
               </View>
             </View>
           )}
-        </View>
+        </Pressable>
       )}
     </View>
   );

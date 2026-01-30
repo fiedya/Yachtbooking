@@ -1,3 +1,10 @@
+
+export enum BookingStatus {
+  Pending = 0,
+  Approved = 1,
+  Rejected = 2,
+}
+
 export type Booking = {
   id: string;
   userId: string;
@@ -6,6 +13,6 @@ export type Booking = {
   yachtName: string;
   start: any;
   end: any;
-  status: "pending" | "approved" | "rejected";
+  status: BookingStatus;
   createdAt: any;
 };

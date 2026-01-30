@@ -19,7 +19,8 @@
       "Dodano prostokącik wybranej godziny w kalendarzu przy tworzeniu nowej rezerwacji",
       "Refactor admin mode - teraz tryb admina jest globalny i można go przełączać w profilu. Reszta adminowskich miejsc jest dostępna przez tryb, nie rolę",
       "Statusy jachtów, użytkowników i rezerwacji są teraz enumami w kodzie, a nie stringami",
-      "Wyświetlenie która wersja aplikacji jest aktualna w ekranie historii wersji"
+      "Wyświetlenie która wersja aplikacji jest aktualna w ekranie historii wersji",
+      "Klikanie poza info oknem minibookingu teraz je zamyka"
     ]
   }
 ]

@@ -1,4 +1,5 @@
 import firestore from "@react-native-firebase/firestore";
+import { BookingStatus } from "../entities/booking";
 
 export function subscribeToBookings(
   start: Date,
@@ -34,7 +35,7 @@ export async function getAvailableYachtIds(
     .collection("bookings")
     .where("start", "<", end)
     .where("end", ">", start)
-    .where("status", "in", ["pending", "approved"])
+    .where("status", "in", [BookingStatus.Pending, BookingStatus.Approved])
     .get();
 
   const busyYachtIds = new Set(snapshot.docs.map((doc) => doc.data().yachtId));

@@ -12,12 +12,11 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Alert,
-  Image,
-  Pressable,
+  Image, Platform, Pressable,
   ScrollView,
   Text,
   TextInput,
-  View,
+  View
 } from "react-native";
 import { useMode } from "../providers/ModeProvider";
 
@@ -273,6 +272,7 @@ export default function BookScreen() {
           <DateTimePicker
             value={startTime}
             mode="time"
+            display={Platform.OS === "android" ? "spinner" : "default"}
             onChange={(event, selectedDate) => {
               setShowStartPicker(false);
               if (selectedDate) setStartTime(selectedDate);
@@ -296,6 +296,7 @@ export default function BookScreen() {
           <DateTimePicker
             value={endTime}
             mode="time"
+            display={Platform.OS === "android" ? "spinner" : "default"}
             onChange={(event, selectedDate) => {
               setShowEndPicker(false);
               if (selectedDate) setEndTime(selectedDate);

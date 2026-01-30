@@ -36,11 +36,7 @@ useEffect(() => {
     .orderBy("surname", "desc")
     .onSnapshot(
       snapshot => {
-        // 🚫 Ignore cached snapshots
-        if (snapshot.metadata.fromCache) {
-          console.log("[ALL USERS] cached snapshot ignored");
-          return;
-        }
+
 
         const users = snapshot.docs.map(doc => {
           const d = doc.data();

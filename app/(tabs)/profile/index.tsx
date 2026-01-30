@@ -1,4 +1,5 @@
 import { Booking } from "@/src/entities/booking";
+import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
 import { subscribeToBookings } from "@/src/services/calendarService";
 import { uploadImage } from "@/src/services/imageUploadService";
 import { headerStyles } from "@/src/theme/header";
@@ -336,7 +337,7 @@ export default function ProfileScreen() {
                         minute: "2-digit",
                       })}
                   </Text>
-                  <Text style={theme.textXs}>Status: {b.status}</Text>
+                  <Text style={theme.textXs}>Status: {getBookingStatusLabel(b.status)}</Text>
                 </Pressable>
               ))}
             </View>
@@ -446,7 +447,7 @@ export default function ProfileScreen() {
             </Text>
             <Text style={theme.textPrimary}>
               {"Status: "}
-              {selectedBooking.status}
+              {getBookingStatusLabel(selectedBooking.status)}
             </Text>
             <Pressable
               style={{ marginTop: 16, alignSelf: "flex-end" }}

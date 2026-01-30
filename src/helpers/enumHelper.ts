@@ -1,5 +1,19 @@
+import { BookingStatus } from "@/src/entities/booking";
 import { UserStatus } from "@/src/entities/user";
 import { YachtStatus } from "@/src/entities/yacht";
+
+export function getBookingStatusLabel(status: BookingStatus): string {
+  switch (status) {
+    case BookingStatus.Pending:
+      return "Oczekuje";
+    case BookingStatus.Approved:
+      return "Zatwierdzona";
+    case BookingStatus.Rejected:
+      return "Odrzucona";
+    default:
+      return "Nieznany";
+  }
+}
 
 export function getUserStatusLabel(status: UserStatus): string {
   switch (status) {
