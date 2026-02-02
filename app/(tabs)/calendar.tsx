@@ -191,8 +191,6 @@ export default function CalendarScreen() {
     const user = auth().currentUser;
     if (!user) return;
 
-    console.log("[DEBUG] checking firestore access for user", user.uid);
-
     firestore()
       .collection("settings")
       .doc(user.uid)
@@ -208,7 +206,6 @@ export default function CalendarScreen() {
       .catch((e) => console.log("[DEBUG] bookings FAIL", e.code));
   }, []);
 
-  // Fetch user photo for modal when booking is selected
   useEffect(() => {
     if (selectedBooking) {
       getUserPhotoUrl(selectedBooking.userId).then(setModalUserPhoto);
@@ -217,6 +214,8 @@ export default function CalendarScreen() {
     }
   }, [selectedBooking]);
   const [showWeekPicker, setShowWeekPicker] = useState(false);
+  // Debug log for showWeekPicker state changes
+
   const [refreshKey, setRefreshKey] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [yachts, setYachts] = useState<any[]>([]);
@@ -231,12 +230,10 @@ export default function CalendarScreen() {
     [baseWeekStart, weekOffset],
   );
 
-  // Load yachts and build id->shortcut/name map
   useEffect(() => {
     const unsub = subscribeToYachts((data) => {
       const activeYachts = data.filter((y) => y.active === true);
       setYachts(activeYachts);
-      // Build map for quick lookup
       const map: { [id: string]: { name: string; shortcut?: string } } = {};
       activeYachts.forEach((y) => {
         map[y.id] = { name: y.name, shortcut: y.shortcut };
@@ -259,8 +256,6 @@ export default function CalendarScreen() {
   }, [bookings, selectedYachtIds, isAdmin]);
 
   useEffect(() => {
-    console.log("[CALENDAR] subscribing, key:", refreshKey);
-
     const weekEnd = addDays(weekStart, 7);
 
     const unsub = firestore()
@@ -616,7 +611,6 @@ export default function CalendarScreen() {
                                 layout,
                               ]}
                               onPress={() => {
-                                console.log("BOOKING PRESSED", b.id);
                                 setSelectedBooking(b);
                               }}
                             >
@@ -654,10 +648,7 @@ export default function CalendarScreen() {
           style={theme.modalOverlay}
           onPress={() => setSelectedBooking(null)}
         >
-          <Pressable
-            style={theme.modal}
-            onPress={(e) => e.stopPropagation()}
-          >
+          <Pressable style={theme.modal} onPress={(e) => e.stopPropagation()}>
             <View
               style={{
                 flexDirection: "row",
@@ -715,8 +706,14 @@ export default function CalendarScreen() {
               )}
               <Text style={theme.textPrimary}> {selectedBooking.userName}</Text>
             </View>
-            <Text style={[theme.textPrimary, {
-                marginBottom: 8,}]}>
+            <Text
+              style={[
+                theme.textPrimary,
+                {
+                  marginBottom: 8,
+                },
+              ]}
+            >
               ⏰{" "}
               {selectedBooking.start
                 .toDate()
@@ -726,8 +723,14 @@ export default function CalendarScreen() {
                 .toDate()
                 .toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </Text>
-            <Text style={[theme.textPrimary, {
-                marginBottom: 8}]}>
+            <Text
+              style={[
+                theme.textPrimary,
+                {
+                  marginBottom: 8,
+                },
+              ]}
+            >
               {"Status: "}
               {getBookingStatusLabel(selectedBooking.status)}
             </Text>
@@ -750,7 +753,10 @@ export default function CalendarScreen() {
                     marginRight: 8,
                     minWidth: 90,
                     alignItems: "center",
-                    opacity: selectedBooking.status === BookingStatus.Approved ? 0.5 : 1,
+                    opacity:
+                      selectedBooking.status === BookingStatus.Approved
+                        ? 0.5
+                        : 1,
                   }}
                   disabled={selectedBooking.status === BookingStatus.Approved}
                   onPress={async () => {
@@ -776,7 +782,10 @@ export default function CalendarScreen() {
                     borderRadius: 6,
                     minWidth: 90,
                     alignItems: "center",
-                    opacity: selectedBooking.status === BookingStatus.Rejected ? 0.5 : 1,
+                    opacity:
+                      selectedBooking.status === BookingStatus.Rejected
+                        ? 0.5
+                        : 1,
                   }}
                   disabled={selectedBooking.status === BookingStatus.Rejected}
                   onPress={async () => {

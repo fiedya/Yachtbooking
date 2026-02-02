@@ -2,7 +2,7 @@ export enum YachtStatus {
   Disabled = 0,
   Available = 1,
   Maintenance = 2,
-  NotOurs = 3
+  NotOurs = 3,
 }
 
 export type Yacht = {

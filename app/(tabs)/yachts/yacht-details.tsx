@@ -148,7 +148,7 @@ export default function YachtDetailsScreen() {
                 onPress={isAdmin ? () => startEdit("shortcut") : undefined}
                 disabled={!isAdmin}
               >
-                <Text style={[theme.bodyText, { flex: 1 }]}> 
+                <Text style={[theme.bodyText, { flex: 1 }]}>
                   {yacht.shortcut && yacht.shortcut.trim() !== ""
                     ? yacht.shortcut
                     : "Brak skrótu"}
@@ -206,7 +206,7 @@ export default function YachtDetailsScreen() {
                 onPress={isAdmin ? () => startEdit("type") : undefined}
                 disabled={!isAdmin}
               >
-                <Text style={[theme.bodyText, { flex: 1 }]}> 
+                <Text style={[theme.bodyText, { flex: 1 }]}>
                   {yacht.type || "Brak typu"}
                 </Text>
                 {isAdmin && (
@@ -269,7 +269,11 @@ export default function YachtDetailsScreen() {
                   <Text style={theme.bodyText}>
                     {yacht.description || "Brak opisu"}
                   </Text>
-                  <Text style={[theme.bodyText, { marginTop: 8, color: '#666' }]}>Status: {getYachtStatusLabel(yacht.status)}</Text>
+                  <Text
+                    style={[theme.bodyText, { marginTop: 8, color: "#666" }]}
+                  >
+                    Status: {getYachtStatusLabel(yacht.status)}
+                  </Text>
                 </View>
                 {isAdmin && (
                   <MaterialIcons

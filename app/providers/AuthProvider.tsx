@@ -20,11 +20,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let unsubscribeUserDoc: (() => void) | undefined;
 
     const unsubscribeAuth = auth().onAuthStateChanged((u) => {
-      console.log("[AUTH PROVIDER] state changed:", {
-        uid: u?.uid,
-        phone: u?.phoneNumber,
-      });
-
       // 🔁 cleanup previous Firestore subscription
       if (unsubscribeUserDoc) {
         unsubscribeUserDoc();

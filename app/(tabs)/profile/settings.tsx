@@ -19,9 +19,7 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     if (!user) return;
-    console.log("[Settings] Subscribing to user", user.uid);
     const unsub = subscribeToUser(user.uid, (data) => {
-      console.log("[Settings] User data from Firestore", data);
       setPrefs({
         usePseudonims: data?.preferences?.usePseudonims ?? false,
         useYachtShortcuts: data?.preferences?.useYachtShortcuts ?? false,
@@ -33,19 +31,14 @@ export default function SettingsScreen() {
 
   const handleToggle =
     (key: "usePseudonims" | "useYachtShortcuts") => async (value: boolean) => {
-      console.log(`[Settings] Toggle ${key} to`, value);
       setPrefs((p) => ({ ...p, [key]: value }));
       setUpdating((u) => ({ ...u, [key]: true }));
       try {
         if (user) {
-          console.log("[Settings] Calling updateUserPreferences", user.uid, {
-            [key]: value,
-          });
           await updateUserPreferences(user.uid, { [key]: value });
-          console.log("[Settings] updateUserPreferences success");
         }
       } catch (e) {
-        console.log("[Settings] updateUserPreferences error", e);
+        console.error("[Settings] updateUserPreferences error", e);
         setPrefs((p) => ({ ...p, [key]: !value })); // revert
         Alert.alert(
           "Błąd",

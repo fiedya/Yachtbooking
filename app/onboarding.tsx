@@ -21,35 +21,25 @@ export default function OnboardingScreen() {
   const router = useRouter();
 
   async function handleContinue() {
-    console.log("[ONBOARDING] Continue pressed");
 
     if (!name.trim() || !surname.trim()) {
-      console.log("[ONBOARDING] Missing name or surname");
       return;
     }
 
     const user = auth().currentUser;
-    console.log("[ONBOARDING] currentUser:", {
-      uid: user?.uid,
-      phone: user?.phoneNumber,
-    });
+
 
     if (!user) return;
 
     setLoading(true);
 
     try {
-      console.log("[ONBOARDING] calling createOrUpdateUser");
 
       await createOrUpdateUser(
         user.uid,
         user.phoneNumber || "",
         name.trim(),
         surname.trim(),
-      );
-      // No need to create separate settings, preferences are in user doc
-      console.log(
-        "[ONBOARDING] createOrUpdateUser & createDefaultSettings SUCCESS",
       );
       router.replace("/post-auth");
     } catch (e) {

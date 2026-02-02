@@ -1,4 +1,3 @@
-
 export enum BookingStatus {
   Pending = 0,
   Approved = 1,

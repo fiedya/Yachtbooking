@@ -44,8 +44,8 @@ export default function ProfileScreen() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
   const [modalUserPhoto, setModalUserPhoto] = useState<string | null>(null);
-  
-    useEffect(() => {
+
+  useEffect(() => {
     const user = auth().currentUser;
     if (!user) return;
     const unsub = subscribeToUser(user.uid, (profile) => {
@@ -323,21 +323,19 @@ export default function ProfileScreen() {
                   <Text style={theme.sectionTitle}>{b.yachtName}</Text>
                   <Text style={theme.textSecondary}>
                     {b.start.toDate().toLocaleDateString()}{" "}
-                    {b.start
-                      .toDate()
-                      .toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                    {b.start.toDate().toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                     {" - "}
-                    {b.end
-                      .toDate()
-                      .toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                    {b.end.toDate().toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </Text>
-                  <Text style={theme.textXs}>Status: {getBookingStatusLabel(b.status)}</Text>
+                  <Text style={theme.textXs}>
+                    Status: {getBookingStatusLabel(b.status)}
+                  </Text>
                 </Pressable>
               ))}
             </View>

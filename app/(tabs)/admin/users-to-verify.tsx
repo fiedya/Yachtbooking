@@ -36,7 +36,6 @@ export default function UsersToVerifyScreen() {
       .onSnapshot(
         (snapshot) => {
           if (!snapshot) {
-            console.log("[USERS TO VERIFY] snapshot is null");
             return;
           }
 

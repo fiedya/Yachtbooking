@@ -13,7 +13,6 @@ export default function Index() {
     );
   }
 
-  console.log("[INDEX] Current user:", user);
   if (user) {
     return <Redirect href="/post-auth" />;
   }

@@ -191,7 +191,7 @@ export const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "center",
     alignItems: "center",
-    padding: 0
+    padding: 0,
   },
 
   modal: {

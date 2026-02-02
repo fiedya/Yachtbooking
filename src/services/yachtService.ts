@@ -65,9 +65,7 @@ export async function getYachtById(id: string): Promise<Yacht | null> {
   };
 }
 
-export async function addYacht(
-  data: Omit<Yacht, "id" | "createdAt">,
-) {
+export async function addYacht(data: Omit<Yacht, "id" | "createdAt">) {
   return firestore()
     .collection("yachts")
     .add({
@@ -79,7 +77,6 @@ export async function addYacht(
 export async function setYachtActive(yachtId: string, active: boolean) {
   return firestore().collection("yachts").doc(yachtId).update({ active });
 }
-
 
 // Get only available yachts (status === YachtStatus.Available)
 export async function getAvailableYachts(): Promise<Yacht[]> {
@@ -107,9 +104,7 @@ export async function getOurYachts(): Promise<Yacht[]> {
 
 // Get all yachts (admin)
 export async function getAllYachts(): Promise<Yacht[]> {
-  const snap = await firestore()
-    .collection("yachts")
-    .get();
+  const snap = await firestore().collection("yachts").get();
   return snap.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),

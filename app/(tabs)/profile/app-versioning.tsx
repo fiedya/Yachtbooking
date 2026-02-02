@@ -42,7 +42,7 @@ export default function AppVersioningScreen() {
               key={v.version}
               style={[
                 styles.card,
-                isCurrent && { borderWidth: 2, borderColor: '#FF7A00' },
+                isCurrent && { borderWidth: 2, borderColor: "#FF7A00" },
               ]}
             >
               <Text style={styles.version}>

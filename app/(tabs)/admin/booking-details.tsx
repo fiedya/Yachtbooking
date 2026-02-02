@@ -94,8 +94,11 @@ export default function BookingDetailsScreen() {
     );
   }
 
-  function updateStatus(nextStatus: BookingStatus.Approved | BookingStatus.Rejected) {
-    const actionLabel = nextStatus === BookingStatus.Approved ? "zaakceptować" : "odrzucić";
+  function updateStatus(
+    nextStatus: BookingStatus.Approved | BookingStatus.Rejected,
+  ) {
+    const actionLabel =
+      nextStatus === BookingStatus.Approved ? "zaakceptować" : "odrzucić";
     Alert.alert("Potwierdź", `Na pewno chcesz ${actionLabel} ten booking?`, [
       { text: "Anuluj", style: "cancel" },
       {
@@ -305,7 +308,9 @@ export default function BookingDetailsScreen() {
       {/* Status */}
       <View style={{ marginVertical: 16 }}>
         <Text style={theme.textMuted}>Current status</Text>
-        <Text style={theme.textPrimary}>{getBookingStatusLabel(booking.status)}</Text>
+        <Text style={theme.textPrimary}>
+          {getBookingStatusLabel(booking.status)}
+        </Text>
       </View>
 
       {/* Buttons */}

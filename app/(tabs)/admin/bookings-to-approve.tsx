@@ -28,7 +28,6 @@ export default function BookingsToApproveScreen() {
       .onSnapshot(
         (snapshot) => {
           if (!snapshot) {
-            console.log("[BOOKINGS TO APPROVE] snapshot is null");
             return;
           }
 

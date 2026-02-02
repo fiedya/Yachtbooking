@@ -1,6 +1,7 @@
 import { BookingStatus } from "@/src/entities/booking";
 import { UserStatus } from "@/src/entities/user";
 import { YachtStatus } from "@/src/entities/yacht";
+import { NewsCategory, NewsStatus } from "../entities/news";
 
 export function getBookingStatusLabel(status: BookingStatus): string {
   switch (status) {
@@ -36,6 +37,32 @@ export function getYachtStatusLabel(status: YachtStatus): string {
       return "Serwis";
     case YachtStatus.Disabled:
       return "Wyłączony";
+    default:
+      return "Nieznany";
+  }
+}
+
+export function getNewsCategoryLabel(category: NewsCategory): string {
+  switch (category) {
+    case NewsCategory.General:
+      return "Ogólne";
+    case NewsCategory.Yachts:
+      return "Jachty";
+    case NewsCategory.Stanica:
+      return "Stanica";
+    case NewsCategory.Events:
+      return "Wydarzenia";
+    default:
+      return "Nieznany";
+  }
+}
+
+export function getNewsStatusLabel(status: NewsStatus): string {
+  switch (status) {
+    case NewsStatus.Active:
+      return "Aktywny";
+    case NewsStatus.Old:
+      return "Stary";
     default:
       return "Nieznany";
   }

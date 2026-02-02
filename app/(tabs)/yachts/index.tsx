@@ -29,7 +29,7 @@ export default function YachtsScreen() {
       if (showAll) {
         setYachts(allYachts);
       } else {
-        setYachts(allYachts.filter(y => y.status !== YachtStatus.Disabled));
+        setYachts(allYachts.filter((y) => y.status !== YachtStatus.Disabled));
       }
     });
     return unsub;
@@ -43,12 +43,29 @@ export default function YachtsScreen() {
           title: "Jachty",
           headerRight: isAdmin
             ? () => (
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 8 }}>
-                  <Text style={{ color: colors.primary, fontWeight: 'bold', marginRight: 8 }}>wszystkie</Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginRight: 8,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: colors.primary,
+                      fontWeight: "bold",
+                      marginRight: 8,
+                    }}
+                  >
+                    wszystkie
+                  </Text>
                   <Switch
                     value={showAll}
                     onValueChange={setShowAll}
-                    trackColor={{ false: colors.lightGrey, true: colors.primary }}
+                    trackColor={{
+                      false: colors.lightGrey,
+                      true: colors.primary,
+                    }}
                     thumbColor={showAll ? colors.primary : colors.primaryLight}
                   />
                 </View>

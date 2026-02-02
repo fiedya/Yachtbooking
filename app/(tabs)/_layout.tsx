@@ -15,7 +15,7 @@ export default function TabsLayout() {
 
   const user = auth().currentUser;
 
-    useEffect(() => {
+  useEffect(() => {
     const user = auth().currentUser;
     if (!user) return;
     const unsub = subscribeToUser(user.uid, (profile) => {
@@ -82,8 +82,7 @@ export default function TabsLayout() {
         name="admin"
         options={{
           title: "Admin",
-          href:
-            isAdmin ? undefined : null,
+          href: isAdmin ? undefined : null,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="key-outline" size={size} color={color} />
           ),

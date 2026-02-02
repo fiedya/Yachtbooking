@@ -25,7 +25,6 @@ export default function AuthScreen() {
 
   function log(label: string, data?: any) {
     const t = new Date().toISOString().split("T")[1];
-    console.log(`[AUTH ${t}] ${label}`, data ?? "");
   }
 
   async function handleSendCode() {

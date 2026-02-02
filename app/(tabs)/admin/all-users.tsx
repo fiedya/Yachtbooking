@@ -28,40 +28,36 @@ export default function AllUsersScreen() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-useEffect(() => {
-  setLoading(true);
+  useEffect(() => {
+    setLoading(true);
 
-  const unsub = firestore()
-    .collection("users")
-    .orderBy("surname", "desc")
-    .onSnapshot(
-      snapshot => {
+    const unsub = firestore()
+      .collection("users")
+      .orderBy("surname", "desc")
+      .onSnapshot(
+        (snapshot) => {
+          const users = snapshot.docs.map((doc) => {
+            const d = doc.data();
+            return {
+              uid: doc.id,
+              name: d.name,
+              surname: d.surname,
+              phone: d.phone,
+              status: d.status,
+            };
+          });
 
+          setUsers(users);
+          setLoading(false);
+        },
+        (error) => {
+          console.error("[ALL USERS] snapshot error:", error);
+          setLoading(false);
+        },
+      );
 
-        const users = snapshot.docs.map(doc => {
-          const d = doc.data();
-          return {
-            uid: doc.id,
-            name: d.name,
-            surname: d.surname,
-            phone: d.phone,
-            status: d.status,
-          };
-        });
-
-        console.log("[ALL USERS] server users:", users.length);
-        setUsers(users);
-        setLoading(false);
-      },
-      error => {
-        console.error("[ALL USERS] snapshot error:", error);
-        setLoading(false);
-      }
-    );
-
-  return unsub;
-}, []);
-
+    return unsub;
+  }, []);
 
   return (
     <View style={theme.screen}>

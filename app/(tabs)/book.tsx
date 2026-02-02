@@ -12,11 +12,13 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Alert,
-  Image, Platform, Pressable,
+  Image,
+  Platform,
+  Pressable,
   ScrollView,
   Text,
   TextInput,
-  View
+  View,
 } from "react-native";
 import { useMode } from "../providers/ModeProvider";
 
@@ -34,27 +36,27 @@ export default function BookScreen() {
     bookingId?: string;
     edit?: string;
   }>();
-    const { mode } = useMode();
-    const [isAdmin, setIsAdmin] = useState(false);
-    const getDatePart = (iso?: string) => (iso ? new Date(iso) : new Date());
-    const getTimePart = (iso?: string) => (iso ? new Date(iso) : new Date());
+  const { mode } = useMode();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const getDatePart = (iso?: string) => (iso ? new Date(iso) : new Date());
+  const getTimePart = (iso?: string) => (iso ? new Date(iso) : new Date());
 
-    const [showDatePicker, setShowDatePicker] = useState(false);
-    const [showStartPicker, setShowStartPicker] = useState(false);
-    const [showEndPicker, setShowEndPicker] = useState(false);
-    const [date, setDate] = useState(() => getDatePart(paramStartDate));
-    const [startTime, setStartTime] = useState(() => getTimePart(paramStartDate));
-    const [endTime, setEndTime] = useState(() => getTimePart(paramEndDate));
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+  const [date, setDate] = useState(() => getDatePart(paramStartDate));
+  const [startTime, setStartTime] = useState(() => getTimePart(paramStartDate));
+  const [endTime, setEndTime] = useState(() => getTimePart(paramEndDate));
 
-    const [loading, setLoading] = useState(false);
-    const [yachts, setYachts] = useState<Yacht[]>([]);
-    const [availableYachtIds, setAvailableYachtIds] = useState<string[]>([]);
-    const [yacht, setYacht] = useState<Yacht | null>(null);
-    const [bookingName, setBookingName] = useState("");
-    const [settings, setSettings] = useState<{ usePseudonims: boolean }>({
-      usePseudonims: false,
-    });
-    const [editingBooking, setEditingBooking] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [yachts, setYachts] = useState<Yacht[]>([]);
+  const [availableYachtIds, setAvailableYachtIds] = useState<string[]>([]);
+  const [yacht, setYacht] = useState<Yacht | null>(null);
+  const [bookingName, setBookingName] = useState("");
+  const [settings, setSettings] = useState<{ usePseudonims: boolean }>({
+    usePseudonims: false,
+  });
+  const [editingBooking, setEditingBooking] = useState<any>(null);
   useEffect(() => {
     if (paramStartDate) {
       const d = new Date(paramStartDate);
@@ -186,7 +188,6 @@ export default function BookScreen() {
     }
   }
 
-
   useEffect(() => {
     getAvailableYachts().then((data) => {
       setYachts(data);
@@ -217,15 +218,15 @@ export default function BookScreen() {
   }, [date, startTime, endTime, yachts, yacht]);
 
   const snapToQuarter = (date: Date) => {
-  const snapped = Math.round(date.getMinutes() / 15) * 15
+    const snapped = Math.round(date.getMinutes() / 15) * 15;
 
-  const fixed = new Date(date)
-  fixed.setMinutes(snapped)
-  fixed.setSeconds(0)
-  fixed.setMilliseconds(0)
+    const fixed = new Date(date);
+    fixed.setMinutes(snapped);
+    fixed.setSeconds(0);
+    fixed.setMilliseconds(0);
 
-  return fixed
-}
+    return fixed;
+  };
 
   return (
     <View style={styles.container}>
@@ -286,17 +287,17 @@ export default function BookScreen() {
             display={Platform.OS === "android" ? "spinner" : "default"}
             onChange={(event, selectedDate) => {
               if (event.type === "dismissed") {
-                setShowStartPicker(false)
-                return
+                setShowStartPicker(false);
+                return;
               }
 
               if (selectedDate) {
-                const snapped = snapToQuarter(selectedDate)
-                setStartTime(snapped)
+                const snapped = snapToQuarter(selectedDate);
+                setStartTime(snapped);
               }
 
               if (Platform.OS === "android") {
-                setShowStartPicker(false)
+                setShowStartPicker(false);
               }
             }}
           />
@@ -321,17 +322,17 @@ export default function BookScreen() {
             display={Platform.OS === "android" ? "spinner" : "default"}
             onChange={(event, selectedDate) => {
               if (event.type === "dismissed") {
-                setShowEndPicker(false)
-                return
+                setShowEndPicker(false);
+                return;
               }
 
               if (selectedDate) {
-                const snapped = snapToQuarter(selectedDate)
-                setEndTime(snapped)
+                const snapped = snapToQuarter(selectedDate);
+                setEndTime(snapped);
               }
 
               if (Platform.OS === "android") {
-                setShowEndPicker(false)
+                setShowEndPicker(false);
               }
             }}
           />

@@ -11,8 +11,6 @@ export async function getUserPhotoUrl(uid: string): Promise<string | null> {
 }
 
 export async function getUser(uid: string) {
-  console.log("[USER SERVICE] getUser uid:", uid);
-
   const ref = firestore().collection("users").doc(uid);
   const snap = await ref.get();
   return snap.exists() ? snap.data() : null;
@@ -129,7 +127,6 @@ export function subscribeToUser(
         const msg = error?.message ?? "";
 
         if (msg.includes("permission-denied")) {
-          console.log("[USER SERVICE] Firestore not ready yet");
           return;
         }
 

@@ -32,7 +32,7 @@ export default function AddEditYachtScreen() {
   const [active, setActive] = useState(true);
   const [status, setStatus] = useState<YachtStatus>(YachtStatus.Available);
 
-    useEffect(() => {
+  useEffect(() => {
     const user = auth().currentUser;
     if (!user) return;
     const unsub = subscribeToUser(user.uid, (profile) => {
@@ -151,34 +151,61 @@ export default function AddEditYachtScreen() {
         {/* Status */}
         <View style={[theme.card, theme.cardPadding]}>
           <Text style={theme.title}>Status</Text>
-          <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+          <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
             <Pressable
               onPress={() => setStatus(YachtStatus.Available)}
-              style={[theme.pill, status === YachtStatus.Available && theme.pillActive]}
+              style={[
+                theme.pill,
+                status === YachtStatus.Available && theme.pillActive,
+              ]}
             >
-              <Text style={status === YachtStatus.Available ? theme.textOnPrimary : theme.textSecondary}>
+              <Text
+                style={
+                  status === YachtStatus.Available
+                    ? theme.textOnPrimary
+                    : theme.textSecondary
+                }
+              >
                 Dostępny
               </Text>
             </Pressable>
             <Pressable
               onPress={() => setStatus(YachtStatus.Maintenance)}
-              style={[theme.pill, status === YachtStatus.Maintenance && theme.pillActive]}
+              style={[
+                theme.pill,
+                status === YachtStatus.Maintenance && theme.pillActive,
+              ]}
             >
-              <Text style={status === YachtStatus.Maintenance ? theme.textOnPrimary : theme.textSecondary}>
+              <Text
+                style={
+                  status === YachtStatus.Maintenance
+                    ? theme.textOnPrimary
+                    : theme.textSecondary
+                }
+              >
                 Serwis
               </Text>
             </Pressable>
             <Pressable
               onPress={() => setStatus(YachtStatus.Disabled)}
-              style={[theme.pill, status === YachtStatus.Disabled && theme.pillActive]}
+              style={[
+                theme.pill,
+                status === YachtStatus.Disabled && theme.pillActive,
+              ]}
             >
-              <Text style={status === YachtStatus.Disabled ? theme.textOnPrimary : theme.textSecondary}>
+              <Text
+                style={
+                  status === YachtStatus.Disabled
+                    ? theme.textOnPrimary
+                    : theme.textSecondary
+                }
+              >
                 Wyłączony
               </Text>
             </Pressable>
           </View>
         </View>
-        
+
         {/* Nazwa */}
         <View style={[theme.card, theme.cardPadding]}>
           <Text style={theme.title}>Nazwa</Text>
