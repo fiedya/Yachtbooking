@@ -1,9 +1,12 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
 import {
+  browserLocalPersistence,
   getAuth,
   RecaptchaVerifier,
+  setPersistence,
   signInWithPhoneNumber,
 } from "firebase/auth";
+
 import {
   getDoc as _getDoc,
   onSnapshot as _onSnapshot,
@@ -34,7 +37,14 @@ const app =
     : getApp();
 
 const auth = getAuth(app);
+
+// 🔥 STEP 7 — Firebase Auth persistence for iOS PWA
+setPersistence(auth, browserLocalPersistence).catch(() => {
+  // iOS Safari private mode can throw — safe to ignore
+});
+
 const db = getFirestore(app);
+
 
 /* AUTH */
 export const onAuthStateChanged = (cb: any) =>

@@ -5,6 +5,11 @@ import { ActivityIndicator, View } from "react-native";
 export default function Index() {
   const { user, loading } = useAuth();
 
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js");
+  }
+
+
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center" }}>
