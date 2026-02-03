@@ -1,23 +1,23 @@
 import { News } from "@/src/entities/news";
+import { useAuth } from "@/src/providers/AuthProvider";
 import { subscribeToNews } from "@/src/services/newsService";
 import { subscribeToUser } from "@/src/services/userService";
 import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
 import { styles as theme } from "@/src/theme/styles";
 import { Ionicons } from "@expo/vector-icons";
-import auth from "@react-native-firebase/auth";
 import { Stack, router } from "expo-router";
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
-import { useMode } from "../../providers/ModeProvider";
+import { useMode } from "../../../src/providers/ModeProvider";
 
 export default function NewsScreen() {
   const { mode } = useMode();
   const [isAdmin, setIsAdmin] = useState(false);
   const [news, setNews] = useState<News[]>([]);
+  const { user, uid, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    const user = auth().currentUser;
     if (!user) return;
     const unsub = subscribeToUser(user.uid, (profile) => {
       setIsAdmin(profile?.role === "admin" && mode === "admin");

@@ -1,16 +1,16 @@
 import { News, NewsCategory } from "@/src/entities/news";
 import { getNewsCategoryLabel } from "@/src/helpers/enumHelper";
+import { useAuth } from "@/src/providers/AuthProvider";
 import { getNewsById, updateNews } from "@/src/services/newsService";
 import { subscribeToUser } from "@/src/services/userService";
 import { headerStyles } from "@/src/theme/header";
 import { spacing } from "@/src/theme/spacing";
 import { styles as theme } from "@/src/theme/styles";
 import { MaterialIcons } from "@expo/vector-icons";
-import auth from "@react-native-firebase/auth";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import { useMode } from "../../providers/ModeProvider";
+import { useMode } from "../../../src/providers/ModeProvider";
 
 export default function NewsDetailsScreen() {
   const { mode } = useMode();
@@ -23,6 +23,7 @@ export default function NewsDetailsScreen() {
   const [fieldValue, setFieldValue] = useState<string>("");
   const [categoryValue, setCategoryValue] = useState<NewsCategory | null>(null);
   const [saving, setSaving] = useState(false);
+  const { user, uid, loading: authLoading } = useAuth();
 
   useEffect(() => {
     if (!id || typeof id !== "string") return;
@@ -30,7 +31,6 @@ export default function NewsDetailsScreen() {
   }, [id]);
 
   useEffect(() => {
-    const user = auth().currentUser;
     if (!user) return;
     const unsub = subscribeToUser(user.uid, (profile) => {
       setIsAdmin(profile?.role === "admin" && mode === "admin");

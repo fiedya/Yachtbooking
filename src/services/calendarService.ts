@@ -1,56 +1,80 @@
-import firestore from "@react-native-firebase/firestore";
+import {
+  getDoc,
+  onSnapshot,
+  queryDocs,
+} from "@/src/firebase/init";
 import { BookingStatus } from "../entities/booking";
+
+/* ----------------------------------
+   Realtime subscription
+----------------------------------- */
 
 export function subscribeToBookings(
   start: Date,
   end: Date,
   onChange: (bookings: any[]) => void,
 ) {
-  return firestore()
-    .collection("bookings")
-    .where("start", "<", end)
-    .where("end", ">", start)
-    .onSnapshot((snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
+  return onSnapshot("bookings", async (snapshot: any) => {
+    if (!snapshot) {
+      onChange([]);
+      return;
+    }
+
+    const docs = snapshot.docs ?? snapshot._docs ?? [];
+
+    const data = docs
+      .map((doc: any) => ({
         id: doc.id,
         ...doc.data(),
-      }));
+      }))
+      .filter(
+        (b: any) =>
+          b.start?.toDate?.() < end &&
+          b.end?.toDate?.() > start &&
+          [BookingStatus.Pending, BookingStatus.Approved].includes(b.status),
+      );
 
-      onChange(data);
-    });
+    onChange(data);
+  });
 }
 
-/**
- * Returns yacht IDs that are busy (booked) in the given time range, unless it's the yacht of the booking being edited.
- * @param start
- * @param end
- * @param editingBookingId (optional) - if provided, always include the yacht from this booking as available
- */
+/* ----------------------------------
+   Availability query
+----------------------------------- */
+
 export async function getAvailableYachtIds(
   start: Date,
   end: Date,
   editingBookingId?: string | null,
 ): Promise<string[]> {
-  const snapshot = await firestore()
-    .collection("bookings")
-    .where("start", "<", end)
-    .where("end", ">", start)
-    .where("status", "in", [BookingStatus.Pending, BookingStatus.Approved])
-    .get();
+  const snapshot: any = await queryDocs("bookings", {
+    where: ["start", "<", end],
+  });
 
-  const busyYachtIds = new Set(snapshot.docs.map((doc) => doc.data().yachtId));
+  const docs = snapshot.docs ?? snapshot._docs ?? [];
+  const busyYachtIds = new Set<string>();
 
-  // If editing, remove the yachtId of the booking being edited from busy list
+  docs.forEach((doc: any) => {
+    const d = doc.data();
+
+    if (
+      d.start?.toDate?.() < end &&
+      d.end?.toDate?.() > start &&
+      [BookingStatus.Pending, BookingStatus.Approved].includes(d.status)
+    ) {
+      busyYachtIds.add(d.yachtId);
+    }
+  });
+
+  // allow yacht of edited booking
   if (editingBookingId) {
-    const editingDoc = await firestore()
-      .collection("bookings")
-      .doc(editingBookingId)
-      .get();
-    const editingYachtId = editingDoc.exists()
-      ? editingDoc.data()?.yachtId
-      : null;
-    if (editingYachtId) {
-      busyYachtIds.delete(editingYachtId);
+    const editSnap: any = await getDoc("bookings", editingBookingId);
+
+    if (editSnap.exists()) {
+      const editingYachtId = editSnap.data()?.yachtId;
+      if (editingYachtId) {
+        busyYachtIds.delete(editingYachtId);
+      }
     }
   }
 

@@ -1,13 +1,13 @@
 import { Booking } from "@/src/entities/booking";
+import { getCurrentUser, signOut } from "@/src/firebase/init";
 import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
+import { useAuth } from "@/src/providers/AuthProvider";
 import { subscribeToBookings } from "@/src/services/calendarService";
 import { uploadImage } from "@/src/services/imageUploadService";
 import { headerStyles } from "@/src/theme/header";
 import { styles as theme } from "@/src/theme/styles";
 import { pickImageFromGallery } from "@/src/utils/pickImage";
 import { MaterialIcons } from "@expo/vector-icons";
-import auth from "@react-native-firebase/auth";
-import firestore from "@react-native-firebase/firestore";
 import Constants from "expo-constants";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -21,12 +21,13 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { User } from "../../../src/entities/user";
+import { useMode } from "../../../src/providers/ModeProvider";
 import {
   getUserPhotoUrl,
   subscribeToUser,
+  updateUserAvatar,
   updateUserProfile,
 } from "../../../src/services/userService";
-import { useMode } from "../../providers/ModeProvider";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -40,13 +41,12 @@ export default function ProfileScreen() {
   const [saving, setSaving] = useState(false);
   const { mode, toggleMode } = useMode();
   const insets = useSafeAreaInsets();
-  const user = auth().currentUser;
+  const { user, uid, loading: authLoading } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
   const [modalUserPhoto, setModalUserPhoto] = useState<string | null>(null);
 
   useEffect(() => {
-    const user = auth().currentUser;
     if (!user) return;
     const unsub = subscribeToUser(user.uid, (profile) => {
       setIsAdmin(profile?.role === "admin" && mode === "admin");
@@ -96,16 +96,17 @@ export default function ProfileScreen() {
     };
   }, [user?.uid]);
 
-  async function handleLogout() {
-    try {
-      await auth().signOut();
-      router.replace("/auth");
-    } catch (e) {
-      console.error("Logout error", e);
-    }
+async function handleLogout() {
+  try {
+    await signOut();
+    router.replace("/auth");
+  } catch (e) {
+    console.error("Logout error", e);
   }
+}
 
   async function handleChangeAvatar() {
+    const user = getCurrentUser();
     if (!user?.uid) return;
 
     const localUri = await pickImageFromGallery();
@@ -116,11 +117,9 @@ export default function ProfileScreen() {
       `users/${user.uid}/avatar.jpg`,
     );
 
-    await firestore()
-      .collection("users")
-      .doc(user.uid)
-      .update({ photoUrl: imageUrl });
+    await updateUserAvatar(user.uid, imageUrl);
   }
+
 
   async function saveField(field: "pseudonim" | "description") {
     if (!user?.uid) return;

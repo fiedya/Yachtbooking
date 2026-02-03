@@ -1,11 +1,11 @@
 import { Yacht } from "@/src/entities/yacht";
 import { getYachtStatusLabel } from "@/src/helpers/enumHelper";
+import { useAuth } from "@/src/providers/AuthProvider";
 import { subscribeToUser } from "@/src/services/userService";
 import { getYachtById, updateYacht } from "@/src/services/yachtService";
 import { headerStyles } from "@/src/theme/header";
 import { styles as theme } from "@/src/theme/styles";
 import { MaterialIcons } from "@expo/vector-icons";
-import auth from "@react-native-firebase/auth";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -16,7 +16,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useMode } from "../../providers/ModeProvider";
+import { useMode } from "../../../src/providers/ModeProvider";
 
 export default function YachtDetailsScreen() {
   const { mode } = useMode();
@@ -28,14 +28,14 @@ export default function YachtDetailsScreen() {
   >(null);
   const [fieldValue, setFieldValue] = useState("");
   const [saving, setSaving] = useState(false);
-
+  const { user, uid, loading: authLoading } = useAuth();
+  
   useEffect(() => {
     if (!id || typeof id !== "string") return;
     getYachtById(id).then(setYacht);
   }, [id]);
 
   useEffect(() => {
-    const user = auth().currentUser;
     if (!user) return;
     const unsub = subscribeToUser(user.uid, (profile) => {
       setIsAdmin(profile?.role === "admin" && mode === "admin");

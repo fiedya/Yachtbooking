@@ -1,60 +1,44 @@
-import auth from "@react-native-firebase/auth";
+import { auth } from "@/src/firebase/auth";
+import { useAuth } from "@/src/providers/AuthProvider";
+import { getUser } from "@/src/services/userService";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
-import { getUser } from "../src/services/userService";
+import { useEffect } from "react";
 
 export default function PostAuthScreen() {
   const router = useRouter();
-  const [authReady, setAuthReady] = useState(false);
-  const [user, setUser] =
-    useState<ReturnType<typeof auth>["currentUser"]>(null);
+  const { user, uid, loading } = useAuth();
 
   useEffect(() => {
-    const unsub = auth().onAuthStateChanged((u) => {
-      setUser(u);
-      setAuthReady(true);
-    });
-
-    return unsub;
-  }, []);
-
-  useEffect(() => {
-    if (!authReady) return;
+    if (loading) return;
 
     async function decide() {
-      if (!user) {
+      // 🔒 Not signed in
+      if (!user || !uid) {
         router.replace("/auth");
         return;
       }
 
+      // 🔁 Ensure Firebase session is still valid
       try {
         await user.reload();
       } catch (e) {
-        console.log("[POST-AUTH] User reload failed, signing out.", e);
-        await auth().signOut();
-        router.replace("/auth");
-        return;
-      }
-      const currentUser = auth().currentUser;
-      if (!currentUser) {
-        await auth().signOut();
+        console.log("[POST-AUTH] reload failed, signing out", e);
+        await auth.signOut();
         router.replace("/auth");
         return;
       }
 
 
-      const userDoc = await getUser(currentUser.uid);
-      if (!userDoc) {
-        router.replace("/onboarding");
-        return;
-      }
-      if (!userDoc.onboarded) {
+      // 🔥 Fetch Firestore user document
+      const userDoc = await getUser(uid);
+
+      if (!userDoc || !userDoc.onboarded) {
         router.replace("/onboarding");
         return;
       }
 
-      await auth().currentUser?.getIdToken(true);
+      // 🔑 Force fresh token (permissions, claims)
+      await user.getIdToken(true);
 
       if (userDoc.status === 0 /* ToVerify */) {
         router.replace("/wait-for-verification");
@@ -65,20 +49,7 @@ export default function PostAuthScreen() {
     }
 
     decide();
-  }, [authReady]);
+  }, [loading, user, uid]);
 
-        
-    useEffect(() => {
-      (async () => {
-        const user = auth().currentUser;
-
-        const token = await user?.getIdTokenResult(true);
-      })();
-    }, []);
-    
-  return (
-    <View style={{ flex: 1, justifyContent: "center" }}>
-      <ActivityIndicator size="large" />
-    </View>
-  );
+  return null;
 }

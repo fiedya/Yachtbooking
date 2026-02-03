@@ -1,89 +1,103 @@
-import firestore from "@react-native-firebase/firestore";
+import {
+  getDoc,
+  onSnapshot,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+} from "@/src/firebase/init";
 import { Settings } from "../entities/settings";
+
+const SETTINGS_COLLECTION = "settings";
+
+/* ----------------------------------
+   Create or update (upsert)
+----------------------------------- */
 
 export async function createOrUpdateSettings(
   userId: string,
   usePseudonims = false,
   useYachtShortcuts = false,
 ) {
-  const ref = firestore().collection("settings").doc(userId);
-  const snap = await ref.get();
+  try {
+    const snap: any = await getDoc(SETTINGS_COLLECTION, userId);
 
-  console.log("[settingsService] createOrUpdateSettings for userId:", userId);
-
-  if (!snap.exists()) {
-    console.log(
-      "[settingsService] Creating default settings for userId:",
-      userId,
+    if (!snap.exists()) {
+      await setDoc(SETTINGS_COLLECTION, userId, {
+        userId,
+        usePseudonims,
+        useYachtShortcuts,
+        createdAt: serverTimestamp(),
+      });
+    } else {
+      await updateDoc(SETTINGS_COLLECTION, userId, {
+        usePseudonims,
+        useYachtShortcuts,
+      });
+    }
+  } catch (e: any) {
+    console.warn(
+      "[settingsService] createOrUpdateSettings error:",
+      e?.message || e,
     );
-    await ref.set({
-      userId,
-      usePseudonims,
-      useYachtShortcuts,
-      createdAt: firestore.FieldValue.serverTimestamp(),
-    });
-  } else {
-    await ref.update({
-      usePseudonims,
-      useYachtShortcuts,
-    });
   }
 }
 
-export async function getSettings(userId: string): Promise<Settings | null> {
+/* ----------------------------------
+   Read once
+----------------------------------- */
+
+export async function getSettings(
+  userId: string,
+): Promise<Settings | null> {
   try {
-    const ref = firestore().collection("settings").doc(userId);
-    const snap = await ref.get();
+    const snap: any = await getDoc(SETTINGS_COLLECTION, userId);
     return snap.exists() ? (snap.data() as Settings) : null;
-  } catch (e) {
-    // If collection does not exist or permission denied, return null
+  } catch (e: any) {
     console.warn(
       "[settingsService] getSettings error:",
-      (e as any)?.message || e,
+      e?.message || e,
     );
     return null;
   }
 }
 
+/* ----------------------------------
+   Realtime subscription
+----------------------------------- */
+
 export function subscribeToSettings(
   userId: string,
   onChange: (settings: Settings | null) => void,
 ) {
-  try {
-    return firestore()
-      .collection("settings")
-      .doc(userId)
-      .onSnapshot(
-        (snap) => {
-          if (!snap || !snap.exists) {
-            onChange(null);
-            return;
-          }
-          onChange(snap.data() as Settings);
-        },
-        (error) => {
-          // If collection does not exist or permission denied, return null
-          console.warn(
-            "[settingsService] subscribeToSettings error:",
-            error?.message || error,
-          );
-          onChange(null);
-        },
-      );
-  } catch (e) {
-    console.warn(
-      "[settingsService] subscribeToSettings error:",
-      (e as any)?.message || e,
-    );
-    onChange(null);
-    return () => {};
-  }
+  return onSnapshot(
+    SETTINGS_COLLECTION,
+    async (snapshot: any) => {
+      if (!snapshot) {
+        onChange(null);
+        return;
+      }
+
+      const docs = snapshot.docs ?? snapshot._docs ?? [];
+      const doc = docs.find((d: any) => d.id === userId);
+
+      if (!doc) {
+        onChange(null);
+        return;
+      }
+
+      onChange(doc.data() as Settings);
+    },
+    () => onChange(null),
+  );
 }
+
+/* ----------------------------------
+   Partial update (merge)
+----------------------------------- */
 
 export async function updateSettings(
   userId: string,
   data: Partial<Omit<Settings, "userId">>,
 ) {
-  const ref = firestore().collection("settings").doc(userId);
-  await ref.set(data, { merge: true });
+  return setDoc(SETTINGS_COLLECTION, userId, data, { merge: true });
 }

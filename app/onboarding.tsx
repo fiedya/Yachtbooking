@@ -1,6 +1,7 @@
 import { colors } from "@/src/theme/colors";
 import { styles, styles as theme } from "@/src/theme/styles";
-import auth from "@react-native-firebase/auth";
+
+import { useAuth } from "@/src/providers/AuthProvider";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -17,7 +18,7 @@ export default function OnboardingScreen() {
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const { user, uid, loading: authLoading } = useAuth();
   const router = useRouter();
 
   async function handleContinue() {
@@ -25,9 +26,6 @@ export default function OnboardingScreen() {
     if (!name.trim() || !surname.trim()) {
       return;
     }
-
-    const user = auth().currentUser;
-
 
     if (!user) return;
 

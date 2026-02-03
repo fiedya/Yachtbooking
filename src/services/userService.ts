@@ -1,20 +1,35 @@
-// Get only the user's photoUrl by UID
+import {
+  getDoc,
+  onDocSnapshot,
+  onSnapshot,
+  queryDocs,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+} from "@/src/firebase/init";
+import { User, UserStatus } from "../entities/user";
 
-import firestore from "@react-native-firebase/firestore";
+/* ----------------------------------
+   Reads
+----------------------------------- */
 
-export async function getUserPhotoUrl(uid: string): Promise<string | null> {
-  const ref = firestore().collection("users").doc(uid);
-  const snap = await ref.get();
-  if (!snap.exists) return null;
-  const data = snap.data();
-  return data && data.photoUrl ? data.photoUrl : null;
+export async function getUserPhotoUrl(
+  uid: string,
+): Promise<string | null> {
+  const snap: any = await getDoc("users", uid);
+
+  if (!snap.exists()) return null;
+  return snap.data()?.photoUrl ?? null;
 }
 
 export async function getUser(uid: string) {
-  const ref = firestore().collection("users").doc(uid);
-  const snap = await ref.get();
+  const snap: any = await getDoc("users", uid);
   return snap.exists() ? snap.data() : null;
 }
+
+/* ----------------------------------
+   Writes
+----------------------------------- */
 
 export async function createOrUpdateUser(
   uid: string,
@@ -22,11 +37,10 @@ export async function createOrUpdateUser(
   name: string,
   surname: string,
 ) {
-  const ref = firestore().collection("users").doc(uid);
-  const snap = await ref.get();
+  const snap: any = await getDoc("users", uid);
 
   if (!snap.exists()) {
-    await ref.set({
+    await setDoc("users", uid, {
       uid,
       phone,
       name,
@@ -34,16 +48,16 @@ export async function createOrUpdateUser(
       description: "",
       photoUrl: null,
       role: "user",
-      status: 0, // UserStatus.ToVerify
+      status: 0,
       onboarded: true,
-      createdAt: firestore.FieldValue.serverTimestamp(),
+      createdAt: serverTimestamp(),
       preferences: {
         usePseudonims: false,
         useYachtShortcuts: false,
       },
     });
   } else {
-    await ref.update({
+    await updateDoc("users", uid, {
       name,
       surname,
       onboarded: true,
@@ -51,86 +65,150 @@ export async function createOrUpdateUser(
   }
 }
 
-export async function createUserIfMissing(
-  uid: string,
-  phone: string,
-  name?: string,
-  surname?: string,
-) {
-  const ref = firestore().collection("users").doc(uid);
-  const snap = await ref.get();
-
-  if (!snap.exists) {
-    await ref.set({
-      uid,
-      phone,
-      name: name ?? "",
-      surname: surname ?? "",
-      description: "",
-      pseudonim: "",
-      photoUrl: null,
-      role: "user",
-      status: 0, // UserStatus.ToVerify
-      onboarded: !!(name && surname),
-      createdAt: firestore.FieldValue.serverTimestamp(),
-      preferences: {
-        usePseudonims: false,
-        useYachtShortcuts: false,
-      },
-    });
-  } else if (name && surname) {
-    await ref.update({
-      name,
-      surname,
-      onboarded: true,
-    });
-  }
-}
-
-// Update user preferences
 export async function updateUserPreferences(
   uid: string,
-  preferences: Partial<{ usePseudonims: boolean; useYachtShortcuts: boolean }>,
+  preferences: Partial<{
+    usePseudonims: boolean;
+    useYachtShortcuts: boolean;
+  }>,
 ) {
-  const ref = firestore().collection("users").doc(uid);
-  await ref.set({ preferences }, { merge: true });
+  return setDoc("users", uid, { preferences }, { merge: true });
 }
 
 export async function updateUserProfile(
   uid: string,
   data: { description?: string; pseudonim?: string },
 ) {
-  const ref = firestore().collection("users").doc(uid);
-  await ref.update(data);
+  return updateDoc("users", uid, data);
 }
+
+/* ----------------------------------
+   Realtime subscription
+----------------------------------- */
+
 
 export function subscribeToUser(
   uid: string,
-  onChange: (data: any | null) => void,
+  onChange: (user: User | null) => void,
 ) {
-  return firestore()
-    .collection("users")
-    .doc(uid)
-    .onSnapshot(
-      (snap) => {
-        if (!snap.exists) {
-          onChange(null);
-          return;
-        }
+  if (!uid) {
+    onChange(null);
+    return () => {};
+  }
 
-        onChange({
-          id: snap.id,
-          ...snap.data(),
-        });
-      },
-      (error) => {
-        const msg = error?.message ?? "";
+  return onDocSnapshot(
+    "users",
+    uid,
+    (snap: any) => {
+      if (!snap.exists()) {
+        onChange(null);
+        return;
+      }
 
-        if (msg.includes("permission-denied")) {
-          return;
-        }
-
+      onChange({
+        uid: snap.id,
+        ...(snap.data() as Omit<User, "uid">),
+      });
+    },
+    (error: any) => {
+      const msg = error?.message ?? "";
+      if (!msg.includes("permission-denied")) {
         console.error("[USER SERVICE] subscribe error", error);
-      },
-    );
+      }
+      onChange(null);
+    },
+  );
+}
+
+export function subscribeToAllUsers(
+  onChange: (users: User[]) => void,
+  onError?: (error: unknown) => void,
+) {
+  return onSnapshot(
+    "users",
+    (snapshot: any) => {
+      if (!snapshot) {
+        onChange([]);
+        return;
+      }
+
+      const docs = snapshot.docs ?? snapshot._docs ?? [];
+
+      const users: User[] = docs
+        .map((doc: any) => ({
+          uid: doc.id,
+          ...(doc.data() as Omit<User, "uid">),
+        }))
+        .sort((a: { surname: any; }, b: { surname: any; }) =>
+          (b.surname ?? "").localeCompare(a.surname ?? ""),
+        );
+
+      onChange(users);
+    },
+    onError,
+  );
+}
+
+
+export function subscribeToUsersToVerify(
+  onChange: (users: User[]) => void,
+  onError?: (error: unknown) => void,
+) {
+  return onSnapshot(
+    "users",
+    (snapshot: any) => {
+      if (!snapshot) {
+        onChange([]);
+        return;
+      }
+
+      const docs = snapshot.docs ?? snapshot._docs ?? [];
+
+      const users: User[] = docs
+        .map((doc: any) => ({
+          uid: doc.id,
+          ...(doc.data() as Omit<User, "uid">),
+        }))
+        // where status == ToVerify
+        .filter((u: { status: UserStatus; }) => u.status === UserStatus.ToVerify)
+        // orderBy surname desc
+        .sort((a: { surname: any; }, b: { surname: any; }) =>
+          (b.surname ?? "").localeCompare(a.surname ?? ""),
+        );
+
+      onChange(users);
+    },
+    onError,
+  );
+}
+
+export async function updateUserStatus(
+  userId: string,
+  status: UserStatus.Verified | UserStatus.Rejected,
+) {
+  return updateDoc("users", userId, { status });
+}
+
+
+export async function updateUserAvatar(
+  userId: string,
+  photoUrl: string,
+) {
+  return updateDoc("users", userId, { photoUrl });
+}
+
+export async function probeUserPermissions(userId: string) {
+  try {
+    await getDoc("settings", userId);
+    console.log("[DEBUG] settings OK");
+  } catch (e: any) {
+    console.log("[DEBUG] settings FAIL", e?.code ?? e);
+  }
+
+  try {
+    await queryDocs("bookings", { limit: 1 });
+    console.log("[DEBUG] bookings OK");
+  } catch (e: any) {
+    console.log("[DEBUG] bookings FAIL", e?.code ?? e);
+  }
 }

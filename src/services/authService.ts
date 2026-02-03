@@ -1,17 +1,29 @@
-import auth from "@react-native-firebase/auth";
 
-export function onAuthStateChanged(callback: (user: any | null) => void) {
-  return auth().onAuthStateChanged(callback);
-}
+import {
+  signInWithPhoneNumber,
+} from "firebase/auth";
+import { Platform } from "react-native";
+import { auth } from "../firebase/auth";
 
+/**
+ * Native ONLY
+ */
 export async function signInWithPhone(phoneNumber: string) {
-  return auth().signInWithPhoneNumber(phoneNumber);
+  if (Platform.OS === "web") {
+    throw new Error("signInWithPhone must not be called on web");
+  }
+
+  return auth.signInWithPhoneNumber(phoneNumber);
 }
 
-export async function confirmCode(confirmation: any, code: string) {
-  return confirmation.confirm(code);
+/**
+ * Web ONLY
+ */
+export async function signInWithPhoneWeb(
+  phoneNumber: string,
+  verifier: any,
+) {
+  return signInWithPhoneNumber(auth, phoneNumber, verifier);
 }
 
-export function signOut() {
-  return auth().signOut();
-}
+

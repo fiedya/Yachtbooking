@@ -1,7 +1,7 @@
-import { useAuth } from "@/app/providers/AuthProvider";
+import { useAuth } from "@/src/providers/AuthProvider";
 import {
-  subscribeToUser,
-  updateUserPreferences,
+    subscribeToUser,
+    updateUserPreferences,
 } from "@/src/services/userService";
 import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";

@@ -1,11 +1,10 @@
 import { UserStatus } from "@/src/entities/user";
 import { getUserStatusLabel } from "@/src/helpers/enumHelper";
+import { subscribeToAllUsers } from "@/src/services/userService";
 import { styles as theme } from "@/src/theme/styles";
-import firestore from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
-
 type UserRow = {
   uid: string;
   name: string;
@@ -31,33 +30,20 @@ export default function AllUsersScreen() {
   useEffect(() => {
     setLoading(true);
 
-    const unsub = firestore()
-      .collection("users")
-      .orderBy("surname", "desc")
-      .onSnapshot(
-        (snapshot) => {
-          const users = snapshot.docs.map((doc) => {
-            const d = doc.data();
-            return {
-              uid: doc.id,
-              name: d.name,
-              surname: d.surname,
-              phone: d.phone,
-              status: d.status,
-            };
-          });
+    const unsubscribe = subscribeToAllUsers(
+      (users) => {
+        setUsers(users);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("[ALL USERS] snapshot error:", error);
+        setLoading(false);
+      },
+    );
 
-          setUsers(users);
-          setLoading(false);
-        },
-        (error) => {
-          console.error("[ALL USERS] snapshot error:", error);
-          setLoading(false);
-        },
-      );
-
-    return unsub;
+    return unsubscribe;
   }, []);
+
 
   return (
     <View style={theme.screen}>
@@ -93,7 +79,9 @@ export default function AllUsersScreen() {
           </Pressable>
         )}
         ListEmptyComponent={
-          !loading ? <Text style={theme.textMuted}>No users found</Text> : null
+          !loading ? (
+            <Text style={theme.textMuted}>No users found</Text>
+          ) : null
         }
       />
     </View>

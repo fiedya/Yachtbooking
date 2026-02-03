@@ -1,23 +1,23 @@
 import { Yacht, YachtStatus } from "@/src/entities/yacht";
+import { useAuth } from "@/src/providers/AuthProvider";
 import { subscribeToUser } from "@/src/services/userService";
 import { subscribeToYachts } from "@/src/services/yachtService";
 import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";
 import { Ionicons } from "@expo/vector-icons";
-import auth from "@react-native-firebase/auth";
 import { router, Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { FlatList, Image, Pressable, Switch, Text, View } from "react-native";
-import { useMode } from "../../providers/ModeProvider";
+import { useMode } from "../../../src/providers/ModeProvider";
 
 export default function YachtsScreen() {
   const [yachts, setYachts] = useState<Yacht[]>([]);
   const [showAll, setShowAll] = useState(false);
   const { mode } = useMode();
   const [isAdmin, setIsAdmin] = useState(false);
+  const { user, uid, loading: authLoading } = useAuth();
   useEffect(() => {
-    // Assume user is available from context or auth
-    const user = auth().currentUser;
+
     if (!user) return;
     const unsub = subscribeToUser(user.uid, (profile) => {
       setIsAdmin(profile?.role === "admin" && mode === "admin");

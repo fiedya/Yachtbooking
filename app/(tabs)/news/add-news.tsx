@@ -1,11 +1,11 @@
-import { useMode } from "@/app/providers/ModeProvider";
 import { NewsCategory, NewsStatus } from "@/src/entities/news";
+import { useAuth } from "@/src/providers/AuthProvider";
+import { useMode } from "@/src/providers/ModeProvider";
 import { addNews } from "@/src/services/newsService";
 import { subscribeToUser } from "@/src/services/userService";
 import { headerStyles } from "@/src/theme/header";
 import { styles as theme } from "@/src/theme/styles";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import auth from "@react-native-firebase/auth";
 import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
@@ -22,9 +22,9 @@ export default function AddNewsScreen() {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [tempDate, setTempDate] = useState<Date>(new Date());
   const [loading, setLoading] = useState(false);
+  const { user, uid, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    const user = auth().currentUser;
     if (!user) {
       router.replace("/auth");
       return;

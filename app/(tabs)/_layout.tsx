@@ -1,22 +1,20 @@
 import { User } from "@/src/entities/user";
+import { useAuth } from "@/src/providers/AuthProvider";
 import { subscribeToUser } from "@/src/services/userService";
 import { colors } from "@/src/theme/colors";
 import { Ionicons } from "@expo/vector-icons";
-import auth from "@react-native-firebase/auth";
 import { Tabs } from "expo-router";
 import { useEffect, useState } from "react";
-import { useMode } from "../providers/ModeProvider";
+import { useMode } from "../../src/providers/ModeProvider";
 
 export default function TabsLayout() {
   const { mode } = useMode();
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-
-  const user = auth().currentUser;
+  const { user, uid, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    const user = auth().currentUser;
     if (!user) return;
     const unsub = subscribeToUser(user.uid, (profile) => {
       setIsAdmin(profile?.role === "admin" && mode === "admin");

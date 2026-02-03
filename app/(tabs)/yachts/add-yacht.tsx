@@ -1,12 +1,12 @@
-import { useMode } from "@/app/providers/ModeProvider";
 import { YachtStatus } from "@/src/entities/yacht";
+import { useAuth } from "@/src/providers/AuthProvider";
+import { useMode } from "@/src/providers/ModeProvider";
 import { uploadImage } from "@/src/services/imageUploadService";
 import { subscribeToUser } from "@/src/services/userService";
 import { addYacht } from "@/src/services/yachtService";
 import { headerStyles } from "@/src/theme/header";
 import { styles as theme } from "@/src/theme/styles";
 import { pickImageFromGallery } from "@/src/utils/pickImage";
-import auth from "@react-native-firebase/auth";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -31,9 +31,8 @@ export default function AddEditYachtScreen() {
   const [loading, setLoading] = useState(false);
   const [active, setActive] = useState(true);
   const [status, setStatus] = useState<YachtStatus>(YachtStatus.Available);
-
+  const { user, uid, loading: authLoading } = useAuth();
   useEffect(() => {
-    const user = auth().currentUser;
     if (!user) return;
     const unsub = subscribeToUser(user.uid, (profile) => {
       setIsAdmin(profile?.role === "admin" && mode === "admin");
@@ -41,21 +40,23 @@ export default function AddEditYachtScreen() {
     return unsub;
   }, [mode]);
 
+
   useEffect(() => {
-    const user = auth().currentUser;
-    if (!user) {
+    if (loading) return;
+
+    if (!uid) {
       router.replace("/auth");
       return;
     }
 
-    const unsub = subscribeToUser(user.uid, (profile) => {
-      if (!isAdmin) {
+    const unsub = subscribeToUser(uid, (profile) => {
+      if (!profile || profile.role !== "admin") {
         router.replace("/(tabs)/calendar");
       }
     });
 
     return unsub;
-  }, []);
+  }, [loading, uid]);
   async function handlePickImage() {
     const localUri = await pickImageFromGallery();
     if (!localUri) return;

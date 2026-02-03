@@ -1,7 +1,7 @@
 import { UserStatus } from "@/src/entities/user";
 import { getUserStatusLabel } from "@/src/helpers/enumHelper";
+import { subscribeToUsersToVerify } from "@/src/services/userService";
 import { styles as theme } from "@/src/theme/styles";
-import firestore from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
@@ -29,37 +29,21 @@ export default function UsersToVerifyScreen() {
   const router = useRouter();
 
   useEffect(() => {
-    const unsub = firestore()
-      .collection("users")
-      .where("status", "==", UserStatus.ToVerify)
-      .orderBy("surname", "desc")
-      .onSnapshot(
-        (snapshot) => {
-          if (!snapshot) {
-            return;
-          }
+    setLoading(true);
 
-          const data = snapshot.docs.map((doc) => {
-            const d = doc.data();
-            return {
-              uid: doc.id,
-              name: d.name,
-              surname: d.surname,
-              phone: d.phone,
-              status: d.status as UserStatus,
-            };
-          });
-
-          setUsers(data);
-          setLoading(false);
-        },
-        (error) => {
-          console.error(
-            "[USERS TO VERIFY] snapshot error:",
-            error?.message ?? error,
-          );
-        },
-      );
+    const unsub = subscribeToUsersToVerify(
+      (users) => {
+        setUsers(users);
+        setLoading(false);
+      },
+      (error) => {
+        console.error(
+          "[USERS TO VERIFY] snapshot error:",
+          error,
+        );
+        setLoading(false);
+      },
+    );
 
     return unsub;
   }, []);

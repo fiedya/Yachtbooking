@@ -1,16 +1,16 @@
+import { useAuth } from "@/src/providers/AuthProvider";
 import { subscribeToUser } from "@/src/services/userService";
 import { headerStyles } from "@/src/theme/header";
 import { styles } from "@/src/theme/styles";
-import auth from "@react-native-firebase/auth";
 import { Stack, useRouter } from "expo-router";
 import { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
-import { useMode } from "../../providers/ModeProvider";
+import { useMode } from "../../../src/providers/ModeProvider";
 
 export default function AdminScreen() {
   const router = useRouter();
   const { mode } = useMode();
-  const user = auth().currentUser;
+  const { user, uid, loading: authLoading } = useAuth();
 
   useEffect(() => {
     if (!user) {

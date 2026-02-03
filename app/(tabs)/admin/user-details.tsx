@@ -1,7 +1,7 @@
 import { UserStatus } from "@/src/entities/user";
 import { getUserStatusLabel } from "@/src/helpers/enumHelper";
+import { subscribeToUser, updateUserStatus } from "@/src/services/userService";
 import { styles as theme } from "@/src/theme/styles";
-import firestore from "@react-native-firebase/firestore";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
@@ -22,24 +22,14 @@ export default function UserDetailsScreen() {
   useEffect(() => {
     if (!uid) return;
 
-    const unsub = firestore()
-      .collection("users")
-      .doc(uid)
-      .onSnapshot((doc) => {
-        if (!doc.exists) return;
-
-        const d = doc.data()!;
-        setUser({
-          uid: doc.id,
-          name: d.name,
-          surname: d.surname,
-          phone: d.phone,
-          status: d.status,
-        });
-      });
+    const unsub = subscribeToUser(uid, (user) => {
+      if (!user) return;
+      setUser(user);
+    });
 
     return unsub;
   }, [uid]);
+
 
   if (!user) {
     return (
@@ -49,27 +39,28 @@ export default function UserDetailsScreen() {
     );
   }
 
-  function updateStatus(nextStatus: UserStatus.Verified | UserStatus.Rejected) {
+  function updateStatus(
+    nextStatus: UserStatus.Verified | UserStatus.Rejected,
+  ) {
     Alert.alert(
       "Potwierdź",
-      `Na pewno chcesz oznaczyć tego użytkownika nowym statusem: ${nextStatus}?`,
+      `Na pewno chcesz oznaczyć tego użytkownika nowym statusem: ${getUserStatusLabel(nextStatus)}?`,
       [
         { text: "Cancel", style: "cancel" },
         {
           text: "Confirm",
           style: "destructive",
           onPress: async () => {
-            await firestore()
-              .collection("users")
-              .doc(user?.uid)
-              .update({ status: nextStatus });
+            if (!user) return;
 
+            await updateUserStatus(user.uid, nextStatus);
             router.back();
           },
         },
       ],
     );
   }
+
 
   return (
     <View style={theme.screenPadded}>
@@ -81,10 +72,12 @@ export default function UserDetailsScreen() {
 
       <View style={{ marginVertical: 24 }}>
         <Text style={theme.textMuted}>Current status</Text>
-        <Text style={theme.textPrimary}>{getUserStatusLabel(user.status)}</Text>
+        <Text style={theme.textPrimary}>
+          {getUserStatusLabel(user.status)}
+        </Text>
       </View>
 
-      {user.status !== 1 && (
+      {user.status !== UserStatus.Verified && (
         <Pressable
           style={[theme.button, { marginBottom: 12 }]}
           onPress={() => updateStatus(UserStatus.Verified)}
@@ -93,7 +86,7 @@ export default function UserDetailsScreen() {
         </Pressable>
       )}
 
-      {user.status !== 2 && (
+      {user.status !== UserStatus.Rejected && (
         <Pressable
           style={[theme.button, theme.buttonDanger]}
           onPress={() => updateStatus(UserStatus.Rejected)}

@@ -1,18 +1,20 @@
-import { subscribeToUser } from "@/src/services/userService";
+/* -----------------------------
+   Date helpers
+-------------------------------- */
+import { BookingStatus } from "@/src/entities/booking";
+import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
+import { useAuth } from "@/src/providers/AuthProvider";
+import { useMode } from "@/src/providers/ModeProvider";
+import { subscribeToWeekBookings, updateBookingStatus } from "@/src/services/booking.service";
+import { getUserPhotoUrl, probeUserPermissions, subscribeToUser } from "@/src/services/userService";
 import { subscribeToYachts } from "@/src/services/yachtService";
 import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
 import { spacing } from "@/src/theme/spacing";
 import { styles, styles as theme } from "@/src/theme/styles";
 import { Ionicons } from "@expo/vector-icons";
-import auth from "@react-native-firebase/auth";
-import firestore from "@react-native-firebase/firestore";
 import { Stack, useRouter } from "expo-router";
-
-import { BookingStatus } from "@/src/entities/booking";
-import { User } from "@/src/entities/user";
-import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
-import { getUserPhotoUrl } from "@/src/services/userService";
+import { User } from "firebase/auth";
 import { useEffect, useMemo, useState } from "react";
 import {
   Animated,
@@ -21,13 +23,8 @@ import {
   Pressable,
   ScrollView,
   Text,
-  View,
+  View
 } from "react-native";
-import { useMode } from "../providers/ModeProvider";
-
-/* -----------------------------
-   Date helpers
--------------------------------- */
 
 function startOfWeek(date: Date) {
   const d = new Date(date);
@@ -154,7 +151,6 @@ export default function CalendarScreen() {
   } | null>(null);
 
   const router = useRouter();
-  const user = auth().currentUser;
   const [isAdmin, setIsAdmin] = useState(false);
   const { mode } = useMode();
   const [weekmode, setWeekmode] = useState<"week" | "month">("week");
@@ -163,9 +159,9 @@ export default function CalendarScreen() {
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
   const [modalUserPhoto, setModalUserPhoto] = useState<string | null>(null);
   const [profile, setProfile] = useState<User | null>(null);
+  const { user, uid, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    const user = auth().currentUser;
     if (!user) return;
     const unsub = subscribeToUser(user.uid, (profile) => {
       setIsAdmin(profile?.role === "admin" && mode === "admin");
@@ -173,9 +169,7 @@ export default function CalendarScreen() {
     return unsub;
   }, [mode]);
 
-  // Subscribe to user preferences in user doc
   useEffect(() => {
-    const user = auth().currentUser;
     if (!user) return;
     const unsub = subscribeToUser(user.uid, (data) => {
       const prefs = data?.preferences ?? {
@@ -188,23 +182,11 @@ export default function CalendarScreen() {
   }, []);
 
   useEffect(() => {
-    const user = auth().currentUser;
     if (!user) return;
 
-    firestore()
-      .collection("settings")
-      .doc(user.uid)
-      .get()
-      .then(() => console.log("[DEBUG] settings OK"))
-      .catch((e) => console.log("[DEBUG] settings FAIL", e.code));
+    probeUserPermissions(user.uid);
+  }, [user]);
 
-    firestore()
-      .collection("bookings")
-      .limit(1)
-      .get()
-      .then(() => console.log("[DEBUG] bookings OK"))
-      .catch((e) => console.log("[DEBUG] bookings FAIL", e.code));
-  }, []);
 
   useEffect(() => {
     if (selectedBooking) {
@@ -255,37 +237,27 @@ export default function CalendarScreen() {
     return result.filter((b) => selectedYachtIds.includes(b.yachtId));
   }, [bookings, selectedYachtIds, isAdmin]);
 
-  useEffect(() => {
-    const weekEnd = addDays(weekStart, 7);
+useEffect(() => {
+  const weekEnd = addDays(weekStart, 7);
 
-    const unsub = firestore()
-      .collection("bookings")
-      .where("start", "<", weekEnd)
-      .where("end", ">", weekStart)
-      .onSnapshot(
-        (snap) => {
-          if (!snap) {
-            setBookings([]);
-            setIsRefreshing(false);
-            return;
-          }
+  setIsRefreshing(true);
 
-          const data = snap.docs.map((d) => ({
-            id: d.id,
-            ...d.data(),
-          }));
+  const unsub = subscribeToWeekBookings(
+    weekStart,
+    weekEnd,
+    (bookings) => {
+      setBookings(bookings);
+      setIsRefreshing(false);
+    },
+    (error) => {
+      console.error("[CALENDAR] error", error);
+      setIsRefreshing(false);
+    },
+  );
 
-          setBookings(data);
-          setIsRefreshing(false);
-        },
-        (error) => {
-          console.error("[CALENDAR] error", error);
-          setIsRefreshing(false);
-        },
-      );
+  return unsub;
+}, [weekStart, refreshKey]);
 
-    return unsub;
-  }, [weekStart, refreshKey]);
 
   const days = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
@@ -760,14 +732,10 @@ export default function CalendarScreen() {
                   }}
                   disabled={selectedBooking.status === BookingStatus.Approved}
                   onPress={async () => {
-                    await firestore()
-                      .collection("bookings")
-                      .doc(selectedBooking.id)
-                      .update({ status: BookingStatus.Approved });
-                    setSelectedBooking({
-                      ...selectedBooking,
-                      status: BookingStatus.Approved,
-                    });
+                    updateBookingStatus(
+                      selectedBooking.id,
+                      BookingStatus.Approved,
+                    );
                   }}
                 >
                   <Text style={{ color: colors.white, fontWeight: "bold" }}>
@@ -789,14 +757,10 @@ export default function CalendarScreen() {
                   }}
                   disabled={selectedBooking.status === BookingStatus.Rejected}
                   onPress={async () => {
-                    await firestore()
-                      .collection("bookings")
-                      .doc(selectedBooking.id)
-                      .update({ status: BookingStatus.Rejected });
-                    setSelectedBooking({
-                      ...selectedBooking,
-                      status: BookingStatus.Rejected,
-                    });
+                    updateBookingStatus(
+                      selectedBooking.id,
+                      BookingStatus.Rejected,
+                    );
                   }}
                 >
                   <Text style={{ color: colors.white, fontWeight: "bold" }}>

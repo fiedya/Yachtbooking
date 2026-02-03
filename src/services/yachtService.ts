@@ -1,112 +1,102 @@
-export async function updateYacht(
-  id: string,
-  data: Partial<Omit<Yacht, "id" | "createdAt">>,
-) {
-  return firestore().collection("yachts").doc(id).update(data);
-}
-// src/services/yachtService.ts
-
-import firestore from "@react-native-firebase/firestore";
+import {
+  addDocAuto,
+  getDoc,
+  onSnapshot,
+  queryDocs,
+  serverTimestamp,
+  updateDoc,
+} from "@/src/firebase/init";
 import { Yacht, YachtStatus } from "../entities/yacht";
 
-/**
- * One-time fetch of all yachts
- */
-export async function getYachts(): Promise<Yacht[]> {
-  const snapshot = await firestore().collection("yachts").get();
+/* ----------------------------------
+   Reads
+----------------------------------- */
 
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...(doc.data() as Omit<Yacht, "id">),
+export async function getYachts(): Promise<Yacht[]> {
+  const snap: any = await queryDocs("yachts", {});
+  const docs = snap.docs ?? snap._docs ?? [];
+
+  return docs.map((d: any) => ({
+    id: d.id,
+    ...(d.data() as Omit<Yacht, "id">),
   }));
 }
-
-/**
- * Real-time subscription (optional, but nice)
- */
 
 export function subscribeToYachts(
   onChange: (yachts: Yacht[]) => void,
   onError?: (error: unknown) => void,
 ) {
-  return firestore()
-    .collection("yachts")
-    .onSnapshot(
-      (snapshot) => {
-        if (!snapshot) {
-          onChange([]);
-          return;
-        }
+  return onSnapshot(
+    "yachts",
+    (snapshot: any) => {
+      const docs = snapshot?.docs ?? snapshot?._docs ?? [];
 
-        const yachts = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as Omit<Yacht, "id">),
-        }));
+      const yachts = docs.map((d: any) => ({
+        id: d.id,
+        ...(d.data() as Omit<Yacht, "id">),
+      }));
 
-        onChange(yachts);
-      },
-      (error) => {
-        console.error("Firestore yachts subscription error:", error);
-        onError?.(error);
-      },
-    );
+      onChange(yachts);
+    },
+    onError,
+  );
 }
 
 export async function getYachtById(id: string): Promise<Yacht | null> {
-  const docSnap = await firestore().collection("yachts").doc(id).get();
+  const snap: any = await getDoc("yachts", id);
 
-  if (!docSnap.exists) {
-    return null;
-  }
+  if (!snap.exists()) return null;
 
   return {
-    id: docSnap.id,
-    ...(docSnap.data() as Omit<Yacht, "id">),
+    id: snap.id,
+    ...(snap.data() as Omit<Yacht, "id">),
   };
 }
 
-export async function addYacht(data: Omit<Yacht, "id" | "createdAt">) {
-  return firestore()
-    .collection("yachts")
-    .add({
-      ...data,
-      createdAt: firestore.FieldValue.serverTimestamp(),
-    });
+/* ----------------------------------
+   Writes
+----------------------------------- */
+
+export async function addYacht(
+  data: Omit<Yacht, "id" | "createdAt">,
+) {
+  return addDocAuto("yachts", {
+    ...data,
+    createdAt: serverTimestamp(),
+  });
 }
 
-export async function setYachtActive(yachtId: string, active: boolean) {
-  return firestore().collection("yachts").doc(yachtId).update({ active });
+export async function updateYacht(
+  id: string,
+  data: Partial<Omit<Yacht, "id" | "createdAt">>,
+) {
+  return updateDoc("yachts", id, data);
 }
 
-// Get only available yachts (status === YachtStatus.Available)
+export async function setYachtActive(
+  yachtId: string,
+  active: boolean,
+) {
+  return updateDoc("yachts", yachtId, { active });
+}
+
+/* ----------------------------------
+   Queries
+----------------------------------- */
+
 export async function getAvailableYachts(): Promise<Yacht[]> {
-  const snap = await firestore()
-    .collection("yachts")
-    .where("status", "==", YachtStatus.Available)
-    .get();
-  return snap.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as Yacht[];
+  const snap: any = await queryDocs("yachts", {
+    where: ["status", "==", YachtStatus.Available],
+  });
+
+  const docs = snap.docs ?? snap._docs ?? [];
+
+  return docs.map((d: any) => ({
+    id: d.id,
+    ...(d.data() as Omit<Yacht, "id">),
+  }));
 }
 
-// Get all yachts except Disabled (status !== YachtStatus.Disabled)
-export async function getOurYachts(): Promise<Yacht[]> {
-  const snap = await firestore()
-    .collection("yachts")
-    .where("status", "!=", YachtStatus.Disabled)
-    .get();
-  return snap.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as Yacht[];
-}
-
-// Get all yachts (admin)
 export async function getAllYachts(): Promise<Yacht[]> {
-  const snap = await firestore().collection("yachts").get();
-  return snap.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as Yacht[];
+  return getYachts();
 }

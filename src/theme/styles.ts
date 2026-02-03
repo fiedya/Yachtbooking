@@ -133,7 +133,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: spacing.sm,
     fontSize: text.base,
-    backgroundColor: "#fafafa",
+    backgroundColor: colors.white,
   },
 
   label: {
