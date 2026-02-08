@@ -2,6 +2,7 @@
    Date helpers
 -------------------------------- */
 import { BookingStatus } from "@/src/entities/booking";
+import { User } from "@/src/entities/user";
 import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { useMode } from "@/src/providers/ModeProvider";
@@ -14,16 +15,15 @@ import { spacing } from "@/src/theme/spacing";
 import { styles, styles as theme } from "@/src/theme/styles";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
-import { User } from "firebase/auth";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Animated,
-  Image,
-  PanResponder,
-  Pressable,
-  ScrollView,
-  Text,
-  View
+    Animated,
+    Image,
+    PanResponder,
+    Pressable,
+    ScrollView,
+    Text,
+    View
 } from "react-native";
 
 function startOfWeek(date: Date) {
@@ -160,6 +160,18 @@ export default function CalendarScreen() {
   const [modalUserPhoto, setModalUserPhoto] = useState<string | null>(null);
   const [profile, setProfile] = useState<User | null>(null);
   const { user, uid, loading: authLoading } = useAuth();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -488,6 +500,15 @@ useEffect(() => {
 
                 {days.map((day) => {
                   const isToday = sameDay(day, today);
+                  const slotStart = new Date(day);
+                  slotStart.setHours(h, 0, 0, 0);
+                  const slotEnd = new Date(slotStart);
+                  slotEnd.setHours(h + 1, 0, 0, 0);
+                  const slotBooking = filteredBookings.find((b) => {
+                    const start = b.start?.toDate?.() ?? b.start;
+                    const end = b.end?.toDate?.() ?? b.end;
+                    return start < slotEnd && end > slotStart;
+                  });
                   return (
                     <View
                       key={day.toISOString() + h}
@@ -502,12 +523,22 @@ useEffect(() => {
                       <Pressable
                         style={{ flex: 1 }}
                         onPress={() => {
+                          if (slotBooking) {
+                            setSelectedBooking(slotBooking);
+                            return;
+                          }
+
                           setPendingSlot({ day: day.toISOString(), hour: h });
-                          setTimeout(() => {
+
+                          timeoutRef.current = setTimeout(() => {
+                            if (!mountedRef.current) return;
+
                             const startDate = new Date(day);
                             startDate.setHours(h, 0, 0, 0);
+
                             const endDate = new Date(startDate);
                             endDate.setHours(h + 1, 0, 0, 0);
+
                             router.push({
                               pathname: "/book",
                               params: {
@@ -515,8 +546,7 @@ useEffect(() => {
                                 endDate: endDate.toISOString(),
                               },
                             });
-                            setPendingSlot(null);
-                          }, 200); // Show rectangle for 200ms
+                          }, 200);
                         }}
                       >
                         {/* Rectangle overlay if this slot is pending */}
@@ -561,7 +591,6 @@ useEffect(() => {
 
                           const fontColor = getBookingFontColor(b, user?.uid);
 
-                          // Show shortcut if enabled and available
                           const yachtInfo = yachtMap[b.yachtId] || {
                             name: b.yachtName,
                           };
@@ -570,7 +599,7 @@ useEffect(() => {
                               ? yachtInfo.shortcut
                               : yachtInfo.name;
                           return (
-                            <Pressable
+                            <View
                               key={b.id}
                               style={[
                                 theme.absoluteCard,
@@ -582,9 +611,6 @@ useEffect(() => {
                                 },
                                 layout,
                               ]}
-                              onPress={() => {
-                                setSelectedBooking(b);
-                              }}
                             >
                               <Text
                                 style={[
@@ -594,12 +620,10 @@ useEffect(() => {
                               >
                                 {displayYacht}
                               </Text>
-                              <Text
-                                style={[theme.textXs, { color: fontColor }]}
-                              >
+                              <Text style={[theme.textXs, { color: fontColor }]}>
                                 {b.userName}
                               </Text>
-                            </Pressable>
+                            </View>
                           );
                         })}
                     </View>

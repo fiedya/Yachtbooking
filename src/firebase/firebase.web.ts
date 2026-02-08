@@ -1,28 +1,28 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
 import {
-  browserLocalPersistence,
-  getAuth,
-  RecaptchaVerifier,
-  setPersistence,
-  signInWithPhoneNumber,
+    browserLocalPersistence,
+    getAuth,
+    RecaptchaVerifier,
+    setPersistence,
+    signInWithPhoneNumber,
 } from "firebase/auth";
 
 import {
-  getDoc as _getDoc,
-  onSnapshot as _onSnapshot,
-  setDoc as _setDoc,
-  updateDoc as _updateDoc,
-  addDoc,
-  collection,
-  doc,
-  getDocs,
-  getFirestore,
-  limit,
-  orderBy,
-  query,
-  serverTimestamp,
-  where,
-  WhereFilterOp
+    getDoc as _getDoc,
+    onSnapshot as _onSnapshot,
+    setDoc as _setDoc,
+    updateDoc as _updateDoc,
+    addDoc,
+    collection,
+    doc,
+    getDocs,
+    getFirestore,
+    limit,
+    orderBy,
+    query,
+    serverTimestamp,
+    where,
+    WhereFilterOp
 } from "firebase/firestore";
 
 
@@ -33,7 +33,15 @@ type OrderByTuple = [string, "asc" | "desc"];
 /* INIT */
 const app =
   getApps().length === 0
-    ? initializeApp({ /* config */ })
+    ? initializeApp({
+        apiKey: "AIzaSyAYhQebgwtkMD35Zpb-mjyMZ5D_4wxURys",
+        authDomain: "yachtbooking-34dce.firebaseapp.com",
+        projectId: "yachtbooking-34dce",
+        storageBucket: "yachtbooking-34dce.firebasestorage.app",
+        messagingSenderId: "878201914009",
+        appId: "1:878201914009:web:f59983b820b7370eb8ae08",
+        measurementId: "G-THHDMW3LFP",
+      })
     : getApp();
 
 const auth = getAuth(app);

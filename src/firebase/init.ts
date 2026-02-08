@@ -1,27 +1,23 @@
 import { Platform } from "react-native";
 
-let impl: any;
+import * as native from "./firebase.native";
+import * as web from "./firebase.web";
 
-if (Platform.OS === "web") {
-  impl = require("./firebase.web");
-} else {
-  impl = require("./firebase.native");
-}
+const impl = Platform.OS === "web" ? web : native;
 
-/* AUTH */
-export const onAuthStateChanged = impl.onAuthStateChanged;
-export const getCurrentUser = impl.getCurrentUser;
-export const signOut = impl.signOut;
-export const sendCode = impl.sendCode;
-export const confirmCode = impl.confirmCode;
-export const initRecaptcha = impl.initRecaptcha;
-
-/* FIRESTORE */
-export const getDoc = impl.getDoc;
-export const setDoc = impl.setDoc;
-export const updateDoc = impl.updateDoc;
-export const queryDocs = impl.queryDocs;
-export const onSnapshot = impl.onSnapshot;
-export const serverTimestamp = impl.serverTimestamp;
-export const addDocAuto = impl.addDocAuto;
-export const onDocSnapshot = impl.onDocSnapshot;
+export const {
+  onAuthStateChanged,
+  getCurrentUser,
+  signOut,
+  sendCode,
+  confirmCode,
+  initRecaptcha,
+  getDoc,
+  setDoc,
+  updateDoc,
+  queryDocs,
+  onSnapshot,
+  serverTimestamp,
+  addDocAuto,
+  onDocSnapshot,
+} = impl;

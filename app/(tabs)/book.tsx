@@ -1,7 +1,10 @@
 import { Yacht } from "@/src/entities/yacht";
-import { getDb } from "@/src/firebase/init";
 import { useAuth } from "@/src/providers/AuthProvider";
-import { createBooking } from "@/src/services/booking.service";
+import {
+    createBooking,
+    getBookingById,
+    updateBooking,
+} from "@/src/services/booking.service";
 import { getAvailableYachtIds } from "@/src/services/calendarService";
 import { getUser, subscribeToUser } from "@/src/services/userService";
 import { getAvailableYachts } from "@/src/services/yachtService";
@@ -11,14 +14,14 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  Alert,
-  Image,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
+    Alert,
+    Image,
+    Platform,
+    Pressable,
+    ScrollView,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { useMode } from "../../src/providers/ModeProvider";
 
@@ -77,39 +80,33 @@ export default function BookScreen() {
   }, [mode]);
 
 useEffect(() => {
-  if (edit && bookingId && isAdmin) {
-    const db = getDb();
-    const bookingRef = db.doc("bookings", bookingId);
+  if (!edit || !bookingId || !isAdmin) return;
 
-    db.getDoc(bookingRef).then((snap: any) => {
-      if (!snap.exists()) return;
+  getBookingById(bookingId).then((booking) => {
+    if (!booking) return;
 
-      const data = snap.data();
-      if (!data) return;
+    setEditingBooking(booking);
 
-      setEditingBooking({ ...data, id: snap.id });
+    // Pre-fill form fields
+    setBookingName(booking.userName || "");
 
-      // Pre-fill form fields
-      setBookingName(data.userName || "");
+    if (booking.start && typeof booking.start.toDate === "function") {
+      const startDate = booking.start.toDate();
+      setDate(startDate);
+      setStartTime(startDate);
+    }
 
-      if (data.start && typeof data.start.toDate === "function") {
-        const startDate = data.start.toDate();
-        setDate(startDate);
-        setStartTime(startDate);
-      }
+    if (booking.end && typeof booking.end.toDate === "function") {
+      setEndTime(booking.end.toDate());
+    }
 
-      if (data.end && typeof data.end.toDate === "function") {
-        setEndTime(data.end.toDate());
-      }
-
-      if (data.yachtId && data.yachtName) {
-        setYacht({
-          id: data.yachtId,
-          name: data.yachtName,
-        } as Yacht);
-      }
-    });
-  }
+    if (booking.yachtId && booking.yachtName) {
+      setYacht({
+        id: booking.yachtId,
+        name: booking.yachtName,
+      } as Yacht);
+    }
+  });
 }, [edit, bookingId, isAdmin]);
 
 
@@ -163,10 +160,7 @@ useEffect(() => {
       }
 
   if (edit && bookingId && isAdmin) {
-    const db = getDb();
-    const bookingRef = db.doc("bookings", bookingId);
-
-    await db.updateDoc(bookingRef, {
+    await updateBooking(bookingId, {
       userName: fullName,
       yachtId: yacht.id,
       yachtName: yacht.name,
@@ -175,8 +169,7 @@ useEffect(() => {
     });
 
     Alert.alert("Sukces", "Rezerwacja została zaktualizowana");
-  }
- else {
+  } else {
         // New booking
         await createBooking({
           userId: user.uid,

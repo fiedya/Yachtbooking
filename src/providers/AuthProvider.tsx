@@ -1,4 +1,4 @@
-import { auth } from "@/src/firebase/auth";
+import { onAuthStateChanged } from "@/src/firebase/init";
 import { useMode } from "@/src/providers/ModeProvider";
 import { subscribeToUser } from "@/src/services/userService";
 import { createContext, useContext, useEffect, useState } from "react";
@@ -23,7 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let unsubscribeUserDoc: (() => void) | undefined;
 
-    const unsubscribeAuth = auth.onAuthStateChanged((u: any | null) => {
+    const unsubscribeAuth = onAuthStateChanged((u: any | null) => {
       // cleanup previous Firestore subscription
       unsubscribeUserDoc?.();
       unsubscribeUserDoc = undefined;

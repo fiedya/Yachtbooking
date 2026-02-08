@@ -1,5 +1,12 @@
 import { Booking, BookingStatus } from "@/src/entities/booking";
-import { addDocAuto, onDocSnapshot, onSnapshot, serverTimestamp, updateDoc } from "@/src/firebase/init";
+import {
+    addDocAuto,
+    getDoc,
+    onDocSnapshot,
+    onSnapshot,
+    serverTimestamp,
+    updateDoc,
+} from "@/src/firebase/init";
 
 function asDate(value: any): Date | null {
   if (!value) return null;
@@ -28,6 +35,31 @@ export async function createBooking(params: {
     status: BookingStatus.Pending,
     createdAt: serverTimestamp(),
   });
+}
+
+export async function getBookingById(bookingId: string): Promise<Booking | null> {
+  if (!bookingId) return null;
+
+  const snap: any = await getDoc("bookings", bookingId);
+  if (!snap.exists()) return null;
+
+  return {
+    id: snap.id,
+    ...(snap.data() as Omit<Booking, "id">),
+  };
+}
+
+export async function updateBooking(
+  bookingId: string,
+  data: {
+    userName: string;
+    yachtId: string;
+    yachtName: string;
+    start: Date;
+    end: Date;
+  },
+) {
+  return updateDoc("bookings", bookingId, data);
 }
 
 
@@ -97,7 +129,6 @@ export function subscribeToPendingBookings(
 
       onChange(bookings);
     },
-    onError,
   );
 }
 
@@ -136,7 +167,6 @@ export function subscribeToWeekBookings(
 
       onChange(bookings);
     },
-    onError,
   );
 }
 

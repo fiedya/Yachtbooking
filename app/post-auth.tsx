@@ -1,4 +1,3 @@
-import { auth } from "@/src/firebase/auth";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { getUser } from "@/src/services/userService";
 import { useRouter } from "expo-router";
@@ -23,7 +22,7 @@ export default function PostAuthScreen() {
         await user.reload();
       } catch (e) {
         console.log("[POST-AUTH] reload failed, signing out", e);
-        await auth.signOut();
+        await user.signOut();
         router.replace("/auth");
         return;
       }

@@ -1,29 +1,15 @@
+import { confirmCode, initRecaptcha, sendCode } from "@/src/firebase/init";
 
-import {
-  signInWithPhoneNumber,
-} from "firebase/auth";
-import { Platform } from "react-native";
-import { auth } from "../firebase/auth";
+export { initRecaptcha };
 
-/**
- * Native ONLY
- */
 export async function signInWithPhone(phoneNumber: string) {
-  if (Platform.OS === "web") {
-    throw new Error("signInWithPhone must not be called on web");
-  }
-
-  return auth.signInWithPhoneNumber(phoneNumber);
+  return sendCode(phoneNumber);
 }
 
-/**
- * Web ONLY
- */
-export async function signInWithPhoneWeb(
-  phoneNumber: string,
-  verifier: any,
-) {
-  return signInWithPhoneNumber(auth, phoneNumber, verifier);
+export async function signInWithPhoneWeb(phoneNumber: string) {
+  return sendCode(phoneNumber);
 }
 
-
+export async function confirmSmsCode(confirmation: any, code: string) {
+  return confirmCode(confirmation, code);
+}

@@ -1,22 +1,21 @@
+import {
+    confirmSmsCode,
+    initRecaptcha,
+    signInWithPhone,
+} from "@/src/services/authService";
 import { styles as theme } from "@/src/theme/styles";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Image,
-  Platform,
-  Pressable,
-  Text,
-  TextInput,
-  View,
+    ActivityIndicator,
+    Image,
+    Platform,
+    Pressable,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 
-
-declare global {
-  interface Window {
-    recaptchaVerifier?: any;
-  }
-}
 
 export default function AuthScreen() {
   const router = useRouter();
@@ -36,43 +35,11 @@ export default function AuthScreen() {
     setLoading(true);
 
     try {
-      let confirmation;
-
       if (Platform.OS === "web") {
-        // 🔹 Firebase Web SDK
-        const { getAuth, RecaptchaVerifier, signInWithPhoneNumber } =
-          require("firebase/auth");
-        const { getApp } = require("firebase/app");
-
-        const auth = getAuth(getApp());
-
-        // 🔐 Init reCAPTCHA ON DEMAND (NOT in useEffect)
-        if (!window.recaptchaVerifier) {
-          window.recaptchaVerifier = new RecaptchaVerifier(
-            auth,
-            "recaptcha-container",
-            {
-              size: "invisible",
-            },
-          );
-
-          await window.recaptchaVerifier.render();
-        }
-
-        confirmation = await signInWithPhoneNumber(
-          auth,
-          phone,
-          window.recaptchaVerifier,
-        );
-      } else {
-        // 📱 Native
-        const authNative =
-          require("@react-native-firebase/auth").default;
-
-        confirmation = await authNative().signInWithPhoneNumber(phone);
+        initRecaptcha("recaptcha-container");
       }
 
-      confirmationRef.current = confirmation;
+      confirmationRef.current = await signInWithPhone(phone);
       setStep("code");
     } catch (e: any) {
       console.error("[PHONE AUTH ERROR]", e);
@@ -96,7 +63,7 @@ export default function AuthScreen() {
     setError(null);
 
     try {
-      await confirmation.confirm(code);
+      await confirmSmsCode(confirmation, code);
       router.replace("/post-auth");
     } catch (e) {
       console.error("[CODE CONFIRM ERROR]", e);

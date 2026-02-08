@@ -145,7 +145,6 @@ export function subscribeToAllUsers(
 
       onChange(users);
     },
-    onError,
   );
 }
 
@@ -178,7 +177,6 @@ export function subscribeToUsersToVerify(
 
       onChange(users);
     },
-    onError,
   );
 }
 

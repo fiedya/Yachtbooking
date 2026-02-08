@@ -34,7 +34,6 @@ export function subscribeToNews(
 
       onChange(news);
     },
-    onError,
   );
 }
 

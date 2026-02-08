@@ -87,7 +87,6 @@ export function subscribeToSettings(
 
       onChange(doc.data() as Settings);
     },
-    () => onChange(null),
   );
 }
 
