@@ -41,6 +41,7 @@
     "expo-web-browser": "~15.0.10",
     "firebase": "^12.8.0",
     "react": "19.1.0",
+    "react-datepicker": "^7.6.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "react-native-big-calendar": "^4.19.0",

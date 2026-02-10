@@ -1,5 +1,5 @@
 import { Yacht } from "@/src/entities/yacht";
-import { getDb } from "@/src/firebase/init";
+import { getDoc, updateDoc, WebDatePicker } from "@/src/firebase/init";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { createBooking } from "@/src/services/booking.service";
 import { getAvailableYachtIds } from "@/src/services/calendarService";
@@ -23,7 +23,7 @@ import {
 import { useMode } from "../../src/providers/ModeProvider";
 
 export default function BookScreen() {
-  const { user, uid, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const {
     startDate: paramStartDate,
@@ -76,41 +76,38 @@ export default function BookScreen() {
     return unsub;
   }, [mode]);
 
-useEffect(() => {
-  if (edit && bookingId && isAdmin) {
-    const db = getDb();
-    const bookingRef = db.doc("bookings", bookingId);
+  useEffect(() => {
+    if (edit && bookingId && isAdmin) {
+      getDoc("bookings", bookingId).then((snap: any) => {
+        if (!snap.exists()) return;
 
-    db.getDoc(bookingRef).then((snap: any) => {
-      if (!snap.exists()) return;
+        const data = snap.data();
+        if (!data) return;
 
-      const data = snap.data();
-      if (!data) return;
+        setEditingBooking({ ...data, id: snap.id });
 
-      setEditingBooking({ ...data, id: snap.id });
+        // Pre-fill form fields
+        setBookingName(data.userName || "");
 
-      // Pre-fill form fields
-      setBookingName(data.userName || "");
+        if (data.start && typeof data.start.toDate === "function") {
+          const startDate = data.start.toDate();
+          setDate(startDate);
+          setStartTime(startDate);
+        }
 
-      if (data.start && typeof data.start.toDate === "function") {
-        const startDate = data.start.toDate();
-        setDate(startDate);
-        setStartTime(startDate);
-      }
+        if (data.end && typeof data.end.toDate === "function") {
+          setEndTime(data.end.toDate());
+        }
 
-      if (data.end && typeof data.end.toDate === "function") {
-        setEndTime(data.end.toDate());
-      }
-
-      if (data.yachtId && data.yachtName) {
-        setYacht({
-          id: data.yachtId,
-          name: data.yachtName,
-        } as Yacht);
-      }
-    });
-  }
-}, [edit, bookingId, isAdmin]);
+        if (data.yachtId && data.yachtName) {
+          setYacht({
+            id: data.yachtId,
+            name: data.yachtName,
+          } as Yacht);
+        }
+      });
+    }
+  }, [edit, bookingId, isAdmin]);
 
 
   useEffect(() => {
@@ -162,21 +159,17 @@ useEffect(() => {
         fullName = user.phoneNumber || "";
       }
 
-  if (edit && bookingId && isAdmin) {
-    const db = getDb();
-    const bookingRef = db.doc("bookings", bookingId);
+      if (edit && bookingId && isAdmin) {
+        await updateDoc("bookings", bookingId, {
+          userName: fullName,
+          yachtId: yacht.id,
+          yachtName: yacht.name,
+          start,
+          end,
+        });
 
-    await db.updateDoc(bookingRef, {
-      userName: fullName,
-      yachtId: yacht.id,
-      yachtName: yacht.name,
-      start,
-      end,
-    });
-
-    Alert.alert("Sukces", "Rezerwacja została zaktualizowana");
-  }
- else {
+        Alert.alert("Sukces", "Rezerwacja została zaktualizowana");
+      } else {
         // New booking
         await createBooking({
           userId: user.uid,
@@ -237,6 +230,8 @@ useEffect(() => {
     return fixed;
   };
 
+  const isWeb = Platform.OS === "web";
+
   return (
     <View style={styles.container}>
       <ScrollView>
@@ -260,91 +255,124 @@ useEffect(() => {
           </View>
         )}
         <Text style={styles.label}>Data</Text>
-        <Pressable
-          style={styles.pickerButton}
-          onPress={() => setShowDatePicker(true)}
-        >
-          <Text>{date.toLocaleDateString()}</Text>
-        </Pressable>
-        {showDatePicker && (
-          <DateTimePicker
-            value={date}
+        {isWeb ? (
+          <WebDatePicker
             mode="date"
-            onChange={(event, selectedDate) => {
-              setShowDatePicker(false);
-              if (selectedDate) setDate(selectedDate);
-            }}
+            value={date}
+            onChange={setDate}
+            placeholder="YYYY-MM-DD"
           />
+        ) : (
+          <>
+            <Pressable
+              style={styles.pickerButton}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text>{date.toLocaleDateString()}</Text>
+            </Pressable>
+            {showDatePicker && (
+              <DateTimePicker
+                value={date}
+                mode="date"
+                onChange={(event, selectedDate) => {
+                  setShowDatePicker(false);
+                  if (selectedDate) setDate(selectedDate);
+                }}
+              />
+            )}
+          </>
         )}
         {/* Start */}
         <Text style={styles.label}>Od</Text>
-        <Pressable
-          style={styles.pickerButton}
-          onPress={() => setShowStartPicker(true)}
-        >
-          <Text>
-            {startTime.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </Text>
-        </Pressable>
-        {showStartPicker && (
-          <DateTimePicker
-            value={startTime}
+        {isWeb ? (
+          <WebDatePicker
             mode="time"
-            display={Platform.OS === "android" ? "spinner" : "default"}
-            onChange={(event, selectedDate) => {
-              if (event.type === "dismissed") {
-                setShowStartPicker(false);
-                return;
-              }
-
-              if (selectedDate) {
-                const snapped = snapToQuarter(selectedDate);
-                setStartTime(snapped);
-              }
-
-              if (Platform.OS === "android") {
-                setShowStartPicker(false);
-              }
-            }}
+            value={startTime}
+            onChange={(value: Date) => setStartTime(snapToQuarter(value))}
+            placeholder="HH:MM"
           />
+        ) : (
+          <>
+            <Pressable
+              style={styles.pickerButton}
+              onPress={() => setShowStartPicker(true)}
+            >
+              <Text>
+                {startTime.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Text>
+            </Pressable>
+            {showStartPicker && (
+              <DateTimePicker
+                value={startTime}
+                mode="time"
+                display={Platform.OS === "android" ? "spinner" : "default"}
+                onChange={(event, selectedDate) => {
+                  if (event.type === "dismissed") {
+                    setShowStartPicker(false);
+                    return;
+                  }
+
+                  if (selectedDate) {
+                    const snapped = snapToQuarter(selectedDate);
+                    setStartTime(snapped);
+                  }
+
+                  if (Platform.OS === "android") {
+                    setShowStartPicker(false);
+                  }
+                }}
+              />
+            )}
+          </>
         )}
         {/* End */}
         <Text style={styles.label}>Do</Text>
-        <Pressable
-          style={styles.pickerButton}
-          onPress={() => setShowEndPicker(true)}
-        >
-          <Text>
-            {endTime.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </Text>
-        </Pressable>
-        {showEndPicker && (
-          <DateTimePicker
-            value={endTime}
+        {isWeb ? (
+          <WebDatePicker
             mode="time"
-            display={Platform.OS === "android" ? "spinner" : "default"}
-            onChange={(event, selectedDate) => {
-              if (event.type === "dismissed") {
-                setShowEndPicker(false);
-                return;
-              }
-
-              if (selectedDate) {
-                const snapped = snapToQuarter(selectedDate);
-                setEndTime(snapped);
-              }
-
-              if (Platform.OS === "android") {
-                setShowEndPicker(false);
-              }
-            }}
+            value={endTime}
+            onChange={(value: Date) => setEndTime(snapToQuarter(value))}
+            placeholder="HH:MM"
           />
+        ) : (
+          <>
+            <Pressable
+              style={styles.pickerButton}
+              onPress={() => setShowEndPicker(true)}
+            >
+              <Text>
+                {endTime.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Text>
+            </Pressable>
+            {showEndPicker && (
+              <DateTimePicker
+                value={endTime}
+                mode="time"
+                display={Platform.OS === "android" ? "spinner" : "default"}
+                onChange={(event, selectedDate) => {
+                  if (event.type === "dismissed") {
+                    setShowEndPicker(false);
+                    return;
+                  }
+
+                  if (selectedDate) {
+                    const snapped = snapToQuarter(selectedDate);
+                    setEndTime(snapped);
+                  }
+
+                  if (Platform.OS === "android") {
+                    setShowEndPicker(false);
+                  }
+                }}
+              />
+            )}
+          </>
         )}
         <Text style={styles.label}>Jacht</Text>
         <View style={{ marginTop: 8 }}>

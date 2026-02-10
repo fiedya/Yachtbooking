@@ -496,9 +496,12 @@ useEffect(() => {
                         theme.gridBorderRight,
                         theme.gridBorderBottom,
                         { flex: 1, height: 36 },
-                        isToday && theme.highlightBackground,
+                        isToday && {
+                          backgroundColor: "rgba(0, 80, 200, 0.08)", // 👈 translucent
+                        },
                       ]}
                     >
+
                       <Pressable
                         style={{ flex: 1 }}
                         onPress={() => {
@@ -579,13 +582,21 @@ useEffect(() => {
                                   left: `${left}%`,
                                   width: `${width}%`,
                                   overflow: "hidden",
+
+                                  // 👇 keep bookings above "today" highlight
+                                  zIndex: 10,
+                                  elevation: 5, // Android
                                 },
                                 layout,
                               ]}
-                              onPress={() => {
-                                setSelectedBooking(b);
-                              }}
+            onPress={(e) => {
+              // ✅ CRITICAL: stop click from reaching grid cell (web only)
+              e?.stopPropagation?.();
+              setSelectedBooking(b);
+            }}
+
                             >
+
                               <Text
                                 style={[
                                   theme.textXs,

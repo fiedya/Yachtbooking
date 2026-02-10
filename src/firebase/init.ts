@@ -25,3 +25,7 @@ export const onSnapshot = impl.onSnapshot;
 export const serverTimestamp = impl.serverTimestamp;
 export const addDocAuto = impl.addDocAuto;
 export const onDocSnapshot = impl.onDocSnapshot;
+
+
+/* TSX */
+export const WebDatePicker = impl.WebDatePicker;
