@@ -16,10 +16,12 @@ export async function getYachts(): Promise<Yacht[]> {
   const snap: any = await queryDocs("yachts", {});
   const docs = snap.docs ?? snap._docs ?? [];
 
-  return docs.map((d: any) => ({
-    id: d.id,
-    ...(d.data() as Omit<Yacht, "id">),
-  }));
+  return docs
+    .map((d: any) => ({
+      id: d.id,
+      ...(d.data() as Omit<Yacht, "id">),
+    }))
+    .filter((yacht: { status: YachtStatus; }) => yacht.status === YachtStatus.Available);
 }
 
 export function subscribeToYachts(
@@ -35,6 +37,30 @@ export function subscribeToYachts(
         id: d.id,
         ...(d.data() as Omit<Yacht, "id">),
       }));
+
+      onChange(yachts);
+    },
+    onError,
+  );
+}
+
+export function subscribeToAvailableYachts(
+  onChange: (yachts: Yacht[]) => void,
+  onError?: (error: unknown) => void,
+) {
+  return onSnapshot(
+    "yachts",
+    (snapshot: any) => {
+      const docs = snapshot?.docs ?? snapshot?._docs ?? [];
+
+      const yachts = docs
+        .map((d: any) => ({
+          id: d.id,
+          ...(d.data() as Omit<Yacht, "id">),
+        }))
+        .filter((yacht: { status: YachtStatus }) =>
+          yacht.status === YachtStatus.Available,
+        );
 
       onChange(yachts);
     },

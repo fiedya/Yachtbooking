@@ -1,5 +1,6 @@
+import WebDatePicker from "@/src/components/WebDatePicker";
 import { Yacht } from "@/src/entities/yacht";
-import { getDoc, updateDoc, WebDatePicker } from "@/src/firebase/init";
+import { getDoc, updateDoc } from "@/src/firebase/init";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { createBooking } from "@/src/services/booking.service";
 import { getAvailableYachtIds } from "@/src/services/calendarService";

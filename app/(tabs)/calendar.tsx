@@ -7,7 +7,7 @@ import { useAuth } from "@/src/providers/AuthProvider";
 import { useMode } from "@/src/providers/ModeProvider";
 import { subscribeToWeekBookings, updateBookingStatus } from "@/src/services/booking.service";
 import { getUserPhotoUrl, probeUserPermissions, subscribeToUser } from "@/src/services/userService";
-import { subscribeToYachts } from "@/src/services/yachtService";
+import { subscribeToAvailableYachts } from "@/src/services/yachtService";
 import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
 import { spacing } from "@/src/theme/spacing";
@@ -15,7 +15,7 @@ import { styles, styles as theme } from "@/src/theme/styles";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import { User } from "firebase/auth";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Image,
@@ -160,6 +160,7 @@ export default function CalendarScreen() {
   const [modalUserPhoto, setModalUserPhoto] = useState<string | null>(null);
   const [profile, setProfile] = useState<User | null>(null);
   const { user, uid, loading: authLoading } = useAuth();
+  const suppressGridPressRef = useRef(false);
 
   useEffect(() => {
     if (!user) return;
@@ -212,12 +213,32 @@ export default function CalendarScreen() {
     [baseWeekStart, weekOffset],
   );
 
+  const findBookingForSlot = (day: Date, hour: number) => {
+    const slotMinutes = hour * 60;
+    const candidates = filteredBookings
+      .filter((b) => sameDay(b.start.toDate(), day))
+      .filter((b) => {
+        const start = b.start.toDate();
+        const end = b.end.toDate();
+        const startMinutes = start.getHours() * 60 + start.getMinutes();
+        const endMinutes = end.getHours() * 60 + end.getMinutes();
+        return startMinutes <= slotMinutes && endMinutes > slotMinutes;
+      })
+      .sort((a, b) => {
+        const aStart = a.start.toDate().getTime();
+        const bStart = b.start.toDate().getTime();
+        if (aStart !== bStart) return aStart - bStart;
+        return (a.id || "").localeCompare(b.id || "");
+      });
+
+    return candidates[0] ?? null;
+  };
+
   useEffect(() => {
-    const unsub = subscribeToYachts((data) => {
-      const activeYachts = data.filter((y) => y.active === true);
-      setYachts(activeYachts);
+    const unsub = subscribeToAvailableYachts((data) => {
+      setYachts(data);
       const map: { [id: string]: { name: string; shortcut?: string } } = {};
-      activeYachts.forEach((y) => {
+      data.forEach((y) => {
         map[y.id] = { name: y.name, shortcut: y.shortcut };
       });
       setYachtMap(map);
@@ -505,6 +526,15 @@ useEffect(() => {
                       <Pressable
                         style={{ flex: 1 }}
                         onPress={() => {
+                          if (suppressGridPressRef.current) {
+                            suppressGridPressRef.current = false;
+                            return;
+                          }
+                          const bookingAtSlot = findBookingForSlot(day, h);
+                          if (bookingAtSlot) {
+                            setSelectedBooking(bookingAtSlot);
+                            return;
+                          }
                           setPendingSlot({ day: day.toISOString(), hour: h });
                           setTimeout(() => {
                             const startDate = new Date(day);
@@ -589,11 +619,19 @@ useEffect(() => {
                                 },
                                 layout,
                               ]}
-            onPress={(e) => {
-              // ✅ CRITICAL: stop click from reaching grid cell (web only)
-              e?.stopPropagation?.();
-              setSelectedBooking(b);
-            }}
+                              onPressIn={() => {
+                                suppressGridPressRef.current = true;
+                              }}
+                              onPressOut={() => {
+                                setTimeout(() => {
+                                  suppressGridPressRef.current = false;
+                                }, 0);
+                              }}
+                              onPress={(e) => {
+                                // stop click from reaching grid cell (web)
+                                e?.stopPropagation?.();
+                                setSelectedBooking(b);
+                              }}
 
                             >
 

@@ -4,7 +4,7 @@ import { subscribeToUser, updateUserStatus } from "@/src/services/userService";
 import { styles as theme } from "@/src/theme/styles";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Alert, Platform, Pressable, Text, View } from "react-native";
 
 type UserDetails = {
   uid: string;
@@ -39,26 +39,32 @@ export default function UserDetailsScreen() {
     );
   }
 
-  function updateStatus(
+  async function updateStatus(
     nextStatus: UserStatus.Verified | UserStatus.Rejected,
   ) {
-    Alert.alert(
-      "Potwierdź",
-      `Na pewno chcesz oznaczyć tego użytkownika nowym statusem: ${getUserStatusLabel(nextStatus)}?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Confirm",
-          style: "destructive",
-          onPress: async () => {
-            if (!user) return;
+    const message = `Na pewno chcesz oznaczyć tego użytkownika nowym statusem: ${getUserStatusLabel(nextStatus)}?`;
 
-            await updateUserStatus(user.uid, nextStatus);
-            router.back();
-          },
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm(message);
+      if (!confirmed || !user) return;
+      await updateUserStatus(user.uid, nextStatus);
+      router.back();
+      return;
+    }
+
+    Alert.alert("Potwierdź", message, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Confirm",
+        style: "destructive",
+        onPress: async () => {
+          if (!user) return;
+
+          await updateUserStatus(user.uid, nextStatus);
+          router.back();
         },
-      ],
-    );
+      },
+    ]);
   }
 
 

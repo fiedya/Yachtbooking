@@ -5,7 +5,7 @@ import { styles as theme } from "@/src/theme/styles";
 import dayjs from "dayjs";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Platform, Pressable, ScrollView, Text, View } from "react-native";
 
 /* Date helpers */
 function startOfWeek(date: Date) {
@@ -65,31 +65,45 @@ export default function BookingDetailsScreen() {
     );
   }
   
-function updateStatus(
-  nextStatus: BookingStatus.Approved | BookingStatus.Rejected,
-) {
-  const actionLabel =
-    nextStatus === BookingStatus.Approved ? "zaakceptować" : "odrzucić";
+  async function updateStatus(
+    nextStatus: BookingStatus.Approved | BookingStatus.Rejected,
+  ) {
+    const actionLabel =
+      nextStatus === BookingStatus.Approved ? "zaakceptować" : "odrzucić";
+    const message = `Na pewno chcesz ${actionLabel} ten booking?`;
 
-  Alert.alert("Potwierdź", `Na pewno chcesz ${actionLabel} ten booking?`, [
-    { text: "Anuluj", style: "cancel" },
-    {
-      text: "Potwierdź",
-      style: "destructive",
-      onPress: async () => {
-        if (!booking) return;
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm(message);
+      if (!confirmed || !booking) return;
+      setUpdating(true);
+      try {
+        await updateBookingStatus(booking.id, nextStatus);
+        router.back();
+      } finally {
+        setUpdating(false);
+      }
+      return;
+    }
 
-        setUpdating(true);
-        try {
-          await updateBookingStatus(booking.id, nextStatus);
-          router.back();
-        } finally {
-          setUpdating(false);
-        }
+    Alert.alert("Potwierdź", message, [
+      { text: "Anuluj", style: "cancel" },
+      {
+        text: "Potwierdź",
+        style: "destructive",
+        onPress: async () => {
+          if (!booking) return;
+
+          setUpdating(true);
+          try {
+            await updateBookingStatus(booking.id, nextStatus);
+            router.back();
+          } finally {
+            setUpdating(false);
+          }
+        },
       },
-    },
-  ]);
-}
+    ]);
+  }
 
 
   const startDate = booking.start?.toDate?.();

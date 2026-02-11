@@ -136,7 +136,7 @@ export default function AuthScreen() {
             </Text>
 
             <TextInput
-              placeholder="+48123456789"
+              placeholder=""
               value={phone}
               onChangeText={setPhone}
               keyboardType="phone-pad"
