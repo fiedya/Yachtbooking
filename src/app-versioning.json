@@ -1,6 +1,6 @@
 [
   {
-    "version": "0.0.4 (aktualna)",
+    "version": "0.0.4",
     "date": "2026-01-29",
     "notes": [
       "Poprawiono wygląd bookingów i kalendarza (zdjęcie uzytkownika, stylowanie okien)",
@@ -22,6 +22,21 @@
       "Wyświetlenie która wersja aplikacji jest aktualna w ekranie historii wersji",
       "Klikanie poza info oknem minibookingu teraz je zamyka",
       "Zmiana na spinner przy wyborze czasu w rezerwacji"
+    ]
+  },
+  {
+    "version": "0.0.6",
+    "date": "2026-02-12",
+    "notes": [
+      "Multiplatforma dla PWA/Web/Android"
+    ]
+  },
+  {
+    "version": "0.0.7",
+    "date": "2026-02-19",
+    "notes": [
+      "Poprawka do Internal wersji",
+      "Drobne poprawki do wyglądu"
     ]
   }
 ]

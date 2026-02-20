@@ -1,3 +1,4 @@
+import Icon from "@/src/components/Icon";
 import { Booking } from "@/src/entities/booking";
 import { getCurrentUser, signOut } from "@/src/firebase/init";
 import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
@@ -7,7 +8,6 @@ import { uploadImage } from "@/src/services/imageUploadService";
 import { headerStyles } from "@/src/theme/header";
 import { styles as theme } from "@/src/theme/styles";
 import { pickImageFromGallery } from "@/src/utils/pickImage";
-import { MaterialIcons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -173,7 +173,7 @@ async function handleLogout() {
                 style={{ marginLeft: 12, padding: 4 }}
                 accessibilityLabel="Ustawienia"
               >
-                <MaterialIcons name="settings" size={26} color="#003366" />
+                <Icon type="material" name="settings" size={26} color="#003366" />
               </Pressable>
             </View>
           ),
@@ -258,11 +258,11 @@ async function handleLogout() {
               <Text style={[theme.textPrimary, { flex: 1 }]}>
                 {pseudonim || "Brak pseudonimu"}
               </Text>
-              <MaterialIcons
+              <Icon type="material"
                 name="edit"
                 size={18}
                 color={theme.link.color}
-                style={{ marginLeft: 8 }}
+                //style={{ marginLeft: 8 }}
               />
             </Pressable>
           )}
@@ -394,7 +394,7 @@ async function handleLogout() {
                   style={{ marginLeft: 8 }}
                   accessibilityLabel="Edytuj rezerwację"
                 >
-                  <MaterialIcons
+                  <Icon type="material"
                     name="edit"
                     size={24}
                     color={theme.link.color}

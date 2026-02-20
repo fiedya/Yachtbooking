@@ -9,6 +9,7 @@ import { getAvailableYachts } from "@/src/services/yachtService";
 import { headerStyles } from "@/src/theme/header";
 import { styles } from "@/src/theme/styles";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useIsFocused } from "@react-navigation/native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -26,6 +27,7 @@ import { useMode } from "../../src/providers/ModeProvider";
 export default function BookScreen() {
   const { user } = useAuth();
   const router = useRouter();
+  const isFocused = useIsFocused();
   const {
     startDate: paramStartDate,
     endDate: paramEndDate,
@@ -41,13 +43,23 @@ export default function BookScreen() {
   const [isAdmin, setIsAdmin] = useState(false);
   const getDatePart = (iso?: string) => (iso ? new Date(iso) : new Date());
   const getTimePart = (iso?: string) => (iso ? new Date(iso) : new Date());
+  const getDefaultEndTime = (startIso?: string, endIso?: string) => {
+    if (endIso) return new Date(endIso);
+
+    const base = startIso ? new Date(startIso) : new Date();
+    const end = new Date(base);
+    end.setHours(base.getHours() + 1, base.getMinutes(), 0, 0);
+    return end;
+  };
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [date, setDate] = useState(() => getDatePart(paramStartDate));
   const [startTime, setStartTime] = useState(() => getTimePart(paramStartDate));
-  const [endTime, setEndTime] = useState(() => getTimePart(paramEndDate));
+  const [endTime, setEndTime] = useState(() =>
+    getDefaultEndTime(paramStartDate, paramEndDate),
+  );
 
   const [loading, setLoading] = useState(false);
   const [yachts, setYachts] = useState<Yacht[]>([]);
@@ -63,6 +75,12 @@ export default function BookScreen() {
       const d = new Date(paramStartDate);
       setDate(d);
       setStartTime(d);
+
+      if (!paramEndDate) {
+        const defaultEnd = new Date(d);
+        defaultEnd.setHours(d.getHours() + 1, d.getMinutes(), 0, 0);
+        setEndTime(defaultEnd);
+      }
     }
     if (paramEndDate) {
       setEndTime(new Date(paramEndDate));
@@ -201,6 +219,8 @@ export default function BookScreen() {
   }, [edit, bookingId]);
 
   useEffect(() => {
+    if (!isFocused) return;
+
     const start = new Date(date);
     start.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
 
@@ -218,7 +238,7 @@ export default function BookScreen() {
         }
       });
     }
-  }, [date, startTime, endTime, yachts, yacht]);
+  }, [isFocused, date, startTime, endTime, yachts, yacht, edit, bookingId]);
 
   const snapToQuarter = (date: Date) => {
     const snapped = Math.round(date.getMinutes() / 15) * 15;

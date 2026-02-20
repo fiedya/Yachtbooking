@@ -2,7 +2,8 @@ import { User } from "@/src/entities/user";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { subscribeToUser } from "@/src/services/userService";
 import { colors } from "@/src/theme/colors";
-import { Ionicons } from "@expo/vector-icons";
+
+import Icon from "@/src/components/Icon";
 import { Tabs } from "expo-router";
 import { useEffect, useState } from "react";
 import { useMode } from "../../src/providers/ModeProvider";
@@ -35,7 +36,7 @@ export default function TabsLayout() {
         name="news"
         options={{
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="newspaper-outline" size={size} color={color} />
+            <Icon name="newspaper-outline" size={size} color={color} />
           ),
         }}
       />
@@ -44,7 +45,7 @@ export default function TabsLayout() {
         name="yachts"
         options={{
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="boat-outline" size={size} color={color} />
+            <Icon name="boat-outline" size={size} color={color} />
           ),
         }}
       />
@@ -53,7 +54,7 @@ export default function TabsLayout() {
         name="book"
         options={{
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="add-circle-outline" size={size} color={color} />
+            <Icon name="add-circle-outline" size={size} color={color} />
           ),
         }}
       />
@@ -62,7 +63,7 @@ export default function TabsLayout() {
         name="calendar"
         options={{
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar-outline" size={size} color={color} />
+            <Icon name="calendar-outline" size={size} color={color} />
           ),
         }}
       />
@@ -71,7 +72,7 @@ export default function TabsLayout() {
         name="profile"
         options={{
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+            <Icon name="person-outline" size={size} color={color} />
           ),
         }}
       />
@@ -82,7 +83,7 @@ export default function TabsLayout() {
           title: "Admin",
           href: isAdmin ? undefined : null,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="key-outline" size={size} color={color} />
+            <Icon name="key-outline" size={size} color={color} />
           ),
         }}
       />

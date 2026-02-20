@@ -1,6 +1,7 @@
 /* -----------------------------
    Date helpers
 -------------------------------- */
+import Icon from "@/src/components/Icon";
 import { BookingStatus } from "@/src/entities/booking";
 import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
@@ -12,7 +13,7 @@ import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
 import { spacing } from "@/src/theme/spacing";
 import { styles, styles as theme } from "@/src/theme/styles";
-import { Ionicons } from "@expo/vector-icons";
+
 import { Stack, useRouter } from "expo-router";
 import { User } from "firebase/auth";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -335,7 +336,7 @@ useEffect(() => {
               onPress={() => setRefreshKey((k) => k + 1)}
               style={{ margin: 10, paddingRight: "5%" }}
             >
-              <Ionicons
+              <Icon
                 name="refresh"
                 size={24}
                 color={isRefreshing ? "#999" : "#000"}
@@ -426,7 +427,7 @@ useEffect(() => {
             onPress={() => setWeekOffset((o) => o - 1)}
             style={theme.iconButton}
           >
-            <Ionicons name="chevron-back-outline" />
+            <Icon name="chevron-back-outline" size={24} color={colors.black} />
           </Pressable>
 
           {/* Current week label */}
@@ -435,7 +436,6 @@ useEffect(() => {
             style={{ flex: 1, alignItems: "center" }}
           >
             <Text style={theme.textPrimary}>{weekLabel(weekStart)}</Text>
-            <Text style={theme.textMuted}>Ten tydzień</Text>
           </Pressable>
 
           {/* Next week */}
@@ -443,7 +443,7 @@ useEffect(() => {
             onPress={() => setWeekOffset((o) => o + 1)}
             style={theme.iconButton}
           >
-            <Ionicons name="chevron-forward-outline" />
+            <Icon name="chevron-forward-outline" size={24} color={colors.black} />
           </Pressable>
         </View>
       )}
@@ -693,7 +693,7 @@ useEffect(() => {
                   style={{ marginLeft: 8 }}
                   accessibilityLabel="Edytuj rezerwację"
                 >
-                  <Ionicons name="pencil" size={24} color={colors.primary} />
+                  <Icon name="pencil" size={24} color={colors.primary} />
                 </Pressable>
               )}
             </View>

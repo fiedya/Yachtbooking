@@ -1,3 +1,4 @@
+import Icon from "@/src/components/Icon";
 import { News, NewsCategory } from "@/src/entities/news";
 import { getNewsCategoryLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
@@ -6,7 +7,6 @@ import { subscribeToUser } from "@/src/services/userService";
 import { headerStyles } from "@/src/theme/header";
 import { spacing } from "@/src/theme/spacing";
 import { styles as theme } from "@/src/theme/styles";
-import { MaterialIcons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
@@ -150,11 +150,12 @@ export default function NewsDetailsScreen() {
                 </Text>
               </View>
               {isAdmin && (
-                <MaterialIcons
+                <Icon
+                  type="material" 
                   name="edit"
                   size={18}
                   color={theme.link.color}
-                  style={{ marginLeft: 8 }}
+                  //style={{ marginLeft: 8 }}
                 />
               )}
             </Pressable>
@@ -193,7 +194,7 @@ export default function NewsDetailsScreen() {
               <Text onPress={isAdmin ? () => startEdit('category') : undefined} style={{ textDecorationLine: 'underline' }}>
                 {news && getNewsCategoryLabel(news.category)}
                 {isAdmin && (
-                  <MaterialIcons name="edit" size={16} color={theme.link.color} style={{ marginLeft: 4 }} />
+                  <Icon type="material" name="edit" size={16} color={theme.link.color} />//style={{ marginLeft: 4 }} />
                 )}
               </Text>
             )}

@@ -1,12 +1,13 @@
 {
   "hosting": {
     "public": "dist",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
+    "cleanUrls": false,
+    "trailingSlash": false,
     "rewrites": [
+      {
+        "source": "/assets/**",
+        "destination": "/assets/:splat"
+      },
       {
         "source": "**",
         "destination": "/index.html"

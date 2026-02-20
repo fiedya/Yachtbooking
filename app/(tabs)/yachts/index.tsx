@@ -1,10 +1,10 @@
+import Icon from "@/src/components/Icon";
 import { Yacht, YachtStatus } from "@/src/entities/yacht";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { subscribeToUser } from "@/src/services/userService";
 import { subscribeToYachts } from "@/src/services/yachtService";
 import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";
-import { Ionicons } from "@expo/vector-icons";
 import { router, Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { FlatList, Image, Pressable, Switch, Text, View } from "react-native";
@@ -116,7 +116,7 @@ export default function YachtsScreen() {
             elevation: 4,
           }}
         >
-          <Ionicons name="add" size={28} color="#fff" />
+          <Icon name="add" size={28} color="#fff" />
         </Pressable>
       )}
     </>

@@ -1,11 +1,11 @@
-import { Yacht } from "@/src/entities/yacht";
+import Icon from "@/src/components/Icon";
+import { Yacht, YachtStatus } from "@/src/entities/yacht";
 import { getYachtStatusLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { subscribeToUser } from "@/src/services/userService";
 import { getYachtById, updateYacht } from "@/src/services/yachtService";
 import { headerStyles } from "@/src/theme/header";
 import { styles as theme } from "@/src/theme/styles";
-import { MaterialIcons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -29,6 +29,12 @@ export default function YachtDetailsScreen() {
   const [fieldValue, setFieldValue] = useState("");
   const [saving, setSaving] = useState(false);
   const { user, uid, loading: authLoading } = useAuth();
+  const yachtStatuses: YachtStatus[] = [
+    YachtStatus.Available,
+    YachtStatus.Maintenance,
+    YachtStatus.Disabled,
+    YachtStatus.NotOurs,
+  ];
   
   useEffect(() => {
     if (!id || typeof id !== "string") return;
@@ -58,6 +64,21 @@ export default function YachtDetailsScreen() {
     } catch (e) {
       // Optionally show error
       console.error("Save yacht field error", e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const changeStatus = async (status: YachtStatus) => {
+    if (!id || typeof id !== "string") return;
+    if (!isAdmin || !yacht || yacht.status === status) return;
+
+    setSaving(true);
+    try {
+      await updateYacht(id, { status });
+      setYacht((y) => (y ? { ...y, status } : y));
+    } catch (e) {
+      console.error("Save yacht status error", e);
     } finally {
       setSaving(false);
     }
@@ -154,11 +175,11 @@ export default function YachtDetailsScreen() {
                     : "Brak skrótu"}
                 </Text>
                 {isAdmin && (
-                  <MaterialIcons
+                  <Icon type="material"
                     name="edit"
                     size={18}
                     color={theme.link.color}
-                    style={{ marginLeft: 8 }}
+                    //style={{ marginLeft: 8 }}
                   />
                 )}
               </Pressable>
@@ -210,11 +231,11 @@ export default function YachtDetailsScreen() {
                   {yacht.type || "Brak typu"}
                 </Text>
                 {isAdmin && (
-                  <MaterialIcons
+                  <Icon type="material"
                     name="edit"
                     size={18}
                     color={theme.link.color}
-                    style={{ marginLeft: 8 }}
+                    //style={{ marginLeft: 8 }}
                   />
                 )}
               </Pressable>
@@ -269,22 +290,53 @@ export default function YachtDetailsScreen() {
                   <Text style={theme.bodyText}>
                     {yacht.description || "Brak opisu"}
                   </Text>
-                  <Text
-                    style={[theme.bodyText, { marginTop: 8, color: "#666" }]}
-                  >
-                    Status: {getYachtStatusLabel(yacht.status)}
-                  </Text>
                 </View>
                 {isAdmin && (
-                  <MaterialIcons
+                  <Icon type="material"
                     name="edit"
                     size={18}
                     color={theme.link.color}
-                    style={{ marginLeft: 8 }}
+                    //style={{ marginLeft: 8 }}
                   />
                 )}
               </Pressable>
             )}
+          </View>
+
+          <View style={{ marginTop: 8 }}>
+            <Text style={theme.sectionTitle}>Status</Text>
+            <View
+              style={{
+                flexDirection: "row",
+                gap: 8,
+                marginTop: 4,
+                flexWrap: "wrap",
+              }}
+            >
+              {(isAdmin ? yachtStatuses : [yacht.status]).map((statusValue) => {
+                const isActive = yacht.status === statusValue;
+                return (
+                  <Pressable
+                    key={statusValue}
+                    onPress={
+                      isAdmin ? () => changeStatus(statusValue) : undefined
+                    }
+                    disabled={!isAdmin || saving}
+                    style={[
+                      theme.pill,
+                      isActive ? theme.pillActive : theme.pillDefault,
+                      saving && isAdmin ? { opacity: 0.6 } : null,
+                    ]}
+                  >
+                    <Text
+                      style={isActive ? theme.textOnPrimary : theme.textSecondary}
+                    >
+                      {getYachtStatusLabel(statusValue)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
         </View>
       </ScrollView>

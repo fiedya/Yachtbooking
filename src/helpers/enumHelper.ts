@@ -37,6 +37,8 @@ export function getYachtStatusLabel(status: YachtStatus): string {
       return "Serwis";
     case YachtStatus.Disabled:
       return "Wyłączony";
+    case YachtStatus.NotOurs:
+      return "Nie nasz";
     default:
       return "Nieznany";
   }

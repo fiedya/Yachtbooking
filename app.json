@@ -2,7 +2,7 @@
   "expo": {
     "name": "YachtBooking",
     "slug": "YachtBooking",
-    "version": "0.0.5",
+    "version": "0.0.7",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "yachtbooking",
@@ -42,6 +42,7 @@
     "owner": "fiedya",
     "runtimeVersion": {
       "policy": "appVersion"
-    }
+    },
+    "assetBundlePatterns": ["**/*"]
   }
 }
