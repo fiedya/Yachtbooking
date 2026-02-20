@@ -1,5 +1,5 @@
 import { Booking } from "@/src/entities/booking";
-import { subscribeToPendingBookings } from "@/src/services/booking.service";
+import { subscribeToAllBookings } from "@/src/services/booking.service";
 import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";
 import dayjs from "dayjs";
@@ -7,39 +7,25 @@ import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, Text, TextInput, View } from "react-native";
 
-type BookingRow = {
-  id: string;
-  yachtName: string;
-  userName: string;
-  start: any;
-  end: any;
-  status: string;
-  createdAt: any;
-};
-
 type SortOption = "yachtName" | "userName" | "createdAt" | "bookingDay";
 
-export default function BookingsToApproveScreen() {
+export default function AllBookingsScreen() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [searchText, setSearchText] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("bookingDay");
-
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     setLoading(true);
 
-    const unsub = subscribeToPendingBookings(
-      (bookings) => {
-        setBookings(bookings);
+    const unsub = subscribeToAllBookings(
+      (nextBookings) => {
+        setBookings(nextBookings);
         setLoading(false);
       },
       (error) => {
-        console.error(
-          "[BOOKINGS TO APPROVE] snapshot error:",
-          error,
-        );
+        console.error("[ALL BOOKINGS] snapshot error:", error);
         setLoading(false);
       },
     );
@@ -97,7 +83,6 @@ export default function BookingsToApproveScreen() {
       <Text style={{ color: colors.white, fontSize: 12 }}>{label}</Text>
     </Pressable>
   );
-
 
   return (
     <View style={theme.screen}>
@@ -163,7 +148,7 @@ export default function BookingsToApproveScreen() {
             <Text style={theme.textMuted}>
               {searchText
                 ? "Brak rezerwacji spełniających kryteria"
-                : "No bookings to approve"}
+                : "Brak rezerwacji"}
             </Text>
           ) : null
         }

@@ -50,13 +50,20 @@ export default function AdminScreen() {
       >
         <Text style={styles.buttonText}>Nowi użytkownicy</Text>
       </Pressable>
-
+      <Pressable
+        style={[styles.button, { marginTop: 12 }]}
+        onPress={() => router.push("/admin/all-bookings")}
+      >
+        <Text style={styles.buttonText}>Wszystkie bookingi</Text>
+      </Pressable>
       <Pressable
         style={styles.button}
         onPress={() => router.push("/admin/bookings-to-approve")}
       >
         <Text style={styles.buttonText}>Nowe bookingi</Text>
       </Pressable>
+
+
     </View>
   );
 }

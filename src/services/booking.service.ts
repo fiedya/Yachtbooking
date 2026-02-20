@@ -101,6 +101,48 @@ export function subscribeToPendingBookings(
   );
 }
 
+export function subscribeToAllBookings(
+  onChange: (bookings: Booking[]) => void,
+  onError?: (error: unknown) => void,
+) {
+  return onSnapshot(
+    "bookings",
+    (snapshot: any) => {
+      if (!snapshot) {
+        onChange([]);
+        return;
+      }
+
+      const docs = snapshot.docs ?? snapshot._docs ?? [];
+
+      const bookings: Booking[] = docs
+        .map((doc: any) => ({
+          id: doc.id,
+          ...(doc.data() as Omit<Booking, "id">),
+        }))
+        .sort(
+          (
+            a: {
+              start: {
+                toDate: () => { (): any; new (): any; getTime: { (): number; new (): any } };
+              };
+            },
+            b: {
+              start: {
+                toDate: () => { (): any; new (): any; getTime: { (): number; new (): any } };
+              };
+            },
+          ) =>
+            a.start?.toDate?.()?.getTime?.() -
+            b.start?.toDate?.()?.getTime?.(),
+        );
+
+      onChange(bookings);
+    },
+    onError,
+  );
+}
+
 
 export function subscribeToWeekBookings(
   weekStart: Date,
