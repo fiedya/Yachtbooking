@@ -788,17 +788,13 @@ useEffect(() => {
                     marginRight: 8,
                     minWidth: 90,
                     alignItems: "center",
-                    opacity:
-                      selectedBooking.status === BookingStatus.Approved
-                        ? 0.5
-                        : 1,
                   }}
-                  disabled={selectedBooking.status === BookingStatus.Approved}
                   onPress={async () => {
                     updateBookingStatus(
                       selectedBooking.id,
                       BookingStatus.Approved,
                     );
+                    setSelectedBooking(null);
                   }}
                 >
                   <Text style={{ color: colors.white, fontWeight: "bold" }}>
@@ -813,17 +809,13 @@ useEffect(() => {
                     borderRadius: 6,
                     minWidth: 90,
                     alignItems: "center",
-                    opacity:
-                      selectedBooking.status === BookingStatus.Rejected
-                        ? 0.5
-                        : 1,
                   }}
-                  disabled={selectedBooking.status === BookingStatus.Rejected}
                   onPress={async () => {
                     updateBookingStatus(
                       selectedBooking.id,
                       BookingStatus.Rejected,
                     );
+                    setSelectedBooking(null);
                   }}
                 >
                   <Text style={{ color: colors.white, fontWeight: "bold" }}>
