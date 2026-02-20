@@ -313,7 +313,7 @@ export const styles = StyleSheet.create({
 
   // Yacht card for booking
   yachtCard: {
-    width: 120,
+    width: 140,
     marginRight: 12,
     borderRadius: 12,
     borderWidth: 1,
@@ -330,13 +330,13 @@ export const styles = StyleSheet.create({
   },
   yachtImage: {
     width: "100%",
-    height: 80,
+    height: 96,
     backgroundColor: "#eee",
   },
   yachtName: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    fontSize: 14,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    fontSize: 15,
     textAlign: "center",
   },
   yachtNameActive: {

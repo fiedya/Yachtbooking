@@ -1,4 +1,5 @@
 import WebDatePicker from "@/src/components/WebDatePicker";
+import { BookingStatus } from "@/src/entities/booking";
 import { Yacht } from "@/src/entities/yacht";
 import { getDoc, updateDoc } from "@/src/firebase/init";
 import { useAuth } from "@/src/providers/AuthProvider";
@@ -11,7 +12,7 @@ import { styles } from "@/src/theme/styles";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useIsFocused } from "@react-navigation/native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
     Alert,
     Image,
@@ -96,37 +97,49 @@ export default function BookScreen() {
   }, [mode]);
 
   useEffect(() => {
-    if (edit && bookingId && isAdmin) {
-      getDoc("bookings", bookingId).then((snap: any) => {
-        if (!snap.exists()) return;
+    if (!edit || !bookingId || !user) return;
 
-        const data = snap.data();
-        if (!data) return;
+    getDoc("bookings", bookingId).then((snap: any) => {
+      if (!snap.exists()) return;
 
-        setEditingBooking({ ...data, id: snap.id });
+      const data = snap.data();
+      if (!data) return;
 
-        // Pre-fill form fields
-        setBookingName(data.userName || "");
+      const isOwner = data.userId === user.uid;
+      if (!isAdmin && !isOwner) {
+        Alert.alert("Brak dostępu", "Nie możesz edytować tej rezerwacji");
+        router.replace("/(tabs)/calendar");
+        return;
+      }
 
-        if (data.start && typeof data.start.toDate === "function") {
-          const startDate = data.start.toDate();
-          setDate(startDate);
-          setStartTime(startDate);
-        }
+      if (data.status === BookingStatus.Rejected) {
+        Alert.alert("Brak dostępu", "Nie można edytować odrzuconej rezerwacji");
+        router.replace("/(tabs)/calendar");
+        return;
+      }
 
-        if (data.end && typeof data.end.toDate === "function") {
-          setEndTime(data.end.toDate());
-        }
+      setEditingBooking({ ...data, id: snap.id });
 
-        if (data.yachtId && data.yachtName) {
-          setYacht({
-            id: data.yachtId,
-            name: data.yachtName,
-          } as Yacht);
-        }
-      });
-    }
-  }, [edit, bookingId, isAdmin]);
+      setBookingName(data.userName || "");
+
+      if (data.start && typeof data.start.toDate === "function") {
+        const startDate = data.start.toDate();
+        setDate(startDate);
+        setStartTime(startDate);
+      }
+
+      if (data.end && typeof data.end.toDate === "function") {
+        setEndTime(data.end.toDate());
+      }
+
+      if (data.yachtId && data.yachtName) {
+        setYacht({
+          id: data.yachtId,
+          name: data.yachtName,
+        } as Yacht);
+      }
+    });
+  }, [edit, bookingId, isAdmin, user, router]);
 
 
   useEffect(() => {
@@ -178,13 +191,19 @@ export default function BookScreen() {
         fullName = user.phoneNumber || "";
       }
 
-      if (edit && bookingId && isAdmin) {
+      if (edit && bookingId) {
+        if (editingBooking?.status === BookingStatus.Rejected) {
+          Alert.alert("Błąd", "Nie można edytować odrzuconej rezerwacji");
+          return;
+        }
+
         await updateDoc("bookings", bookingId, {
           userName: fullName,
           yachtId: yacht.id,
           yachtName: yacht.name,
           start,
           end,
+          status: BookingStatus.Pending,
         });
 
         Alert.alert("Sukces", "Rezerwacja została zaktualizowana");
@@ -252,6 +271,22 @@ export default function BookScreen() {
   };
 
   const isWeb = Platform.OS === "web";
+  const orderedYachts = useMemo(() => {
+    const busyIds = new Set(availableYachtIds);
+    return [...yachts].sort((a, b) => {
+      const aBusy = busyIds.has(a.id) ? 1 : 0;
+      const bBusy = busyIds.has(b.id) ? 1 : 0;
+      return aBusy - bBusy;
+    });
+  }, [yachts, availableYachtIds]);
+
+  const yachtRows = useMemo(() => {
+    const rows: Yacht[][] = [[], []];
+    orderedYachts.forEach((y, index) => {
+      rows[index % 2].push(y);
+    });
+    return rows;
+  }, [orderedYachts]);
 
   return (
     <View style={styles.container}>
@@ -398,60 +433,69 @@ export default function BookScreen() {
         <Text style={styles.label}>Jacht</Text>
         <View style={{ marginTop: 8 }}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {yachts.map((y) => {
-              const selected = yacht?.id === y.id;
-              const isAvailable = !availableYachtIds.includes(y.id);
-              return (
-                <Pressable
-                  key={y.id}
-                  onPress={() => isAvailable && setYacht(y)}
-                  disabled={!isAvailable}
-                  style={[
-                    styles.yachtCard,
-                    selected && styles.yachtCardActive,
-                    !isAvailable && styles.yachtCardDisabled,
-                  ]}
+            <View>
+              {yachtRows.map((row, rowIndex) => (
+                <View
+                  key={`row-${rowIndex}`}
+                  style={{ flexDirection: "row", marginBottom: 12 }}
                 >
-                  <Image
-                    source={
-                      y.imageUrl
-                        ? { uri: y.imageUrl }
-                        : require("@/assets/images/yacht_placeholder.png")
-                    }
-                    style={[
-                      styles.yachtImage,
-                      !isAvailable && { opacity: 0.5 },
-                    ]}
-                    resizeMode="cover"
-                  />
-                  <Text
-                    style={[
-                      styles.yachtName,
-                      selected && styles.yachtNameActive,
-                      !isAvailable && { color: "#999" },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {y.name}
-                  </Text>
-                  {!isAvailable && (
-                    <Text
-                      style={{
-                        fontSize: 10,
-                        color: "#cc0000",
-                        marginTop: 4,
-                        marginLeft: 8,
-                        marginBottom: 5,
-                      }}
-                    >
-                      Zajęty
-                    </Text>
-                  )}
-                </Pressable>
-              );
-            })}
+                  {row.map((y) => {
+                    const selected = yacht?.id === y.id;
+                    const isAvailable = !availableYachtIds.includes(y.id);
+                    return (
+                      <Pressable
+                        key={y.id}
+                        onPress={() => isAvailable && setYacht(y)}
+                        disabled={!isAvailable}
+                        style={[
+                          styles.yachtCard,
+                          selected && styles.yachtCardActive,
+                          !isAvailable && styles.yachtCardDisabled,
+                        ]}
+                      >
+                        <Image
+                          source={
+                            y.imageUrl
+                              ? { uri: y.imageUrl }
+                              : require("@/assets/images/yacht_placeholder.png")
+                          }
+                          style={[
+                            styles.yachtImage,
+                            !isAvailable && { opacity: 0.5 },
+                          ]}
+                          resizeMode="cover"
+                        />
+                        <Text
+                          style={[
+                            styles.yachtName,
+                            selected && styles.yachtNameActive,
+                            !isAvailable && { color: "#999" },
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {y.name}
+                        </Text>
+                        {!isAvailable && (
+                          <Text
+                            style={{
+                              fontSize: 10,
+                              color: "#cc0000",
+                              marginTop: 4,
+                              marginLeft: 8,
+                              marginBottom: 5,
+                            }}
+                          >
+                            Zajęty
+                          </Text>
+                        )}
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              ))}
+            </View>
           </ScrollView>
-          {yachts.length === 0 && (
+          {orderedYachts.length === 0 && (
             <Text style={{ color: "#999", marginTop: 8 }}>
               Brak dostępnych jachtów
             </Text>

@@ -205,6 +205,11 @@ export default function CalendarScreen() {
   const [yachts, setYachts] = useState<any[]>([]);
   const [selectedYachtIds, setSelectedYachtIds] = useState<string[]>([]); // empty = all
 
+  const canEditSelectedBooking =
+    !!selectedBooking &&
+    selectedBooking.status !== BookingStatus.Rejected &&
+    (isAdmin || selectedBooking.userId === user?.uid);
+
   const today = new Date();
 
   const baseWeekStart = useMemo(() => startOfWeek(new Date()), []);
@@ -678,7 +683,7 @@ useEffect(() => {
               }}
             >
               <Text style={theme.title}>{selectedBooking.yachtName}</Text>
-              {isAdmin && (
+              {canEditSelectedBooking && (
                 <Pressable
                   onPress={() => {
                     setSelectedBooking(null);
