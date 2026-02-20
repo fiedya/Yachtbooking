@@ -9,12 +9,12 @@ import { styles as theme } from "@/src/theme/styles";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  Image,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
+    Image,
+    Pressable,
+    ScrollView,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { useMode } from "../../../src/providers/ModeProvider";
 

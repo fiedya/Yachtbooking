@@ -1,5 +1,6 @@
 import Icon from "@/src/components/Icon";
 import { Yacht, YachtStatus } from "@/src/entities/yacht";
+import { getYachtStatusLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { subscribeToUser } from "@/src/services/userService";
 import { subscribeToYachts } from "@/src/services/yachtService";
@@ -7,33 +8,47 @@ import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";
 import { router, Stack } from "expo-router";
 import { useEffect, useState } from "react";
-import { FlatList, Image, Pressable, Switch, Text, View } from "react-native";
+import { FlatList, Image, Pressable, Text, View } from "react-native";
 import { useMode } from "../../../src/providers/ModeProvider";
 
 export default function YachtsScreen() {
-  const [yachts, setYachts] = useState<Yacht[]>([]);
-  const [showAll, setShowAll] = useState(false);
+  const [allYachts, setAllYachts] = useState<Yacht[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState<YachtStatus | "all">(YachtStatus.Available);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const { mode } = useMode();
   const [isAdmin, setIsAdmin] = useState(false);
-  const { user, uid, loading: authLoading } = useAuth();
-  useEffect(() => {
+  const { user } = useAuth();
+  const statusOptions: Array<{ value: YachtStatus | "all"; label: string }> = [
+    { value: "all", label: "Wszystkie statusy" },
+    { value: YachtStatus.Available, label: getYachtStatusLabel(YachtStatus.Available) },
+    { value: YachtStatus.Maintenance, label: getYachtStatusLabel(YachtStatus.Maintenance) },
+    { value: YachtStatus.Disabled, label: getYachtStatusLabel(YachtStatus.Disabled) },
+    { value: YachtStatus.NotOurs, label: getYachtStatusLabel(YachtStatus.NotOurs) },
+  ];
 
+  const yachts =
+    selectedStatus === "all"
+      ? allYachts
+      : allYachts.filter((y) => y.status === selectedStatus);
+
+  useEffect(() => {
     if (!user) return;
     const unsub = subscribeToUser(user.uid, (profile) => {
       setIsAdmin(profile?.role === "admin" && mode === "admin");
     });
     return unsub;
   }, [mode]);
+
   useEffect(() => {
     const unsub = subscribeToYachts((allYachts) => {
-      if (showAll) {
-        setYachts(allYachts);
-      } else {
-        setYachts(allYachts.filter((y) => y.status !== YachtStatus.Disabled));
-      }
+      setAllYachts(allYachts);
     });
     return unsub;
-  }, [showAll]);
+  }, []);
+
+  const selectedStatusLabel = statusOptions.find(
+    (option) => option.value === selectedStatus,
+  )?.label;
 
   return (
     <>
@@ -41,43 +56,94 @@ export default function YachtsScreen() {
         options={{
           headerShown: true,
           title: "Jachty",
-          headerRight: isAdmin
-            ? () => (
-                <View
+          headerRight: () => (
+            <Pressable
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginRight: 8,
+              }}
+              onPress={() => setShowStatusDropdown((prev) => !prev)}
+            >
+              <Text
+                style={{
+                  color: colors.primary,
+                  fontWeight: "600",
+                  marginRight: 2,
+                }}
+              >
+                {selectedStatusLabel}
+              </Text>
+              <Icon
+                type="material"
+                name={showStatusDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"}
+                size={20}
+                color={colors.primary}
+              />
+            </Pressable>
+          ),
+        }}
+      />
+
+      {showStatusDropdown && (
+        <View
+          style={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+            zIndex: 20,
+            minWidth: 180,
+          }}
+        >
+          <View
+            style={[
+              theme.card,
+              {
+                backgroundColor: colors.white,
+                borderColor: colors.border,
+                borderWidth: 1,
+              },
+            ]}
+          >
+            {statusOptions.map((option) => {
+              const isSelected = option.value === selectedStatus;
+              return (
+                <Pressable
+                  key={String(option.value)}
+                  onPress={() => {
+                    setSelectedStatus(option.value);
+                    setShowStatusDropdown(false);
+                  }}
                   style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    marginRight: 8,
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                    backgroundColor: isSelected
+                      ? colors.primaryLight
+                      : colors.white,
                   }}
                 >
                   <Text
-                    style={{
-                      color: colors.primary,
-                      fontWeight: "bold",
-                      marginRight: 8,
-                    }}
+                    style={[
+                      theme.bodyText,
+                      isSelected && { color: colors.primary, fontWeight: "600" },
+                    ]}
                   >
-                    wszystkie
+                    {option.label}
                   </Text>
-                  <Switch
-                    value={showAll}
-                    onValueChange={setShowAll}
-                    trackColor={{
-                      false: colors.lightGrey,
-                      true: colors.primary,
-                    }}
-                    thumbColor={showAll ? colors.primary : colors.primaryLight}
-                  />
-                </View>
-              )
-            : undefined,
-        }}
-      />
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      )}
 
       <FlatList
         data={yachts}
         keyExtractor={(item) => item.id}
         contentContainerStyle={theme.listPadding}
+        ListEmptyComponent={
+          <Text style={theme.textMuted}>Brak jachtów dla wybranego statusu</Text>
+        }
         renderItem={({ item }) => (
           <Pressable
             style={[
