@@ -7,6 +7,7 @@ type WebDatePickerProps = {
   onChange: (date: Date) => void;
   mode: "date" | "time";
   placeholder?: string;
+  minDate?: Date;
 };
 
 export default function WebDatePicker({
@@ -14,6 +15,7 @@ export default function WebDatePicker({
   onChange,
   mode,
   placeholder,
+  minDate,
 }: WebDatePickerProps) {
   return (
     <DatePicker
@@ -30,6 +32,7 @@ export default function WebDatePicker({
       timeCaption="Godzina"
       placeholderText={placeholder}
       wrapperClassName="web-date-picker"
+      minDate={minDate}
     />
   );
 }

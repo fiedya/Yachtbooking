@@ -71,6 +71,8 @@ export default function BookScreen() {
     usePseudonims: false,
   });
   const [editingBooking, setEditingBooking] = useState<any>(null);
+  const now = new Date();
+
   useEffect(() => {
     if (paramStartDate) {
       const d = new Date(paramStartDate);
@@ -315,8 +317,19 @@ export default function BookScreen() {
           <WebDatePicker
             mode="date"
             value={date}
-            onChange={setDate}
+            onChange={(selectedDate) => {
+              const selectedDateOnly = new Date(selectedDate);
+              selectedDateOnly.setHours(0, 0, 0, 0);
+              const todayOnly = new Date(now);
+              todayOnly.setHours(0, 0, 0, 0);
+              if (!isAdmin && selectedDateOnly < todayOnly) {
+                Alert.alert("Błąd", "Nie można wybrać przeszłej daty");
+                return;
+              }
+              setDate(selectedDate);
+            }}
             placeholder="YYYY-MM-DD"
+            minDate={isAdmin ? undefined : now}
           />
         ) : (
           <>
@@ -330,9 +343,20 @@ export default function BookScreen() {
               <DateTimePicker
                 value={date}
                 mode="date"
+                minimumDate={isAdmin ? undefined : now}
                 onChange={(event, selectedDate) => {
                   setShowDatePicker(false);
-                  if (selectedDate) setDate(selectedDate);
+                  if (selectedDate) {
+                    const selectedDateOnly = new Date(selectedDate);
+                    selectedDateOnly.setHours(0, 0, 0, 0);
+                    const todayOnly = new Date(now);
+                    todayOnly.setHours(0, 0, 0, 0);
+                    if (!isAdmin && selectedDateOnly < todayOnly) {
+                      Alert.alert("Błąd", "Nie można wybrać przeszłej daty");
+                      return;
+                    }
+                    setDate(selectedDate);
+                  }
                 }}
               />
             )}

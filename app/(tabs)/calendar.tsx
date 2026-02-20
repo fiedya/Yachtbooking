@@ -18,6 +18,7 @@ import { Stack, useRouter } from "expo-router";
 import { User } from "firebase/auth";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Alert,
   Animated,
   Image,
   PanResponder,
@@ -533,6 +534,14 @@ useEffect(() => {
                         onPress={() => {
                           if (suppressGridPressRef.current) {
                             suppressGridPressRef.current = false;
+                            return;
+                          }
+                          const dayOnly = new Date(day);
+                          dayOnly.setHours(0, 0, 0, 0);
+                          const todayOnly = new Date(today);
+                          todayOnly.setHours(0, 0, 0, 0);
+                          if (!isAdmin && dayOnly < todayOnly) {
+                            Alert.alert("Błąd", "Nie można tworzyć rezerwacji w przeszłości");
                             return;
                           }
                           const bookingAtSlot = findBookingForSlot(day, h);
