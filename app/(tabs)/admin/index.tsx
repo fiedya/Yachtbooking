@@ -57,7 +57,7 @@ export default function AdminScreen() {
         <Text style={styles.buttonText}>Wszystkie bookingi</Text>
       </Pressable>
       <Pressable
-        style={styles.button}
+        style={[styles.button, { marginTop: 12 }]}
         onPress={() => router.push("/admin/bookings-to-approve")}
       >
         <Text style={styles.buttonText}>Nowe bookingi</Text>

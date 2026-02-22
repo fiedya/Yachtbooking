@@ -43,10 +43,14 @@
     "version": "0.0.8",
     "date": "2026-02-26",
     "notes": [
-      "Fix na rezerwowanie tego samego jachtu w tym samym czasie przy otwieraniu okna rezerwacji przez plusik",
+      "[Book] Fix na rezerwowanie tego samego jachtu w tym samym czasie przy otwieraniu okna rezerwacji przez plusik",
       "[Admin] Możliwość zmiany statusu jachtu w liście jachtów",
       "[Book] Edycja bookingu - w momencie edycji status zmienia się na pending",
-      "[Book] Zmiana scrollera jachtów na dwa w kolumnie, by łatwiej było znaleźć jacht",
+      "[Book] Zmiana scrollera jachtów na dwa w kolumnie",
+      "[Admin] Filtrowanie i sortowanie listy użytkowników do weryfikacji oraz listy wszystkich uzytkowników",
+      "[Admin] Filtrowanie i sortowanie listy bookingów do zatwierdzenia oraz listy wszystkich bookingów",
+      "[Admin] Dodanie listy wszystkich bookingów",
+      "[Admin] Zamykanie okienka szczegołów bookingu po approve/reject"
     ]
   }
 

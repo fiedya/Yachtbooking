@@ -14,14 +14,14 @@ import { useIsFocused } from "@react-navigation/native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-    Alert,
-    Image,
-    Platform,
-    Pressable,
-    ScrollView,
-    Text,
-    TextInput,
-    View,
+  Alert,
+  FlatList,
+  Image,
+  Platform,
+  Pressable,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import { useMode } from "../../src/providers/ModeProvider";
 
@@ -282,253 +282,236 @@ export default function BookScreen() {
     });
   }, [yachts, availableYachtIds]);
 
-  const yachtRows = useMemo(() => {
-    const rows: Yacht[][] = [[], []];
-    orderedYachts.forEach((y, index) => {
-      rows[index % 2].push(y);
-    });
-    return rows;
-  }, [orderedYachts]);
-
   return (
     <View style={styles.container}>
-      <ScrollView>
-        <Stack.Screen
-          options={{
-            headerShown: true,
-            title: "Nowa rezerwacja",
-            headerStyle: headerStyles.header,
-            headerTitleStyle: headerStyles.title,
-          }}
-        />
-        {isAdmin && (
-          <View style={{ marginTop: 16 }}>
-            <Text style={styles.label}>Osoba rezerwująca</Text>
-            <TextInput
-              value={bookingName}
-              onChangeText={setBookingName}
-              placeholder="Imię i nazwisko"
-              style={styles.pickerButton}
-            />
-          </View>
-        )}
-        <Text style={styles.label}>Data</Text>
-        {isWeb ? (
-          <WebDatePicker
-            mode="date"
-            value={date}
-            onChange={(selectedDate) => {
-              const selectedDateOnly = new Date(selectedDate);
-              selectedDateOnly.setHours(0, 0, 0, 0);
-              const todayOnly = new Date(now);
-              todayOnly.setHours(0, 0, 0, 0);
-              if (!isAdmin && selectedDateOnly < todayOnly) {
-                Alert.alert("Błąd", "Nie można wybrać przeszłej daty");
-                return;
-              }
-              setDate(selectedDate);
-            }}
-            placeholder="YYYY-MM-DD"
-            minDate={isAdmin ? undefined : now}
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: "Nowa rezerwacja",
+          headerStyle: headerStyles.header,
+          headerTitleStyle: headerStyles.title,
+        }}
+      />
+      {isAdmin && (
+        <View style={{ marginTop: 16 }}>
+          <Text style={styles.label}>Osoba rezerwująca</Text>
+          <TextInput
+            value={bookingName}
+            onChangeText={setBookingName}
+            placeholder="Imię i nazwisko"
+            style={styles.pickerButton}
           />
-        ) : (
-          <>
-            <Pressable
-              style={styles.pickerButton}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text>{date.toLocaleDateString()}</Text>
-            </Pressable>
-            {showDatePicker && (
-              <DateTimePicker
-                value={date}
-                mode="date"
-                minimumDate={isAdmin ? undefined : now}
-                onChange={(event, selectedDate) => {
-                  setShowDatePicker(false);
-                  if (selectedDate) {
-                    const selectedDateOnly = new Date(selectedDate);
-                    selectedDateOnly.setHours(0, 0, 0, 0);
-                    const todayOnly = new Date(now);
-                    todayOnly.setHours(0, 0, 0, 0);
-                    if (!isAdmin && selectedDateOnly < todayOnly) {
-                      Alert.alert("Błąd", "Nie można wybrać przeszłej daty");
-                      return;
-                    }
-                    setDate(selectedDate);
-                  }
-                }}
-              />
-            )}
-          </>
-        )}
-        {/* Start */}
-        <Text style={styles.label}>Od</Text>
-        {isWeb ? (
-          <WebDatePicker
-            mode="time"
-            value={startTime}
-            onChange={(value: Date) => setStartTime(snapToQuarter(value))}
-            placeholder="HH:MM"
-          />
-        ) : (
-          <>
-            <Pressable
-              style={styles.pickerButton}
-              onPress={() => setShowStartPicker(true)}
-            >
-              <Text>
-                {startTime.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </Text>
-            </Pressable>
-            {showStartPicker && (
-              <DateTimePicker
-                value={startTime}
-                mode="time"
-                display={Platform.OS === "android" ? "spinner" : "default"}
-                onChange={(event, selectedDate) => {
-                  if (event.type === "dismissed") {
-                    setShowStartPicker(false);
-                    return;
-                  }
-
-                  if (selectedDate) {
-                    const snapped = snapToQuarter(selectedDate);
-                    setStartTime(snapped);
-                  }
-
-                  if (Platform.OS === "android") {
-                    setShowStartPicker(false);
-                  }
-                }}
-              />
-            )}
-          </>
-        )}
-        {/* End */}
-        <Text style={styles.label}>Do</Text>
-        {isWeb ? (
-          <WebDatePicker
-            mode="time"
-            value={endTime}
-            onChange={(value: Date) => setEndTime(snapToQuarter(value))}
-            placeholder="HH:MM"
-          />
-        ) : (
-          <>
-            <Pressable
-              style={styles.pickerButton}
-              onPress={() => setShowEndPicker(true)}
-            >
-              <Text>
-                {endTime.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </Text>
-            </Pressable>
-            {showEndPicker && (
-              <DateTimePicker
-                value={endTime}
-                mode="time"
-                display={Platform.OS === "android" ? "spinner" : "default"}
-                onChange={(event, selectedDate) => {
-                  if (event.type === "dismissed") {
-                    setShowEndPicker(false);
-                    return;
-                  }
-
-                  if (selectedDate) {
-                    const snapped = snapToQuarter(selectedDate);
-                    setEndTime(snapped);
-                  }
-
-                  if (Platform.OS === "android") {
-                    setShowEndPicker(false);
-                  }
-                }}
-              />
-            )}
-          </>
-        )}
-        <Text style={styles.label}>Jacht</Text>
-        <View style={{ marginTop: 8 }}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View>
-              {yachtRows.map((row, rowIndex) => (
-                <View
-                  key={`row-${rowIndex}`}
-                  style={{ flexDirection: "row", marginBottom: 12 }}
-                >
-                  {row.map((y) => {
-                    const selected = yacht?.id === y.id;
-                    const isAvailable = !availableYachtIds.includes(y.id);
-                    return (
-                      <Pressable
-                        key={y.id}
-                        onPress={() => isAvailable && setYacht(y)}
-                        disabled={!isAvailable}
-                        style={[
-                          styles.yachtCard,
-                          selected && styles.yachtCardActive,
-                          !isAvailable && styles.yachtCardDisabled,
-                        ]}
-                      >
-                        <Image
-                          source={
-                            y.imageUrl
-                              ? { uri: y.imageUrl }
-                              : require("@/assets/images/yacht_placeholder.png")
-                          }
-                          style={[
-                            styles.yachtImage,
-                            !isAvailable && { opacity: 0.5 },
-                          ]}
-                          resizeMode="cover"
-                        />
-                        <Text
-                          style={[
-                            styles.yachtName,
-                            selected && styles.yachtNameActive,
-                            !isAvailable && { color: "#999" },
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {y.name}
-                        </Text>
-                        {!isAvailable && (
-                          <Text
-                            style={{
-                              fontSize: 10,
-                              color: "#cc0000",
-                              marginTop: 4,
-                              marginLeft: 8,
-                              marginBottom: 5,
-                            }}
-                          >
-                            Zajęty
-                          </Text>
-                        )}
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              ))}
-            </View>
-          </ScrollView>
-          {orderedYachts.length === 0 && (
-            <Text style={{ color: "#999", marginTop: 8 }}>
-              Brak dostępnych jachtów
-            </Text>
-          )}
         </View>
-      </ScrollView>
+      )}
+      <Text style={styles.label}>Data</Text>
+      {isWeb ? (
+        <WebDatePicker
+          mode="date"
+          value={date}
+          onChange={(selectedDate) => {
+            const selectedDateOnly = new Date(selectedDate);
+            selectedDateOnly.setHours(0, 0, 0, 0);
+            const todayOnly = new Date(now);
+            todayOnly.setHours(0, 0, 0, 0);
+            if (!isAdmin && selectedDateOnly < todayOnly) {
+              Alert.alert("Błąd", "Nie można wybrać przeszłej daty");
+              return;
+            }
+            setDate(selectedDate);
+          }}
+          placeholder="YYYY-MM-DD"
+          minDate={isAdmin ? undefined : now}
+        />
+      ) : (
+        <>
+          <Pressable
+            style={styles.pickerButton}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text>{date.toLocaleDateString()}</Text>
+          </Pressable>
+          {showDatePicker && (
+            <DateTimePicker
+              value={date}
+              mode="date"
+              minimumDate={isAdmin ? undefined : now}
+              onChange={(event, selectedDate) => {
+                setShowDatePicker(false);
+                if (selectedDate) {
+                  const selectedDateOnly = new Date(selectedDate);
+                  selectedDateOnly.setHours(0, 0, 0, 0);
+                  const todayOnly = new Date(now);
+                  todayOnly.setHours(0, 0, 0, 0);
+                  if (!isAdmin && selectedDateOnly < todayOnly) {
+                    Alert.alert("Błąd", "Nie można wybrać przeszłej daty");
+                    return;
+                  }
+                  setDate(selectedDate);
+                }
+              }}
+            />
+          )}
+        </>
+      )}
+      {/* Start */}
+      <Text style={styles.label}>Od</Text>
+      {isWeb ? (
+        <WebDatePicker
+          mode="time"
+          value={startTime}
+          onChange={(value: Date) => setStartTime(snapToQuarter(value))}
+          placeholder="HH:MM"
+        />
+      ) : (
+        <>
+          <Pressable
+            style={styles.pickerButton}
+            onPress={() => setShowStartPicker(true)}
+          >
+            <Text>
+              {startTime.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </Text>
+          </Pressable>
+          {showStartPicker && (
+            <DateTimePicker
+              value={startTime}
+              mode="time"
+              display={Platform.OS === "android" ? "spinner" : "default"}
+              onChange={(event, selectedDate) => {
+                if (event.type === "dismissed") {
+                  setShowStartPicker(false);
+                  return;
+                }
+
+                if (selectedDate) {
+                  const snapped = snapToQuarter(selectedDate);
+                  setStartTime(snapped);
+                }
+
+                if (Platform.OS === "android") {
+                  setShowStartPicker(false);
+                }
+              }}
+            />
+          )}
+        </>
+      )}
+      {/* End */}
+      <Text style={styles.label}>Do</Text>
+      {isWeb ? (
+        <WebDatePicker
+          mode="time"
+          value={endTime}
+          onChange={(value: Date) => setEndTime(snapToQuarter(value))}
+          placeholder="HH:MM"
+        />
+      ) : (
+        <>
+          <Pressable
+            style={styles.pickerButton}
+            onPress={() => setShowEndPicker(true)}
+          >
+            <Text>
+              {endTime.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </Text>
+          </Pressable>
+          {showEndPicker && (
+            <DateTimePicker
+              value={endTime}
+              mode="time"
+              display={Platform.OS === "android" ? "spinner" : "default"}
+              onChange={(event, selectedDate) => {
+                if (event.type === "dismissed") {
+                  setShowEndPicker(false);
+                  return;
+                }
+
+                if (selectedDate) {
+                  const snapped = snapToQuarter(selectedDate);
+                  setEndTime(snapped);
+                }
+
+                if (Platform.OS === "android") {
+                  setShowEndPicker(false);
+                }
+              }}
+            />
+          )}
+        </>
+      )}
+      <Text style={styles.label}>Jacht</Text>
+      <View style={{ marginTop: 8, flex: 1 }}>
+        {orderedYachts.length === 0 ? (
+          <Text style={{ color: "#999", marginTop: 8 }}>Brak dostępnych jachtów</Text>
+        ) : (
+          <FlatList
+            data={orderedYachts}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            showsVerticalScrollIndicator={true}
+            columnWrapperStyle={{ justifyContent: "space-between" }}
+            contentContainerStyle={{ paddingBottom: 8 }}
+            renderItem={({ item: y }) => {
+              const selected = yacht?.id === y.id;
+              const isAvailable = !availableYachtIds.includes(y.id);
+              return (
+                <Pressable
+                  onPress={() => isAvailable && setYacht(y)}
+                  disabled={!isAvailable}
+                  style={[
+                    styles.yachtCard,
+                    { width: "48%", marginRight: 0, marginBottom: 12 },
+                    selected && styles.yachtCardActive,
+                    !isAvailable && styles.yachtCardDisabled,
+                  ]}
+                >
+                  <Image
+                    source={
+                      y.imageUrl
+                        ? { uri: y.imageUrl }
+                        : require("@/assets/images/yacht_placeholder.png")
+                    }
+                    style={[styles.yachtImage, !isAvailable && { opacity: 0.5 }]}
+                    resizeMode="cover"
+                  />
+                  <Text
+                    style={[
+                      styles.yachtName,
+                      selected && styles.yachtNameActive,
+                      !isAvailable && { color: "#999" },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {y.name}
+                  </Text>
+                  {!isAvailable && (
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        color: "#cc0000",
+                        marginTop: 4,
+                        marginLeft: 8,
+                        marginBottom: 5,
+                      }}
+                    >
+                      Zajęty
+                    </Text>
+                  )}
+                </Pressable>
+              );
+            }}
+          />
+        )}
+      </View>
       {/* Submit */}
       <Pressable
-        style={[styles.submit, loading && styles.submitDisabled]}
+        style={[styles.submit, { marginTop: 12 }, loading && styles.submitDisabled]}
         onPress={handleBook}
         disabled={loading}
       >
