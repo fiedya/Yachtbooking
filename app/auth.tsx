@@ -1,3 +1,4 @@
+import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
@@ -136,11 +137,12 @@ export default function AuthScreen() {
             </Text>
 
             <TextInput
-              placeholder=""
+              placeholder="+48123456789"
               value={phone}
               onChangeText={setPhone}
               keyboardType="phone-pad"
-              style={theme.input}
+              style={[theme.input, theme.inputDefaultText]}
+              placeholderTextColor={colors.textSecondary}
             />
 
             <Pressable
@@ -166,7 +168,8 @@ export default function AuthScreen() {
               value={code}
               onChangeText={setCode}
               keyboardType="number-pad"
-              style={theme.input}
+              style={[theme.input, theme.inputDefaultText]}
+              placeholderTextColor={colors.textSecondary}
             />
 
             <Pressable

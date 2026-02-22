@@ -3,6 +3,7 @@ import { useAuth } from "@/src/providers/AuthProvider";
 import { useMode } from "@/src/providers/ModeProvider";
 import { addNews } from "@/src/services/newsService";
 import { subscribeToUser } from "@/src/services/userService";
+import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
 import { styles as theme } from "@/src/theme/styles";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -102,8 +103,9 @@ export default function AddNewsScreen() {
           <TextInput
             value={title}
             onChangeText={setTitle}
-            style={theme.input}
+            style={[theme.input, theme.inputDefaultText]}
             placeholder="Tytuł newsa"
+            placeholderTextColor={colors.textSecondary}
           />
         </View>
         {/* Opis */}
@@ -112,11 +114,12 @@ export default function AddNewsScreen() {
           <TextInput
             value={description}
             onChangeText={setDescription}
-            style={theme.input}
+            style={[theme.input, theme.inputDefaultText]}
             placeholder="Opis newsa"
             multiline
             numberOfLines={4}
             textAlignVertical="top"
+            placeholderTextColor={colors.textSecondary}
           />
         </View>
 

@@ -113,7 +113,8 @@ export default function AllUsersScreen() {
           value={searchText}
           onChangeText={setSearchText}
           style={[
-              theme.input,
+            theme.input,
+            theme.inputDefaultText,
             {
               paddingVertical: 10,
               paddingHorizontal: 12,
@@ -123,7 +124,7 @@ export default function AllUsersScreen() {
               marginBottom: 12,
             },
           ]}
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={colors.textSecondary}
         />
 
         {/* Sort options */}

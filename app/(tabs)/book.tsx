@@ -7,6 +7,7 @@ import { createBooking } from "@/src/services/booking.service";
 import { getAvailableYachtIds } from "@/src/services/calendarService";
 import { getUser, subscribeToUser } from "@/src/services/userService";
 import { getAvailableYachts } from "@/src/services/yachtService";
+import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
 import { styles } from "@/src/theme/styles";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -299,7 +300,8 @@ export default function BookScreen() {
             value={bookingName}
             onChangeText={setBookingName}
             placeholder="Imię i nazwisko"
-            style={styles.pickerButton}
+            style={[styles.pickerButton, styles.inputDefaultText]}
+            placeholderTextColor={colors.textSecondary}
           />
         </View>
       )}

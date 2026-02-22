@@ -4,18 +4,19 @@ import { useMode } from "@/src/providers/ModeProvider";
 import { uploadImage } from "@/src/services/imageUploadService";
 import { subscribeToUser } from "@/src/services/userService";
 import { addYacht } from "@/src/services/yachtService";
+import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
 import { styles as theme } from "@/src/theme/styles";
 import { pickImageFromGallery } from "@/src/utils/pickImage";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  Image,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
+    Image,
+    Pressable,
+    ScrollView,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 
 export default function AddEditYachtScreen() {
@@ -213,8 +214,9 @@ export default function AddEditYachtScreen() {
           <TextInput
             value={name}
             onChangeText={setName}
-            style={theme.input}
+            style={[theme.input, theme.inputDefaultText]}
             placeholder="np. Y1, Sunset"
+            placeholderTextColor={colors.textSecondary}
           />
         </View>
 
@@ -224,8 +226,9 @@ export default function AddEditYachtScreen() {
           <TextInput
             value={shortcut}
             onChangeText={setShortcut}
-            style={theme.input}
+            style={[theme.input, theme.inputDefaultText]}
             placeholder="np. Y1, Sunset"
+            placeholderTextColor={colors.textSecondary}
           />
         </View>
 
@@ -235,8 +238,9 @@ export default function AddEditYachtScreen() {
           <TextInput
             value={type}
             onChangeText={setType}
-            style={theme.input}
+            style={[theme.input, theme.inputDefaultText]}
             placeholder=""
+            placeholderTextColor={colors.textSecondary}
           />
         </View>
 
@@ -247,10 +251,11 @@ export default function AddEditYachtScreen() {
             placeholder="Opis"
             value={description}
             onChangeText={setDescription}
-            style={theme.input}
+            style={[theme.input, theme.inputDefaultText]}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
+            placeholderTextColor={colors.textSecondary}
           />
         </View>
       </ScrollView>

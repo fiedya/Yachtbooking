@@ -136,6 +136,10 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
 
+  inputDefaultText: {
+    color: colors.textSecondary,
+  },
+
   label: {
     fontSize: text.md,
     marginBottom: spacing.xs,

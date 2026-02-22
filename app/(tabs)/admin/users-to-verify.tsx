@@ -114,6 +114,7 @@ export default function UsersToVerifyScreen() {
           onChangeText={setSearchText}
           style={[
             theme.input,
+            theme.inputDefaultText,
             {
               paddingVertical: 10,
               paddingHorizontal: 12,
@@ -123,7 +124,7 @@ export default function UsersToVerifyScreen() {
               marginBottom: 12,
             },
           ]}
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={colors.textSecondary}
         />
 
         {/* Sort options */}

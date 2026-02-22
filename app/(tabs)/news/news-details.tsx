@@ -4,6 +4,7 @@ import { getNewsCategoryLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { getNewsById, updateNews } from "@/src/services/newsService";
 import { subscribeToUser } from "@/src/services/userService";
+import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
 import { spacing } from "@/src/theme/spacing";
 import { styles as theme } from "@/src/theme/styles";
@@ -101,11 +102,12 @@ export default function NewsDetailsScreen() {
               <TextInput
                 value={fieldValue}
                 onChangeText={setFieldValue}
-                style={[theme.input, { minHeight: 80 }]}
+                style={[theme.input, theme.inputDefaultText, { minHeight: 80 }]}
                 placeholder="Wpisz opis"
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
+                placeholderTextColor={colors.textSecondary}
                 autoFocus
               />
               <Pressable

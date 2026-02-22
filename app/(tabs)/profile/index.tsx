@@ -5,6 +5,7 @@ import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { subscribeToBookings } from "@/src/services/calendarService";
 import { uploadImage } from "@/src/services/imageUploadService";
+import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
 import { styles as theme } from "@/src/theme/styles";
 import { pickImageFromGallery } from "@/src/utils/pickImage";
@@ -12,21 +13,21 @@ import Constants from "expo-constants";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  Image,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
+    Image,
+    Pressable,
+    ScrollView,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { User } from "../../../src/entities/user";
 import { useMode } from "../../../src/providers/ModeProvider";
 import {
-  getUserPhotoUrl,
-  subscribeToUser,
-  updateUserAvatar,
-  updateUserProfile,
+    getUserPhotoUrl,
+    subscribeToUser,
+    updateUserAvatar,
+    updateUserProfile,
 } from "../../../src/services/userService";
 
 export default function ProfileScreen() {
@@ -223,8 +224,9 @@ async function handleLogout() {
               <TextInput
                 value={pseudonim}
                 onChangeText={setPseudonim}
-                style={theme.input}
+                style={[theme.input, theme.inputDefaultText]}
                 placeholder="Wpisz pseudonim"
+                placeholderTextColor={colors.textSecondary}
                 autoFocus
               />
               <Pressable

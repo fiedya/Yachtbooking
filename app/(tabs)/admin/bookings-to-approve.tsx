@@ -115,6 +115,7 @@ export default function BookingsToApproveScreen() {
           onChangeText={setSearchText}
           style={[
             theme.input,
+            theme.inputDefaultText,
             {
               paddingVertical: 10,
               paddingHorizontal: 12,
@@ -124,7 +125,7 @@ export default function BookingsToApproveScreen() {
               marginBottom: 12,
             },
           ]}
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={colors.textSecondary}
         />
 
         <View style={{ flexDirection: "row", flexWrap: "wrap" }}>

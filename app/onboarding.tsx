@@ -5,12 +5,12 @@ import { useAuth } from "@/src/providers/AuthProvider";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  Text,
-  TextInput,
-  View,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { createOrUpdateUser } from "../src/services/userService";
 
@@ -69,7 +69,8 @@ export default function OnboardingScreen() {
             placeholder="Imię"
             value={name}
             onChangeText={setName}
-            style={[theme.input, { marginBottom: 16 }]}
+            style={[theme.input, theme.inputDefaultText, { marginBottom: 16 }]}
+            placeholderTextColor={colors.textSecondary}
             autoCapitalize="words"
           />
 
@@ -78,7 +79,8 @@ export default function OnboardingScreen() {
             placeholder="Nazwisko"
             value={surname}
             onChangeText={setSurname}
-            style={[theme.input, { marginBottom: 16 }]}
+            style={[theme.input, theme.inputDefaultText, { marginBottom: 16 }]}
+            placeholderTextColor={colors.textSecondary}
             autoCapitalize="words"
           />
         </View>

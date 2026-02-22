@@ -4,6 +4,7 @@ import { getYachtStatusLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { subscribeToUser } from "@/src/services/userService";
 import { getYachtById, updateYacht } from "@/src/services/yachtService";
+import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
 import { styles as theme } from "@/src/theme/styles";
 import { Stack, useLocalSearchParams } from "expo-router";
@@ -136,8 +137,9 @@ export default function YachtDetailsScreen() {
                 <TextInput
                   value={fieldValue}
                   onChangeText={setFieldValue}
-                  style={theme.input}
+                  style={[theme.input, theme.inputDefaultText]}
                   placeholder="Wpisz skrót"
+                  placeholderTextColor={colors.textSecondary}
                   autoFocus
                 />
                 <Pressable
@@ -194,8 +196,9 @@ export default function YachtDetailsScreen() {
                 <TextInput
                   value={fieldValue}
                   onChangeText={setFieldValue}
-                  style={theme.input}
+                  style={[theme.input, theme.inputDefaultText]}
                   placeholder="Wpisz typ"
+                  placeholderTextColor={colors.textSecondary}
                   autoFocus
                 />
                 <Pressable
@@ -250,11 +253,12 @@ export default function YachtDetailsScreen() {
                 <TextInput
                   value={fieldValue}
                   onChangeText={setFieldValue}
-                  style={[theme.input, { minHeight: 80 }]}
+                  style={[theme.input, theme.inputDefaultText, { minHeight: 80 }]}
                   placeholder="Wpisz opis"
                   multiline
                   numberOfLines={4}
                   textAlignVertical="top"
+                  placeholderTextColor={colors.textSecondary}
                   autoFocus
                 />
                 <Pressable
