@@ -5,21 +5,34 @@ import { useAuth } from "@/src/providers/AuthProvider";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    Text,
-    TextInput,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import { createOrUpdateUser } from "../src/services/userService";
 
 export default function OnboardingScreen() {
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
+  const [pseudonim, setPseudonim] = useState("");
   const [loading, setLoading] = useState(false);
   const { user, uid, loading: authLoading } = useAuth();
   const router = useRouter();
+
+  const validatePseudonim = (text: string): boolean => {
+    if (!text.trim()) return true; // Optional field
+    // Allow only alphanumeric characters (a-z, A-Z, 0-9)
+    return /^[a-zA-Z0-9]+$/.test(text);
+  };
+
+  const handlePseudonimChange = (text: string) => {
+    if (validatePseudonim(text)) {
+      setPseudonim(text);
+    }
+  };
 
   async function handleContinue() {
 
@@ -38,6 +51,7 @@ export default function OnboardingScreen() {
         user.phoneNumber || "",
         name.trim(),
         surname.trim(),
+        pseudonim.trim() || undefined,
       );
       router.replace("/post-auth");
     } catch (e) {
@@ -82,6 +96,17 @@ export default function OnboardingScreen() {
             style={[theme.input, theme.inputDefaultText, { marginBottom: 16 }]}
             placeholderTextColor={colors.textSecondary}
             autoCapitalize="words"
+          />
+
+          <Text style={theme.label}>Pseudonim (opcjonalnie):</Text>
+          <TextInput
+            placeholder="Tylko litery i cyfry"
+            value={pseudonim}
+            onChangeText={handlePseudonimChange}
+            style={[theme.input, theme.inputDefaultText, { marginBottom: 16 }]}
+            placeholderTextColor={colors.textSecondary}
+            autoCapitalize="none"
+            maxLength={20}
           />
         </View>
 

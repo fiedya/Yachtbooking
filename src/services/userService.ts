@@ -1,11 +1,11 @@
 import {
-  getDoc,
-  onDocSnapshot,
-  onSnapshot,
-  queryDocs,
-  serverTimestamp,
-  setDoc,
-  updateDoc,
+    getDoc,
+    onDocSnapshot,
+    onSnapshot,
+    queryDocs,
+    serverTimestamp,
+    setDoc,
+    updateDoc,
 } from "@/src/firebase/init";
 import { User, UserStatus } from "../entities/user";
 
@@ -36,6 +36,7 @@ export async function createOrUpdateUser(
   phone: string,
   name: string,
   surname: string,
+  pseudonim?: string,
 ) {
   const snap: any = await getDoc("users", uid);
 
@@ -45,6 +46,7 @@ export async function createOrUpdateUser(
       phone,
       name,
       surname,
+      pseudonim: pseudonim || "",
       description: "",
       photoUrl: null,
       role: "user",

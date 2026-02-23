@@ -143,6 +143,7 @@ export const styles = StyleSheet.create({
   label: {
     fontSize: text.md,
     marginBottom: spacing.xs,
+    padding:8 
   },
 
   /* ---------- Cards ---------- */
@@ -158,7 +159,7 @@ export const styles = StyleSheet.create({
   },
 
   listPadding: {
-    padding: 16,
+    padding: 10,
   },
 
   cardImage: {

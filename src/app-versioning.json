@@ -44,13 +44,16 @@
     "date": "2026-02-26",
     "notes": [
       "[Book] Fix na rezerwowanie tego samego jachtu w tym samym czasie przy otwieraniu okna rezerwacji przez plusik",
-      "[Admin] Możliwość zmiany statusu jachtu w liście jachtów",
-      "[Book] Edycja bookingu - w momencie edycji status zmienia się na pending",
-      "[Book] Zmiana scrollera jachtów na dwa w kolumnie",
+      "[Book] Edycja bookingu - w momencie edycji status zmienia się na Oczekuje",
+      "[Book] Zmiana scrollera jachtów na pionowy dwa w rzedzie",
+      "[Kal] Możliwość dodawania uwag przez przycisk Zgłoś w oknie bookingu. Uwagi są widoczne dla wszystkich w oknie bookingu",
+      "[PROFIL] Pseudonim dostaje rework - jest jednorazowo do zapisania przy wpisywaniu imienia i nazwiska",
       "[Admin] Filtrowanie i sortowanie listy użytkowników do weryfikacji oraz listy wszystkich uzytkowników",
       "[Admin] Filtrowanie i sortowanie listy bookingów do zatwierdzenia oraz listy wszystkich bookingów",
       "[Admin] Dodanie listy wszystkich bookingów",
-      "[Admin] Zamykanie okienka szczegołów bookingu po approve/reject"
+      "[Admin] Zamykanie okienka szczegołów bookingu po approve/reject",
+      "[Admin] Możliwość zmiany statusu jachtu w liście jachtów",
+      "[Admin] Dodanie możliwości odrzucenia lub oznaczenia jako przeczytaną notatki/uwagi",
     ]
   }
 

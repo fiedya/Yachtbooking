@@ -64,10 +64,12 @@ export default function NewsScreen() {
             style={[
               theme.card,
               {
-                backgroundColor: colors.lightGrey,
+                backgroundColor: colors.background,
                 borderColor: colors.primary,
                 borderWidth: 1,
                 padding: 10,
+                margin: 0,
+                marginBottom:10
               },
             ]}
             onPress={() =>

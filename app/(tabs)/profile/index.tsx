@@ -5,7 +5,6 @@ import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { subscribeToBookings } from "@/src/services/calendarService";
 import { uploadImage } from "@/src/services/imageUploadService";
-import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
 import { styles as theme } from "@/src/theme/styles";
 import { pickImageFromGallery } from "@/src/utils/pickImage";
@@ -13,21 +12,20 @@ import Constants from "expo-constants";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    Image,
-    Pressable,
-    ScrollView,
-    Text,
-    TextInput,
-    View,
+  Image,
+  Pressable,
+  ScrollView,
+  Text,
+  View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { User } from "../../../src/entities/user";
 import { useMode } from "../../../src/providers/ModeProvider";
 import {
-    getUserPhotoUrl,
-    subscribeToUser,
-    updateUserAvatar,
-    updateUserProfile,
+  getUserPhotoUrl,
+  subscribeToUser,
+  updateUserAvatar,
+  updateUserProfile,
 } from "../../../src/services/userService";
 
 export default function ProfileScreen() {
@@ -35,10 +33,9 @@ export default function ProfileScreen() {
   const [profile, setProfile] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [editingField, setEditingField] = useState<
-    "pseudonim" | "description" | null
+    "description" | null
   >(null);
   const [description, setDescription] = useState("");
-  const [pseudonim, setPseudonim] = useState("");
   const [saving, setSaving] = useState(false);
   const { mode, toggleMode } = useMode();
   const insets = useSafeAreaInsets();
@@ -69,7 +66,6 @@ export default function ProfileScreen() {
       setProfile(data);
       if (data) {
         setDescription(data.description || "");
-        setPseudonim(data.pseudonim || "");
       }
     });
     return unsub;
@@ -122,13 +118,13 @@ async function handleLogout() {
   }
 
 
-  async function saveField(field: "pseudonim" | "description") {
+  async function saveField(field: "description") {
     if (!user?.uid) return;
 
     setSaving(true);
     try {
       await updateUserProfile(user.uid, {
-        [field]: field === "pseudonim" ? pseudonim : description,
+        [field]: description,
       });
       setEditingField(null);
     } catch (e) {
@@ -217,58 +213,14 @@ async function handleLogout() {
         <Text style={theme.textSecondary}>{profile.phone}</Text>
 
         {/* Pseudonim */}
-        <View style={[theme.card, theme.cardPadding]}>
-          <Text style={theme.sectionTitle}>Pseudonim</Text>
-          {editingField === "pseudonim" ? (
-            <View style={{ gap: 8 }}>
-              <TextInput
-                value={pseudonim}
-                onChangeText={setPseudonim}
-                style={[theme.input, theme.inputDefaultText]}
-                placeholder="Wpisz pseudonim"
-                placeholderTextColor={colors.textSecondary}
-                autoFocus
-              />
-              <Pressable
-                style={{
-                  backgroundColor: theme.link.color,
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  borderRadius: 4,
-                  alignSelf: "flex-start",
-                  opacity: saving ? 0.5 : 1,
-                }}
-                onPress={() => saveField("pseudonim")}
-                disabled={saving}
-              >
-                <Text
-                  style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}
-                >
-                  {saving ? "Zapisywanie..." : "Zapisz"}
-                </Text>
-              </Pressable>
-            </View>
-          ) : (
-            <Pressable
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-              onPress={() => setEditingField("pseudonim")}
-            >
-              <Text style={[theme.textPrimary, { flex: 1 }]}>
-                {pseudonim || "Brak pseudonimu"}
-              </Text>
-              <Icon type="material"
-                name="edit"
-                size={18}
-                color={theme.link.color}
-                //style={{ marginLeft: 8 }}
-              />
-            </Pressable>
-          )}
-        </View>
+        {profile.pseudonim && (
+          <View style={[theme.card, theme.cardPadding]}>
+            <Text style={theme.sectionTitle}>Pseudonim</Text>
+            <Text style={[theme.textPrimary]}>
+              {profile.pseudonim}
+            </Text>
+          </View>
+        )}
 
         {/* Description */}
         {/*
