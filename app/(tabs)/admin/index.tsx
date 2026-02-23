@@ -39,28 +39,41 @@ export default function AdminScreen() {
       />
       <Pressable
         style={[styles.button, { marginBottom: 12 }]}
-        onPress={() => router.push("/admin/all-users")}
-      >
+        onPress={() => router.push("/admin/all-users")}>
         <Text style={styles.buttonText}>Użytkownicy</Text>
       </Pressable>
 
       <Pressable
         style={[styles.button, { marginBottom: 12 }]}
-        onPress={() => router.push("/admin/users-to-verify")}
-      >
+        onPress={() => router.push("/admin/users-to-verify")} >
         <Text style={styles.buttonText}>Nowi użytkownicy</Text>
       </Pressable>
+
       <Pressable
         style={[styles.button, { marginTop: 12 }]}
-        onPress={() => router.push("/admin/all-bookings")}
-      >
+        onPress={() => router.push("/admin/all-bookings")}>
         <Text style={styles.buttonText}>Wszystkie bookingi</Text>
       </Pressable>
+
       <Pressable
         style={[styles.button, { marginTop: 12 }]}
         onPress={() => router.push("/admin/bookings-to-approve")}
       >
         <Text style={styles.buttonText}>Nowe bookingi</Text>
+      </Pressable>
+
+      <Pressable
+        style={[styles.button, { marginTop: 12 }]}
+        onPress={() => router.push("/admin/all-notes")}
+      >
+        <Text style={styles.buttonText}>Notatki</Text>
+      </Pressable>
+
+      <Pressable
+        style={[styles.button, { marginTop: 12 }]}
+        onPress={() => router.push("/admin/new-notes")}
+      >
+        <Text style={styles.buttonText}>Nowe notatki</Text>
       </Pressable>
 
 

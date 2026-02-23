@@ -3,11 +3,14 @@
 -------------------------------- */
 import Icon from "@/src/components/Icon";
 import { BookingStatus } from "@/src/entities/booking";
+import { Note } from "@/src/entities/note";
+import { User } from "@/src/entities/user";
 import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { useMode } from "@/src/providers/ModeProvider";
 import { subscribeToWeekBookings, updateBookingStatus } from "@/src/services/booking.service";
-import { getUserPhotoUrl, probeUserPermissions, subscribeToUser } from "@/src/services/userService";
+import { createNote, subscribeToNotesForBooking } from "@/src/services/noteService";
+import { getUserPhotoUrl, probeUserPermissions, subscribeToAllUsers, subscribeToUser } from "@/src/services/userService";
 import { subscribeToAvailableYachts } from "@/src/services/yachtService";
 import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
@@ -15,7 +18,6 @@ import { spacing } from "@/src/theme/spacing";
 import { styles, styles as theme } from "@/src/theme/styles";
 
 import { Stack, useRouter } from "expo-router";
-import { User } from "firebase/auth";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
@@ -25,6 +27,7 @@ import {
   Pressable,
   ScrollView,
   Text,
+  TextInput,
   View
 } from "react-native";
 
@@ -136,6 +139,24 @@ function getBookingFontColor(booking: any, currentUserId: string | undefined) {
 -------------------------------- */
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const NOTE_VISIBLE_COUNT = 3;
+const NOTE_LINE_HEIGHT = 20;
+const NOTE_VERTICAL_PADDING = 4;
+const NOTE_ITEM_GAP = 6;
+
+function formatNoteDate(value: any) {
+  const date = value?.toDate?.() ?? null;
+
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return "--:--:----";
+  }
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+
+  return `${day}:${month}:${year}`;
+}
 
 /* -----------------------------
    Screen
@@ -159,8 +180,12 @@ export default function CalendarScreen() {
   const [weekOffset, setWeekOffset] = useState(0);
   const [bookings, setBookings] = useState<any[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [showNoteEditor, setShowNoteEditor] = useState(false);
+  const [bookingNote, setBookingNote] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
+  const [bookingNotes, setBookingNotes] = useState<Note[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [modalUserPhoto, setModalUserPhoto] = useState<string | null>(null);
-  const [profile, setProfile] = useState<User | null>(null);
   const { user, uid, loading: authLoading } = useAuth();
   const suppressGridPressRef = useRef(false);
 
@@ -183,6 +208,63 @@ export default function CalendarScreen() {
     });
     return unsub;
   }, []);
+
+  useEffect(() => {
+    const unsub = subscribeToAllUsers(
+      (nextUsers) => {
+        setUsers(nextUsers);
+      },
+      (error) => {
+        console.error("[CALENDAR] users snapshot error", error);
+      },
+    );
+
+    return unsub;
+  }, []);
+
+  useEffect(() => {
+    if (!selectedBooking?.id) {
+      setBookingNotes([]);
+      return;
+    }
+
+    const unsub = subscribeToNotesForBooking(
+      selectedBooking.id,
+      (nextNotes) => {
+        const sorted = [...nextNotes].sort((a, b) => {
+          const aTime = a.createdAt?.toDate?.()?.getTime?.() ?? 0;
+          const bTime = b.createdAt?.toDate?.()?.getTime?.() ?? 0;
+          return aTime - bTime;
+        });
+        setBookingNotes(sorted);
+      },
+      (error) => {
+        console.error("[CALENDAR] notes snapshot error", error);
+      },
+    );
+
+    return unsub;
+  }, [selectedBooking?.id]);
+
+  const userNameMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    users.forEach((person) => {
+      const fullName = `${person.name ?? ""} ${person.surname ?? ""}`.trim();
+      if (fullName) {
+        map[person.uid] = fullName;
+      }
+    });
+    return map;
+  }, [users]);
+
+  const getNoteAuthorName = (note: Note) => {
+    return userNameMap[note.creatorId] ?? (note.creatorWasAdmin ? "Admin" : "Użytkownik");
+  };
+
+  const notesMaxHeight =
+    NOTE_VISIBLE_COUNT * (NOTE_LINE_HEIGHT + NOTE_VERTICAL_PADDING * 2) +
+    (NOTE_VISIBLE_COUNT - 1) * NOTE_ITEM_GAP;
+  const notesShouldScroll = bookingNotes.length > NOTE_VISIBLE_COUNT;
 
   useEffect(() => {
     if (!user) return;
@@ -210,6 +292,9 @@ export default function CalendarScreen() {
     !!selectedBooking &&
     selectedBooking.status !== BookingStatus.Rejected &&
     (isAdmin || selectedBooking.userId === user?.uid);
+
+  const isOwnSelectedBooking =
+    !!selectedBooking && selectedBooking.userId === user?.uid;
 
   const today = new Date();
 
@@ -681,7 +766,10 @@ useEffect(() => {
       {selectedBooking && (
         <Pressable
           style={theme.modalOverlay}
-          onPress={() => setSelectedBooking(null)}
+          onPress={() => {
+            setSelectedBooking(null);
+            setShowNoteEditor(false);
+          }}
         >
           <Pressable style={theme.modal} onPress={(e) => e.stopPropagation()}>
             <View
@@ -770,6 +858,52 @@ useEffect(() => {
               {getBookingStatusLabel(selectedBooking.status)}
             </Text>
 
+            {bookingNotes.length > 0 && (
+              <View style={{ marginBottom: 12 }}>
+                <Text style={[theme.textPrimary, { marginBottom: 8 }]}>Notatki</Text>
+                <ScrollView
+                  nestedScrollEnabled
+                  style={notesShouldScroll ? { maxHeight: notesMaxHeight } : undefined}
+                  contentContainerStyle={{ paddingRight: 2 }}
+                >
+                  {bookingNotes.map((note, index) => (
+                    <Text
+                      key={note.id}
+                      style={[
+                        theme.textSecondary,
+                        {
+                          lineHeight: NOTE_LINE_HEIGHT,
+                          paddingVertical: NOTE_VERTICAL_PADDING,
+                          marginBottom: index === bookingNotes.length - 1 ? 0 : NOTE_ITEM_GAP,
+                        },
+                      ]}
+                    >
+                      {`${formatNoteDate(note.createdAt)}, ${getNoteAuthorName(note)}: ${note.content}`}
+                    </Text>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+
+            {(isOwnSelectedBooking || isAdmin) && (
+              <Pressable
+                style={{
+                  backgroundColor: colors.lightGrey,
+                  paddingHorizontal: 14,
+                  paddingVertical: 8,
+                  borderRadius: 6,
+                  alignSelf: "flex-start",
+                  marginBottom: 8,
+                }}
+                onPress={() => {
+                  setBookingNote("");
+                  setShowNoteEditor(true);
+                }}
+              >
+                <Text style={theme.textPrimary}>Zgłoś</Text>
+              </Pressable>
+            )}
+
             {/* Admin Approve/Reject Buttons */}
             {isAdmin && selectedBooking && (
               <View
@@ -827,11 +961,78 @@ useEffect(() => {
 
             <Pressable
               style={{ marginTop: 16, alignSelf: "flex-end" }}
-              onPress={() => setSelectedBooking(null)}
+              onPress={() => {
+                setSelectedBooking(null);
+                setShowNoteEditor(false);
+              }}
             >
               <Text style={theme.link}>Zamknij</Text>
             </Pressable>
           </Pressable>
+
+          {showNoteEditor && (
+            <Pressable
+              style={theme.modalOverlay}
+              onPress={() => setShowNoteEditor(false)}
+            >
+              <Pressable style={theme.modal} onPress={(e) => e.stopPropagation()}>
+                <Text style={theme.title}>Zgłoś uwagę</Text>
+                <TextInput
+                  value={bookingNote}
+                  onChangeText={setBookingNote}
+                  style={[theme.input, theme.inputDefaultText, { minHeight: 90 }]}
+                  placeholder="Wpisz notatkę"
+                  placeholderTextColor={colors.textSecondary}
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                />
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "flex-end",
+                    gap: 10,
+                    marginTop: 12,
+                  }}
+                >
+                  <Pressable onPress={() => setShowNoteEditor(false)}>
+                    <Text style={theme.link}>Anuluj</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={async () => {
+                      if (!selectedBooking?.id) return;
+                      if (!user?.uid) return;
+                      const trimmed = bookingNote.trim();
+                      if (!trimmed) {
+                        Alert.alert("Błąd", "Notatka nie może być pusta");
+                        return;
+                      }
+                      setSavingNote(true);
+                      try {
+                        await createNote({
+                          bookingId: selectedBooking.id,
+                          content: trimmed,
+                          creatorId: user.uid,
+                          creatorWasAdmin: isAdmin,
+                        });
+                        setShowNoteEditor(false);
+                      } catch (error) {
+                        console.error("[CALENDAR] note update error", error);
+                        Alert.alert("Błąd", "Nie udało się zapisać notatki");
+                      } finally {
+                        setSavingNote(false);
+                      }
+                    }}
+                    disabled={savingNote}
+                  >
+                    <Text style={[theme.link, savingNote && { opacity: 0.6 }]}>
+                      {savingNote ? "Zapisywanie..." : "Zapisz"}
+                    </Text>
+                  </Pressable>
+                </View>
+              </Pressable>
+            </Pressable>
+          )}
 
           {showWeekPicker && (
             <View style={theme.modalOverlay}>

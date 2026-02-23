@@ -1,10 +1,14 @@
 import { BookingStatus } from "@/src/entities/booking";
+import { Note } from "@/src/entities/note";
+import { User } from "@/src/entities/user";
 import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
 import { subscribeToBooking, updateBookingStatus } from "@/src/services/booking.service";
+import { subscribeToNotesForBooking } from "@/src/services/noteService";
+import { subscribeToAllUsers } from "@/src/services/userService";
 import { styles as theme } from "@/src/theme/styles";
 import dayjs from "dayjs";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Alert, Platform, Pressable, ScrollView, Text, View } from "react-native";
 
 /* Date helpers */
@@ -30,6 +34,25 @@ function sameDay(a: Date, b: Date) {
   );
 }
 
+const NOTE_VISIBLE_COUNT = 3;
+const NOTE_LINE_HEIGHT = 20;
+const NOTE_VERTICAL_PADDING = 4;
+const NOTE_ITEM_GAP = 6;
+
+function formatNoteDate(value: any) {
+  const date = value?.toDate?.() ?? null;
+
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return "--:--:----";
+  }
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+
+  return `${day}:${month}:${year}`;
+}
+
 type BookingDetails = {
   id: string;
   yachtName: string;
@@ -43,6 +66,8 @@ export default function BookingDetailsScreen() {
   const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
   const router = useRouter();
   const [booking, setBooking] = useState<BookingDetails | null>(null);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
@@ -55,6 +80,54 @@ export default function BookingDetailsScreen() {
 
     return unsub;
   }, [bookingId]);
+
+  useEffect(() => {
+    if (!bookingId) return;
+
+    const unsub = subscribeToNotesForBooking(bookingId, (nextNotes) => {
+      const sorted = [...nextNotes].sort((a, b) => {
+        const aTime = a.createdAt?.toDate?.()?.getTime?.() ?? 0;
+        const bTime = b.createdAt?.toDate?.()?.getTime?.() ?? 0;
+        return aTime - bTime;
+      });
+      setNotes(sorted);
+    });
+
+    return unsub;
+  }, [bookingId]);
+
+  useEffect(() => {
+    const unsub = subscribeToAllUsers(
+      (nextUsers) => {
+        setUsers(nextUsers);
+      },
+      (error) => {
+        console.error("[BOOKING DETAILS] users snapshot error:", error);
+      },
+    );
+
+    return unsub;
+  }, []);
+
+  const userNameMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    users.forEach((person) => {
+      const fullName = `${person.name ?? ""} ${person.surname ?? ""}`.trim();
+      if (fullName) {
+        map[person.uid] = fullName;
+      }
+    });
+    return map;
+  }, [users]);
+
+  const getNoteAuthorName = (note: Note) => {
+    return userNameMap[note.creatorId] ?? (note.creatorWasAdmin ? "Admin" : "Użytkownik");
+  };
+
+  const notesMaxHeight =
+    NOTE_VISIBLE_COUNT * (NOTE_LINE_HEIGHT + NOTE_VERTICAL_PADDING * 2) +
+    (NOTE_VISIBLE_COUNT - 1) * NOTE_ITEM_GAP;
+  const notesShouldScroll = notes.length > NOTE_VISIBLE_COUNT;
 
 
   if (!booking) {
@@ -140,6 +213,33 @@ export default function BookingDetailsScreen() {
           {getBookingStatusLabel(booking.status)}
         </Text>
       </View>
+
+      {notes.length > 0 ? (
+        <View style={{ marginVertical: 16 }}>
+          <Text style={theme.textMuted}>Notatki</Text>
+          <ScrollView
+            nestedScrollEnabled
+            style={notesShouldScroll ? { maxHeight: notesMaxHeight, marginTop: 8 } : { marginTop: 8 }}
+            contentContainerStyle={{ paddingRight: 2 }}
+          >
+            {notes.map((note, index) => (
+              <Text
+                key={note.id}
+                style={[
+                  theme.textSecondary,
+                  {
+                    lineHeight: NOTE_LINE_HEIGHT,
+                    paddingVertical: NOTE_VERTICAL_PADDING,
+                    marginBottom: index === notes.length - 1 ? 0 : NOTE_ITEM_GAP,
+                  },
+                ]}
+              >
+                {`${formatNoteDate(note.createdAt)}, ${getNoteAuthorName(note)}: ${note.content}`}
+              </Text>
+            ))}
+          </ScrollView>
+        </View>
+      ) : null}
 
       {!isApproved && (
         <Pressable

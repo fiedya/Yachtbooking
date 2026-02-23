@@ -1,0 +1,119 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // =============================================
+    // HELPER FUNCTIONS
+    // =============================================
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // =============================================
+    // USERS COLLECTION
+    // =============================================
+    
+    match /users/{userId} {
+      // Anyone signed in can read user profiles (for displaying names, photos)
+      allow read: if isSignedIn();
+      
+      // Users can only create their own profile
+      allow create: if isOwner(userId);
+      
+      // Users can update their own profile, admins can update any
+      allow update: if isOwner(userId) || isAdmin();
+      
+      // Only admins can delete users
+      allow delete: if isAdmin();
+    }
+    
+    // =============================================
+    // YACHTS COLLECTION
+    // =============================================
+    
+    match /yachts/{yachtId} {
+      // Anyone signed in can read yachts
+      allow read: if isSignedIn();
+      
+      // Only admins can create, update, or delete yachts
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // =============================================
+    // BOOKINGS COLLECTION
+    // =============================================
+    
+    match /bookings/{bookingId} {
+      // Anyone signed in can read bookings (for calendar view)
+      allow read: if isSignedIn();
+      
+      // Users can create their own bookings
+      allow create: if isSignedIn() && 
+                       request.resource.data.userId == request.auth.uid;
+      
+      // Users can update their own bookings, admins can update any
+      allow update: if isOwner(resource.data.userId) || isAdmin();
+      
+      // Only admins can delete bookings
+      allow delete: if isAdmin();
+    }
+    
+    // =============================================
+    // SETTINGS COLLECTION
+    // =============================================
+    
+    match /settings/{userId} {
+      // Users can read their own settings
+      allow read: if isOwner(userId);
+      
+      // Users can create and update their own settings
+      allow create, update: if isOwner(userId);
+      
+      // Only admins can delete settings
+      allow delete: if isAdmin();
+    }
+    
+    // =============================================
+    // NEWS COLLECTION
+    // =============================================
+    
+    match /news/{newsId} {
+      // Anyone signed in can read news
+      allow read: if isSignedIn();
+      
+      // Only admins can create, update, or delete news
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // =============================================
+    // NOTES COLLECTION
+    // =============================================
+    
+    match /notes/{noteId} {
+      // Anyone signed in can read notes (for booking details view)
+      allow read: if isSignedIn();
+      
+      // Users can create notes, must set their own userId as creatorId
+      allow create: if isSignedIn() && 
+                       request.resource.data.creatorId == request.auth.uid &&
+                       request.resource.data.keys().hasAll(['bookingId', 'content', 'creatorId', 'creatorWasAdmin', 'read']);
+      
+      // Admins can update the 'read' flag only
+      allow update: if isAdmin() && 
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      
+      // Only admins can delete notes
+      allow delete: if isAdmin();
+    }
+  }
+}
