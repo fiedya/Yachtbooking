@@ -53,9 +53,9 @@ export default function UserDetailsScreen() {
     }
 
     Alert.alert("Potwierdź", message, [
-      { text: "Cancel", style: "cancel" },
+      { text: "Anuluj", style: "cancel" },
       {
-        text: "Confirm",
+        text: "Potwierdź",
         style: "destructive",
         onPress: async () => {
           if (!user) return;

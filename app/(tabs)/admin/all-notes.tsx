@@ -205,6 +205,7 @@ export default function AllNotesScreen() {
         keyExtractor={(item) => item.note.id}
         renderItem={({ item }) => {
           const booking = item.booking;
+          const isUnread = !(item.note.read === true || String(item.note.read).toLowerCase() === "true");
           return (
             <Pressable
               onPress={() =>
@@ -221,12 +222,29 @@ export default function AllNotesScreen() {
                 <Text style={theme.textSecondary}>
                   {booking?.yachtName ?? "Nieznany jacht"} ({getBookingUserName(booking)})
                 </Text>
-                <Text style={theme.textMuted}>
-                  {getCreatorName(item.note)}
-                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
+                  <Text style={theme.textMuted}>
+                    {getCreatorName(item.note)}
+                  </Text>
+                  {isUnread && (
+                    <View
+                      style={[
+                        theme.pill,
+                        {
+                          backgroundColor: colors.secondary,
+                          paddingVertical: 2,
+                          paddingHorizontal: 8,
+                          marginLeft: 8,
+                        },
+                      ]}
+                    >
+                      <Text style={{ color: colors.white, fontSize: 10 }}>Nowa</Text>
+                    </View>
+                  )}
+                </View>
                 <Text style={theme.textMuted}>
                   {booking?.start
-                    ? `${dayjs(booking.start?.toDate?.()).format("DD MMM YYYY")} – ${dayjs(booking.end?.toDate?.()).format("DD MMM YYYY")}`
+                    ? `${dayjs(booking.start?.toDate?.()).format("DD MMM YYYY hh:mm")} – ${dayjs(booking.end?.toDate?.()).format("DD MMM YYYY hh:mm")}`
                     : "Brak dat"}
                 </Text>
               </View>

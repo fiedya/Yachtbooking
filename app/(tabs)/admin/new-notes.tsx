@@ -224,11 +224,16 @@ export default function NewNotesScreen() {
               <Text style={theme.textMuted}>
                 {getCreatorName(item.note)}
               </Text>
-              <Text style={theme.textMuted}>
-                 {booking?.start
-                  ? `${dayjs(booking.start?.toDate?.()).format("DD MMM YYYY")} – ${dayjs(booking.end?.toDate?.()).format("DD MMM YYYY")}`
-                  : "Brak dat"}
-              </Text>
+                <Text style={theme.textMuted}>
+                  {booking?.start
+                    ? `${dayjs(booking.start?.toDate?.()).format("DD MMM YYYY hh:mm")} – ${dayjs(booking.end?.toDate?.()).format("DD MMM YYYY hh:mm")}`
+                    : "Brak dat"}
+                </Text>
+                                <Text style={theme.textMuted}>
+                  {booking?.start
+                    ? `${dayjs(item.note.createdAt).format("DD MMM YYYY")}`
+                    : "Brak dat"}
+                </Text>
             </View>
           </Pressable>
         );

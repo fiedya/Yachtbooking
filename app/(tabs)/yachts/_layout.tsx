@@ -5,9 +5,9 @@ export default function YachtsLayout() {
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
 
-      <Stack.Screen name="add-yacht" options={{ title: "Add/Edit Yacht" }} />
+      <Stack.Screen name="add-yacht" options={{ title: "Dodaj jacht" }} />
 
-      <Stack.Screen name="yacht-details" options={{ title: "Yacht details" }} />
+      <Stack.Screen name="yacht-details" options={{ title: "Szczegóły jachtu" }} />
     </Stack>
   );
 }

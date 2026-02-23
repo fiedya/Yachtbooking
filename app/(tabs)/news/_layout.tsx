@@ -5,7 +5,7 @@ export default function NewsLayout() {
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
 
-      <Stack.Screen name="add-news" options={{ title: "Add News" }} />
+      <Stack.Screen name="add-news" options={{ title: "Dodaj wiadomość" }} />
     </Stack>
   );
 }

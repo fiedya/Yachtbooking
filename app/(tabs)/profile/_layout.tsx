@@ -5,11 +5,11 @@ export default function ProfileLayout() {
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
 
-      <Stack.Screen name="settings" options={{ title: "Settings" }} />
+      <Stack.Screen name="settings" options={{ title: "Ustawienia" }} />
 
       <Stack.Screen
         name="app-versioning"
-        options={{ title: "App Versioning" }}
+        options={{ title: "Historia wersji" }}
       />
     </Stack>
   );

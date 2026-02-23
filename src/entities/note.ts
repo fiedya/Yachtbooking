@@ -5,5 +5,6 @@ export type Note = {
   creatorId: string;
   creatorWasAdmin: boolean;
   read: boolean;
+  rejected?: boolean;
   createdAt?: any;
 };

@@ -1,13 +1,14 @@
+import Icon from "@/src/components/Icon";
 import { Booking } from "@/src/entities/booking";
 import { Note } from "@/src/entities/note";
 import { User } from "@/src/entities/user";
 import { subscribeToBooking } from "@/src/services/booking.service";
-import { subscribeToNote, updateNoteReadStatus } from "@/src/services/noteService";
+import { rejectNote, subscribeToNote, updateNoteReadStatus } from "@/src/services/noteService";
 import { subscribeToAllUsers } from "@/src/services/userService";
 import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";
 import dayjs from "dayjs";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 
@@ -15,6 +16,7 @@ type BookingInfo = Booking | null;
 
 export default function NoteDetailsScreen() {
   const { noteId } = useLocalSearchParams<{ noteId: string }>();
+  const router = useRouter();
   const [note, setNote] = useState<Note | null>(null);
   const [booking, setBooking] = useState<BookingInfo>(null);
   const [users, setUsers] = useState<User[]>([]);
@@ -94,6 +96,33 @@ export default function NoteDetailsScreen() {
     }
   };
 
+  const handleRejectNote = async () => {
+    if (!note || !noteId) return;
+
+    Alert.alert(
+      "Usuń notatkę",
+      "Na pewno chcesz usunąć tę notatkę? Nie będzie ona wyświetlana nigdzie.",
+      [
+        { text: "Anuluj", style: "cancel" },
+        {
+          text: "Usuń",
+          style: "destructive",
+          onPress: async () => {
+            setUpdating(true);
+            try {
+              await rejectNote(noteId);
+              router.back();
+            } catch (error) {
+              console.error("[NOTE DETAILS] reject note error:", error);
+              Alert.alert("Błąd", "Nie udało się usunąć notatki");
+              setUpdating(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (!note) {
     return (
       <View style={[theme.screenPadded, theme.center]}>
@@ -167,6 +196,19 @@ export default function NoteDetailsScreen() {
             ? `${dayjs(booking.start.toDate()).format("DD MMM YYYY HH:mm")} – ${dayjs(booking.end.toDate()).format("DD MMM YYYY HH:mm")}`
             : "Brak danych daty i czasu"}
         </Text>
+      </View>
+
+      <View style={{ marginTop: 24, alignItems: "flex-end" }}>
+        <Pressable
+          onPress={handleRejectNote}
+          disabled={updating}
+          style={{
+            padding: 10,
+            opacity: updating ? 0.5 : 1,
+          }}
+        >
+          <Icon name="trash" size={28} color={colors.danger} />
+        </Pressable>
       </View>
     </ScrollView>
   );

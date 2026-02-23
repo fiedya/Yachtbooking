@@ -25,6 +25,10 @@ export async function updateNoteReadStatus(noteId: string, read: boolean) {
   return updateDoc("notes", noteId, { read });
 }
 
+export async function rejectNote(noteId: string) {
+  return updateDoc("notes", noteId, { rejected: true });
+}
+
 export function subscribeToNote(
   noteId: string,
   onChange: (note: Note | null) => void,
@@ -66,10 +70,12 @@ export function subscribeToAllNotes(
       }
 
       const docs = snapshot.docs ?? snapshot._docs ?? [];
-      const notes: Note[] = docs.map((doc: any) => ({
-        id: doc.id,
-        ...(doc.data() as Omit<Note, "id">),
-      }));
+      const notes: Note[] = docs
+        .map((doc: any) => ({
+          id: doc.id,
+          ...(doc.data() as Omit<Note, "id">),
+        }))
+        .filter((note: Note) => !(note.rejected === true || String(note.rejected).toLowerCase() === "true"));
 
       onChange(notes);
     },
@@ -101,7 +107,7 @@ export function subscribeToNotesForBooking(
           id: doc.id,
           ...(doc.data() as Omit<Note, "id">),
         }))
-        .filter((note: Note) => note.bookingId === bookingId);
+        .filter((note: Note) => note.bookingId === bookingId && !(note.rejected === true || String(note.rejected).toLowerCase() === "true"));
 
       onChange(notes);
     },
