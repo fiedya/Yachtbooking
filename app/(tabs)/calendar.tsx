@@ -387,13 +387,15 @@ export default function CalendarScreen() {
           b.status !== BookingStatus.Rejected &&
           b.status !== BookingStatus.Cancelled,
       );
+    } else if (!isAdmin) {
+      result = result.filter((b) => b.status !== BookingStatus.Rejected);
     }
 
     if (selectedYachtIds.length === 0) {
       return result;
     }
     return result.filter((b) => selectedYachtIds.includes(b.yachtId));
-  }, [bookings, selectedYachtIds, showCancelledBookings]);
+  }, [bookings, selectedYachtIds, showCancelledBookings, isAdmin]);
 
 useEffect(() => {
   const weekEnd = addDays(weekStart, 7);

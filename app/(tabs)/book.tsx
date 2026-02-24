@@ -65,6 +65,7 @@ export default function BookScreen() {
   );
 
   const [loading, setLoading] = useState(false);
+  const [validatingAvailability, setValidatingAvailability] = useState(false);
   const [yachts, setYachts] = useState<Yacht[]>([]);
   const [availableYachtIds, setAvailableYachtIds] = useState<string[]>([]);
   const [selectedYachts, setSelectedYachts] = useState<Yacht[]>([]);
@@ -184,6 +185,22 @@ export default function BookScreen() {
       return;
     }
 
+    const editingId = edit && bookingId ? bookingId : undefined;
+    const busyIdsAtSave = await getAvailableYachtIds(start, end, editingId);
+    const stillAvailableYachts = selectedYachts.filter(
+      (yacht) => !busyIdsAtSave.includes(yacht.id),
+    );
+
+    if (stillAvailableYachts.length !== selectedYachts.length) {
+      setAvailableYachtIds(busyIdsAtSave);
+      setSelectedYachts(stillAvailableYachts);
+      Alert.alert(
+        "Błąd",
+        "Wybrany jacht jest już zajęty w tym terminie. Wybierz inny jacht.",
+      );
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -213,8 +230,8 @@ export default function BookScreen() {
 
         await updateDoc("bookings", bookingId, {
           userName: fullName,
-          yachtIds: selectedYachts.map((y) => y.id),
-          yachtNames: selectedYachts.map((y) => y.name),
+          yachtIds: stillAvailableYachts.map((y) => y.id),
+          yachtNames: stillAvailableYachts.map((y) => y.name),
           start,
           end,
           status: BookingStatus.Pending,
@@ -226,8 +243,8 @@ export default function BookScreen() {
         await createBooking({
           userId: user.uid,
           userName: fullName,
-          yachtIds: selectedYachts.map((y) => y.id),
-          yachtNames: selectedYachts.map((y) => y.name),
+          yachtIds: stillAvailableYachts.map((y) => y.id),
+          yachtNames: stillAvailableYachts.map((y) => y.name),
           start,
           end,
         });
@@ -258,6 +275,7 @@ export default function BookScreen() {
     end.setHours(endTime.getHours(), endTime.getMinutes(), 0, 0);
 
     if (end > start) {
+      setValidatingAvailability(true);
       const editingId = edit && bookingId ? bookingId : undefined;
       getAvailableYachtIds(start, end, editingId).then((busyIds) => {
         setAvailableYachtIds(busyIds);
@@ -266,9 +284,30 @@ export default function BookScreen() {
             prev.filter((y) => !busyIds.includes(y.id)),
           );
         }
+      }).finally(() => {
+        setValidatingAvailability(false);
       });
+    } else {
+      setAvailableYachtIds([]);
+      setValidatingAvailability(false);
     }
   }, [isFocused, date, startTime, endTime, yachts, edit, bookingId, selectedYachts.length]);
+
+  const isDateRangeValid = useMemo(() => {
+    const start = new Date(date);
+    start.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
+
+    const end = new Date(date);
+    end.setHours(endTime.getHours(), endTime.getMinutes(), 0, 0);
+
+    return end > start;
+  }, [date, startTime, endTime]);
+
+  const canSubmit =
+    !loading &&
+    !validatingAvailability &&
+    isDateRangeValid &&
+    selectedYachts.length > 0;
 
   const snapToQuarter = (date: Date) => {
     const snapped = Math.round(date.getMinutes() / 15) * 15;
@@ -540,12 +579,16 @@ export default function BookScreen() {
       </ScrollView>
       {/* Submit */}
       <Pressable
-        style={[styles.submit, { marginTop: 10 }, loading && styles.submitDisabled]}
+        style={[styles.submit, { marginTop: 10 }, !canSubmit && styles.submitDisabled]}
         onPress={handleBook}
-        disabled={loading}
+        disabled={!canSubmit}
       >
         <Text style={styles.submitText}>
-          {loading ? "Zapisywanie…" : "Zarezerwuj"}
+          {loading
+            ? "Zapisywanie…"
+            : validatingAvailability
+              ? "Sprawdzanie dostępności…"
+              : "Zarezerwuj"}
         </Text>
       </Pressable>
     </View>
