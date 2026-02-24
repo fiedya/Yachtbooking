@@ -41,7 +41,7 @@
   },
   {
     "version": "0.0.8",
-    "date": "2026-02-26",
+    "date": "2026-02-23",
     "notes": [
       "[Book] Fix na rezerwowanie tego samego jachtu w tym samym czasie przy otwieraniu okna rezerwacji przez plusik",
       "[Book] Edycja bookingu - w momencie edycji status zmienia się na Oczekuje",
@@ -54,6 +54,18 @@
       "[Admin] Zamykanie okienka szczegołów bookingu po approve/reject",
       "[Admin] Możliwość zmiany statusu jachtu w liście jachtów",
       "[Admin] Dodanie możliwości odrzucenia lub oznaczenia jako przeczytaną notatki/uwagi",
+    ]
+  },
+  {
+    "version": "0.0.9",
+    "date": "2026-02-24",
+    "notes": [
+      "[Kal/Profil] Możliwośc odwołania własnego bookingu wraz z pzyciskiem pokazania odwołanych bookingów w kalendarzu",
+      "[Admin] Możliwość odwołania bookingu przez admina",
+      "[Kal] Scrollowanie kalendarza w Iphone",
+      "[All] Inputbosy mają szary wskazówkowy tekst oraz czarny wpisywany",
+      "[Book] Prawdopodobnie działające sprawdzanie jachtów przy edycji bookingu",
+      "[Kal] widok dnia po kliknięciu w dzień kalendarza"
     ]
   }
 

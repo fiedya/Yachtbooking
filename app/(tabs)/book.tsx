@@ -13,7 +13,7 @@ import { styles } from "@/src/theme/styles";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useIsFocused } from "@react-navigation/native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -74,6 +74,7 @@ export default function BookScreen() {
     usePseudonims: false,
   });
   const [editingBooking, setEditingBooking] = useState<any>(null);
+  const availabilityRequestIdRef = useRef(0);
   const now = new Date();
 
   useEffect(() => {
@@ -266,7 +267,10 @@ export default function BookScreen() {
   }, [edit, bookingId]);
 
   useEffect(() => {
-    if (!isFocused) return;
+    if (!isFocused) {
+      setValidatingAvailability(false);
+      return;
+    }
 
     const start = new Date(date);
     start.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
@@ -275,23 +279,27 @@ export default function BookScreen() {
     end.setHours(endTime.getHours(), endTime.getMinutes(), 0, 0);
 
     if (end > start) {
+      const requestId = ++availabilityRequestIdRef.current;
       setValidatingAvailability(true);
       const editingId = edit && bookingId ? bookingId : undefined;
       getAvailableYachtIds(start, end, editingId).then((busyIds) => {
-        setAvailableYachtIds(busyIds);
-        if (selectedYachts.length > 0) {
-          setSelectedYachts((prev) =>
-            prev.filter((y) => !busyIds.includes(y.id)),
-          );
+        if (requestId !== availabilityRequestIdRef.current) {
+          return;
         }
+
+        setAvailableYachtIds(busyIds);
+
+        setSelectedYachts((prev) => prev.filter((y) => !busyIds.includes(y.id)));
       }).finally(() => {
-        setValidatingAvailability(false);
+        if (requestId === availabilityRequestIdRef.current) {
+          setValidatingAvailability(false);
+        }
       });
     } else {
       setAvailableYachtIds([]);
       setValidatingAvailability(false);
     }
-  }, [isFocused, date, startTime, endTime, yachts, edit, bookingId, selectedYachts.length]);
+  }, [isFocused, date, startTime, endTime, yachts, edit, bookingId]);
 
   const isDateRangeValid = useMemo(() => {
     const start = new Date(date);

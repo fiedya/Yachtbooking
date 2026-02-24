@@ -1,5 +1,4 @@
 import {
-  getDoc,
   onSnapshot,
   queryDocs,
 } from "@/src/firebase/init";
@@ -55,6 +54,10 @@ export async function getAvailableYachtIds(
   const busyYachtIds = new Set<string>();
 
   docs.forEach((doc: any) => {
+    if (editingBookingId && doc.id === editingBookingId) {
+      return;
+    }
+
     const d = doc.data();
 
     if (
@@ -66,18 +69,6 @@ export async function getAvailableYachtIds(
       yachtIds.forEach((id: string) => busyYachtIds.add(id));
     }
   });
-
-  // allow yacht of edited booking
-  if (editingBookingId) {
-    const editSnap: any = await getDoc("bookings", editingBookingId);
-
-    if (editSnap.exists()) {
-      const editingData = editSnap.data();
-      const editingYachtIds = editingData?.yachtIds ??
-        (editingData?.yachtId ? [editingData.yachtId] : []);
-      editingYachtIds.forEach((id: string) => busyYachtIds.delete(id));
-    }
-  }
 
   return Array.from(busyYachtIds);
 }

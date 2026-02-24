@@ -20,18 +20,18 @@ import { styles, styles as theme } from "@/src/theme/styles";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-    Alert,
-    Animated,
-    Image,
-    PanResponder,
-    Platform,
-    Pressable,
-    ScrollView,
-    Switch,
-    Text,
-    TextInput,
-    View,
-    useWindowDimensions
+  Alert,
+  Animated,
+  Image,
+  PanResponder,
+  Platform,
+  Pressable,
+  ScrollView,
+  Switch,
+  Text,
+  TextInput,
+  View,
+  useWindowDimensions
 } from "react-native";
 
 function startOfWeek(date: Date) {
@@ -471,7 +471,7 @@ useEffect(() => {
           headerTitleStyle: headerStyles.title,
           headerRight: () => (
             <View style={{ flexDirection: "row", alignItems: "center", marginRight: 10 }}>
-              <Text style={[theme.textSecondary, { marginRight: 6 }]}>Anulowane</Text>
+              <Text style={[theme.textSecondary, { marginRight: 6 }]}>Odwołane</Text>
               <Switch
                 value={showCancelledBookings}
                 onValueChange={setShowCancelledBookings}
