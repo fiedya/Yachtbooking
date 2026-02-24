@@ -20,6 +20,7 @@ import {
   Image,
   Platform,
   Pressable,
+  ScrollView,
   Text,
   TextInput,
   View,
@@ -66,7 +67,7 @@ export default function BookScreen() {
   const [loading, setLoading] = useState(false);
   const [yachts, setYachts] = useState<Yacht[]>([]);
   const [availableYachtIds, setAvailableYachtIds] = useState<string[]>([]);
-  const [yacht, setYacht] = useState<Yacht | null>(null);
+  const [selectedYachts, setSelectedYachts] = useState<Yacht[]>([]);
   const [bookingName, setBookingName] = useState("");
   const [settings, setSettings] = useState<{ usePseudonims: boolean }>({
     usePseudonims: false,
@@ -138,11 +139,15 @@ export default function BookScreen() {
         setEndTime(data.end.toDate());
       }
 
-      if (data.yachtId && data.yachtName) {
-        setYacht({
-          id: data.yachtId,
-          name: data.yachtName,
-        } as Yacht);
+      const yachtIds = data.yachtIds ?? (data.yachtId ? [data.yachtId] : []);
+      const yachtNames = data.yachtNames ?? (data.yachtName ? [data.yachtName] : []);
+      if (yachtIds.length > 0) {
+        setSelectedYachts(
+          yachtIds.map((id: string, index: number) => ({
+            id,
+            name: yachtNames[index] ?? yachtNames[0] ?? "",
+          })) as Yacht[],
+        );
       }
     });
   }, [edit, bookingId, isAdmin, user, router]);
@@ -174,7 +179,7 @@ export default function BookScreen() {
       return;
     }
 
-    if (!yacht) {
+    if (selectedYachts.length === 0) {
       Alert.alert("Błąd", "Nie wybrano jachtu");
       return;
     }
@@ -208,8 +213,8 @@ export default function BookScreen() {
 
         await updateDoc("bookings", bookingId, {
           userName: fullName,
-          yachtId: yacht.id,
-          yachtName: yacht.name,
+          yachtIds: selectedYachts.map((y) => y.id),
+          yachtNames: selectedYachts.map((y) => y.name),
           start,
           end,
           status: BookingStatus.Pending,
@@ -221,8 +226,8 @@ export default function BookScreen() {
         await createBooking({
           userId: user.uid,
           userName: fullName,
-          yachtId: yacht.id,
-          yachtName: yacht.name,
+          yachtIds: selectedYachts.map((y) => y.id),
+          yachtNames: selectedYachts.map((y) => y.name),
           start,
           end,
         });
@@ -240,9 +245,6 @@ export default function BookScreen() {
   useEffect(() => {
     getAvailableYachts().then((data) => {
       setYachts(data);
-      if (data.length > 0) {
-        setYacht(data[0]);
-      }
     });
   }, [edit, bookingId]);
 
@@ -259,14 +261,14 @@ export default function BookScreen() {
       const editingId = edit && bookingId ? bookingId : undefined;
       getAvailableYachtIds(start, end, editingId).then((busyIds) => {
         setAvailableYachtIds(busyIds);
-        // If current yacht becomes unavailable, select another one
-        if (yacht && busyIds.includes(yacht.id)) {
-          const availableYacht = yachts.find((y) => !busyIds.includes(y.id));
-          setYacht(availableYacht || null);
+        if (selectedYachts.length > 0) {
+          setSelectedYachts((prev) =>
+            prev.filter((y) => !busyIds.includes(y.id)),
+          );
         }
       });
     }
-  }, [isFocused, date, startTime, endTime, yachts, yacht, edit, bookingId]);
+  }, [isFocused, date, startTime, endTime, yachts, edit, bookingId, selectedYachts.length]);
 
   const snapToQuarter = (date: Date) => {
     const snapped = Math.round(date.getMinutes() / 15) * 15;
@@ -299,7 +301,8 @@ export default function BookScreen() {
           headerTitleStyle: headerStyles.title,
         }}
       />
-      {isAdmin && (
+      <ScrollView>
+        {isAdmin && (
         <View>
           <Text style={styles.label}>Osoba rezerwująca</Text>
           <TextInput
@@ -452,7 +455,7 @@ export default function BookScreen() {
         </>
       )}
       <Text style={styles.label}>Jacht</Text>
-      <View style={{ marginTop: 8, flex: 1 }}>
+      <View style={{ marginTop: 8 }}>
         {orderedYachts.length === 0 ? (
           <Text style={{ color: "#999", marginTop: 8 }}>Brak dostępnych jachtów</Text>
         ) : (
@@ -464,11 +467,30 @@ export default function BookScreen() {
             columnWrapperStyle={{ justifyContent: "space-between" }}
             contentContainerStyle={{ paddingBottom: 8 }}
             renderItem={({ item: y }) => {
-              const selected = yacht?.id === y.id;
+              const selected = selectedYachts.some((item) => item.id === y.id);
               const isAvailable = !availableYachtIds.includes(y.id);
               return (
                 <Pressable
-                  onPress={() => isAvailable && setYacht(y)}
+                  onPress={() => {
+                    if (!isAvailable) return;
+                    setSelectedYachts((prev) => {
+                      const exists = prev.some((item) => item.id === y.id);
+                      
+                      if (isAdmin) {
+                        // Admin: toggle multi-select
+                        if (exists) {
+                          return prev.filter((item) => item.id !== y.id);
+                        }
+                        return [...prev, y];
+                      } else {
+                        // Non-admin: single selection (radio-button)
+                        if (exists) {
+                          return prev.filter((item) => item.id !== y.id);
+                        }
+                        return [y];
+                      }
+                    });
+                  }}
                   disabled={!isAvailable}
                   style={[
                     styles.yachtCard,
@@ -515,6 +537,7 @@ export default function BookScreen() {
           />
         )}
       </View>
+      </ScrollView>
       {/* Submit */}
       <Pressable
         style={[styles.submit, { marginTop: 10 }, loading && styles.submitDisabled]}

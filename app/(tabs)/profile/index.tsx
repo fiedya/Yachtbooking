@@ -12,20 +12,20 @@ import Constants from "expo-constants";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  Image,
-  Pressable,
-  ScrollView,
-  Text,
-  View
+    Image,
+    Pressable,
+    ScrollView,
+    Text,
+    View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { User } from "../../../src/entities/user";
 import { useMode } from "../../../src/providers/ModeProvider";
 import {
-  getUserPhotoUrl,
-  subscribeToUser,
-  updateUserAvatar,
-  updateUserProfile,
+    getUserPhotoUrl,
+    subscribeToUser,
+    updateUserAvatar,
+    updateUserProfile,
 } from "../../../src/services/userService";
 
 export default function ProfileScreen() {
@@ -59,6 +59,11 @@ export default function ProfileScreen() {
       setModalUserPhoto(null);
     }
   }, [selectedBooking]);
+
+  const getBookingYachtLabel = (booking: any) => {
+    const yachtNames = booking?.yachtNames ?? (booking?.yachtName ? [booking.yachtName] : []);
+    return yachtNames.join(", ");
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -273,7 +278,7 @@ async function handleLogout() {
                   }}
                   onPress={() => setSelectedBooking(b)}
                 >
-                  <Text style={theme.sectionTitle}>{b.yachtName}</Text>
+                  <Text style={theme.sectionTitle}>{getBookingYachtLabel(b)}</Text>
                   <Text style={theme.textSecondary}>
                     {b.start.toDate().toLocaleDateString()}{" "}
                     {b.start.toDate().toLocaleTimeString([], {
@@ -332,7 +337,7 @@ async function handleLogout() {
                 alignItems: "center",
               }}
             >
-              <Text style={theme.title}>{selectedBooking.yachtName}</Text>
+              <Text style={theme.title}>{getBookingYachtLabel(selectedBooking)}</Text>
               {isAdmin && (
                 <Pressable
                   onPress={() => {

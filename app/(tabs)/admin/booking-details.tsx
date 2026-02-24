@@ -55,7 +55,8 @@ function formatNoteDate(value: any) {
 
 type BookingDetails = {
   id: string;
-  yachtName: string;
+  yachtName?: string;
+  yachtNames?: string[];
   userName: string;
   start: any;
   end: any;
@@ -69,6 +70,11 @@ export default function BookingDetailsScreen() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [updating, setUpdating] = useState(false);
+
+  const getBookingYachtLabel = (booking: BookingDetails) => {
+    const yachtNames = booking.yachtNames ?? (booking.yachtName ? [booking.yachtName] : []);
+    return yachtNames.join(", ");
+  };
 
   useEffect(() => {
     if (!bookingId) return;
@@ -196,7 +202,7 @@ export default function BookingDetailsScreen() {
 
   return (
     <ScrollView style={theme.screenPadded} contentContainerStyle={{ paddingBottom: 80 }}>
-      <Text style={theme.title}>{booking.yachtName}</Text>
+      <Text style={theme.title}>{getBookingYachtLabel(booking)}</Text>
       <Text style={theme.textSecondary}>{booking.userName}</Text>
 
       <View style={{ marginVertical: 24 }}>

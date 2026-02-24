@@ -89,6 +89,12 @@ export default function NewNotesScreen() {
     return userNameMap[booking.userId] ?? booking.userName ?? "Nieznany użytkownik";
   };
 
+  const getBookingYachtLabel = (booking?: Booking) => {
+    if (!booking) return "Nieznany jacht";
+    const yachtNames = booking.yachtNames ?? (booking.yachtName ? [booking.yachtName] : []);
+    return yachtNames.join(", ") || "Nieznany jacht";
+  };
+
   const getCreatorName = (note: Note) => {
     return userNameMap[note.creatorId] ?? (note.creatorWasAdmin ? "Admin" : "Użytkownik");
   };
@@ -108,7 +114,7 @@ export default function NewNotesScreen() {
       result = result.filter(
         ({ note, booking }) =>
           getBookingUserName(booking).toLowerCase().includes(lowerSearch) ||
-          (booking?.yachtName ?? "").toLowerCase().includes(lowerSearch) ||
+          getBookingYachtLabel(booking).toLowerCase().includes(lowerSearch) ||
           getCreatorName(note).toLowerCase().includes(lowerSearch) ||
           (note.content ?? "").toLowerCase().includes(lowerSearch),
       );
@@ -123,7 +129,7 @@ export default function NewNotesScreen() {
         return (aRead === bRead) ? 0 : aRead ? 1 : -1;
       }
       if (sortBy === "yachtName") {
-        return (bookingA?.yachtName ?? "").localeCompare(bookingB?.yachtName ?? "");
+        return getBookingYachtLabel(bookingA).localeCompare(getBookingYachtLabel(bookingB));
       }
       if (sortBy === "userName") {
         return getBookingUserName(bookingA).localeCompare(getBookingUserName(bookingB));
@@ -219,7 +225,7 @@ export default function NewNotesScreen() {
 
               </Text>
               <Text style={theme.textSecondary}>
-                {booking?.yachtName ?? "Nieznany jacht"} ({getBookingUserName(booking)})
+                {getBookingYachtLabel(booking)} ({getBookingUserName(booking)})
               </Text>
               <Text style={theme.textMuted}>
                 {getCreatorName(item.note)}

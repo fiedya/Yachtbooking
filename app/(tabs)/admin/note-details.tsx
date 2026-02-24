@@ -79,6 +79,12 @@ export default function NoteDetailsScreen() {
     return userNameMap[booking.userId] ?? booking.userName ?? "Nieznany użytkownik";
   }, [booking, userNameMap]);
 
+  const bookingYachtLabel = useMemo(() => {
+    if (!booking) return "Nieznany jacht";
+    const yachtNames = booking.yachtNames ?? (booking.yachtName ? [booking.yachtName] : []);
+    return yachtNames.join(", ") || "Nieznany jacht";
+  }, [booking]);
+
   const toggleReadStatus = async () => {
     if (!note || !noteId) return;
     
@@ -135,7 +141,7 @@ export default function NoteDetailsScreen() {
 
   return (
     <ScrollView style={theme.screenPadded} contentContainerStyle={{ paddingBottom: 80 }}>
-      <Text style={theme.title}>{booking?.yachtName ?? "Nieznany jacht"}</Text>
+      <Text style={theme.title}>{bookingYachtLabel}</Text>
       <Text style={theme.textSecondary}>{bookerName}</Text>
 
       <View style={{ marginVertical: 20 }}>

@@ -9,8 +9,10 @@ export type Booking = {
   id: string;
   userId: string;
   userName: string;
-  yachtId: string;
-  yachtName: string;
+  yachtIds: string[];
+  yachtNames: string[];
+  yachtId?: string;
+  yachtName?: string;
   start: any;
   end: any;
   status: BookingStatus;

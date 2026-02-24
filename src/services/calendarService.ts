@@ -62,7 +62,8 @@ export async function getAvailableYachtIds(
       d.end?.toDate?.() > start &&
       [BookingStatus.Pending, BookingStatus.Approved].includes(d.status)
     ) {
-      busyYachtIds.add(d.yachtId);
+      const yachtIds = d.yachtIds ?? (d.yachtId ? [d.yachtId] : []);
+      yachtIds.forEach((id: string) => busyYachtIds.add(id));
     }
   });
 
@@ -71,10 +72,10 @@ export async function getAvailableYachtIds(
     const editSnap: any = await getDoc("bookings", editingBookingId);
 
     if (editSnap.exists()) {
-      const editingYachtId = editSnap.data()?.yachtId;
-      if (editingYachtId) {
-        busyYachtIds.delete(editingYachtId);
-      }
+      const editingData = editSnap.data();
+      const editingYachtIds = editingData?.yachtIds ??
+        (editingData?.yachtId ? [editingData.yachtId] : []);
+      editingYachtIds.forEach((id: string) => busyYachtIds.delete(id));
     }
   }
 

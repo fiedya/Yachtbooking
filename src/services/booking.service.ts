@@ -13,16 +13,16 @@ function asDate(value: any): Date | null {
 export async function createBooking(params: {
   userId: string;
   userName: string;
-  yachtId: string;
-  yachtName: string;
+  yachtIds: string[];
+  yachtNames: string[];
   start: Date;
   end: Date;
 }) {
   return addDocAuto("bookings", {
     userId: params.userId,
     userName: params.userName,
-    yachtId: params.yachtId,
-    yachtName: params.yachtName,
+    yachtIds: params.yachtIds,
+    yachtNames: params.yachtNames,
     start: params.start,
     end: params.end,
     status: BookingStatus.Pending,
