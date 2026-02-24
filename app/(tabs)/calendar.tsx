@@ -27,6 +27,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  Switch,
   Text,
   TextInput,
   View,
@@ -86,7 +87,6 @@ function getOverlappingBookingsForBooking(
   booking: any,
   allBookings: any[],
   day: Date,
-  isAdmin: boolean = false,
 ) {
   const start = booking.start.toDate();
   const end = booking.end.toDate();
@@ -94,8 +94,6 @@ function getOverlappingBookingsForBooking(
   if (!sameDay(start, day)) return [];
 
   return allBookings.filter((b) => {
-    // Show all statuses for admins, only pending/approved for users
-    if (!isAdmin && b.status === BookingStatus.Rejected) return false;
     const bStart = b.start.toDate();
     const bEnd = b.end.toDate();
     return bStart < end && bEnd > start;
@@ -119,8 +117,9 @@ function getBookingBackgroundColor(
   const isUserBooking = booking.userId === currentUserId;
   const isApproved = booking.status === BookingStatus.Approved;
   const isRejected = booking.status === BookingStatus.Rejected;
+  const isCancelled = booking.status === BookingStatus.Cancelled;
 
-  if (isRejected) {
+  if (isRejected || isCancelled) {
     return colors.dangerSoft;
   }
 
@@ -293,6 +292,7 @@ export default function CalendarScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [yachts, setYachts] = useState<any[]>([]);
   const [selectedYachtIds, setSelectedYachtIds] = useState<string[]>([]); // empty = all
+  const [showCancelledBookings, setShowCancelledBookings] = useState(false);
 
   const updateCalendarGridTopOffset = () => {
     if (Platform.OS !== "web") return;
@@ -322,7 +322,7 @@ export default function CalendarScreen() {
       return spacing.xl;
     }
 
-    return HOUR_ROW_HEIGHT * 2;
+    return HOUR_ROW_HEIGHT + HOUR_ROW_HEIGHT / 2;
   }, []);
 
   useEffect(() => {
@@ -381,15 +381,19 @@ export default function CalendarScreen() {
   const filteredBookings = useMemo(() => {
     let result = bookings;
 
-    if (!isAdmin) {
-      result = result.filter((b) => b.status !== BookingStatus.Rejected);
+    if (!showCancelledBookings) {
+      result = result.filter(
+        (b) =>
+          b.status !== BookingStatus.Rejected &&
+          b.status !== BookingStatus.Cancelled,
+      );
     }
 
     if (selectedYachtIds.length === 0) {
       return result;
     }
     return result.filter((b) => selectedYachtIds.includes(b.yachtId));
-  }, [bookings, selectedYachtIds, isAdmin]);
+  }, [bookings, selectedYachtIds, showCancelledBookings]);
 
 useEffect(() => {
   const weekEnd = addDays(weekStart, 7);
@@ -464,16 +468,27 @@ useEffect(() => {
           headerStyle: headerStyles.header,
           headerTitleStyle: headerStyles.title,
           headerRight: () => (
-            <Pressable
-              onPress={() => setRefreshKey((k) => k + 1)}
-              style={{ margin: 10, paddingRight: "5%" }}
-            >
-              <Icon
-                name="refresh"
-                size={24}
-                color={isRefreshing ? "#999" : "#000"}
+            <View style={{ flexDirection: "row", alignItems: "center", marginRight: 10 }}>
+              <Text style={[theme.textSecondary, { marginRight: 6 }]}>Anulowane</Text>
+              <Switch
+                value={showCancelledBookings}
+                onValueChange={setShowCancelledBookings}
+                trackColor={{ false: colors.lightGrey, true: colors.primary }}
+                thumbColor={showCancelledBookings ? colors.primary : colors.white}
+                style={{ marginRight: 8 }}
               />
-            </Pressable>
+
+              <Pressable
+                onPress={() => setRefreshKey((k) => k + 1)}
+                style={{ paddingRight: "5%" }}
+              >
+                <Icon
+                  name="refresh"
+                  size={24}
+                  color={isRefreshing ? "#999" : "#000"}
+                />
+              </Pressable>
+            </View>
           ),
         }}
       />
@@ -733,7 +748,6 @@ useEffect(() => {
                             b,
                             filteredBookings,
                             day,
-                            isAdmin,
                           );
                           const position = getBookingPosition(b, overlaps);
                           const totalOverlaps = overlaps.length;
@@ -939,22 +953,52 @@ useEffect(() => {
             )}
 
             {(isOwnSelectedBooking || isAdmin) && (
-              <Pressable
+              <View
                 style={{
-                  backgroundColor: colors.lightGrey,
-                  paddingHorizontal: 14,
-                  paddingVertical: 8,
-                  borderRadius: 6,
-                  alignSelf: "flex-start",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 8,
                   marginBottom: 8,
                 }}
-                onPress={() => {
-                  setBookingNote("");
-                  setShowNoteEditor(true);
-                }}
               >
-                <Text style={theme.textPrimary}>Zgłoś</Text>
-              </Pressable>
+                <Pressable
+                  style={{
+                    backgroundColor: colors.lightGrey,
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 6,
+                  }}
+                  onPress={() => {
+                    setBookingNote("");
+                    setShowNoteEditor(true);
+                  }}
+                >
+                  <Text style={theme.textPrimary}>Zgłoś</Text>
+                </Pressable>
+
+                {selectedBooking.status !== BookingStatus.Rejected && (
+                  <Pressable
+                    style={{
+                      backgroundColor: colors.danger,
+                      paddingHorizontal: 14,
+                      paddingVertical: 8,
+                      borderRadius: 6,
+                    }}
+                    onPress={async () => {
+                      await updateBookingStatus(
+                        selectedBooking.id,
+                        BookingStatus.Rejected,
+                      );
+                      setSelectedBooking(null);
+                      setShowNoteEditor(false);
+                    }}
+                  >
+                    <Text style={{ color: colors.white, fontWeight: "bold" }}>
+                      Odwołaj
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
             )}
 
             {/* Admin Approve/Reject Buttons */}

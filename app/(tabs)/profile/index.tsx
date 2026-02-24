@@ -1,10 +1,12 @@
 import Icon from "@/src/components/Icon";
-import { Booking } from "@/src/entities/booking";
+import { Booking, BookingStatus } from "@/src/entities/booking";
 import { getCurrentUser, signOut } from "@/src/firebase/init";
 import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
+import { updateBookingStatus } from "@/src/services/booking.service";
 import { subscribeToBookings } from "@/src/services/calendarService";
 import { uploadImage } from "@/src/services/imageUploadService";
+import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
 import { styles as theme } from "@/src/theme/styles";
 import { pickImageFromGallery } from "@/src/utils/pickImage";
@@ -12,20 +14,20 @@ import Constants from "expo-constants";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    Image,
-    Pressable,
-    ScrollView,
-    Text,
-    View
+  Image,
+  Pressable,
+  ScrollView,
+  Text,
+  View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { User } from "../../../src/entities/user";
 import { useMode } from "../../../src/providers/ModeProvider";
 import {
-    getUserPhotoUrl,
-    subscribeToUser,
-    updateUserAvatar,
-    updateUserProfile,
+  getUserPhotoUrl,
+  subscribeToUser,
+  updateUserAvatar,
+  updateUserProfile,
 } from "../../../src/services/userService";
 
 export default function ProfileScreen() {
@@ -149,6 +151,13 @@ async function handleLogout() {
 
   const fullName = `${profile.name} ${profile.surname}`;
   const firstLetter = profile.name?.charAt(0)?.toUpperCase() ?? "?";
+  const canEditSelectedBooking =
+    !!selectedBooking &&
+    selectedBooking.status !== BookingStatus.Rejected &&
+    (isAdmin || selectedBooking.userId === user?.uid);
+
+  const isOwnSelectedBooking =
+    !!selectedBooking && selectedBooking.userId === user?.uid;
 
   return (
     <View style={[theme.screen, { paddingHorizontal: 16 }]}>
@@ -328,8 +337,8 @@ async function handleLogout() {
 
       {/* Booking Modal (copied from calendar.tsx) */}
       {selectedBooking && (
-        <View style={theme.modalOverlay}>
-          <View style={theme.modal}>
+        <Pressable style={theme.modalOverlay} onPress={() => setSelectedBooking(null)}>
+          <Pressable style={theme.modal} onPress={(e) => e.stopPropagation()}>
             <View
               style={{
                 flexDirection: "row",
@@ -338,7 +347,7 @@ async function handleLogout() {
               }}
             >
               <Text style={theme.title}>{getBookingYachtLabel(selectedBooking)}</Text>
-              {isAdmin && (
+              {canEditSelectedBooking && (
                 <Pressable
                   onPress={() => {
                     setSelectedBooking(null);
@@ -353,11 +362,7 @@ async function handleLogout() {
                   style={{ marginLeft: 8 }}
                   accessibilityLabel="Edytuj rezerwację"
                 >
-                  <Icon type="material"
-                    name="edit"
-                    size={24}
-                    color={theme.link.color}
-                  />
+                  <Icon name="pencil" size={24} color={colors.primary} />
                 </Pressable>
               )}
             </View>
@@ -405,14 +410,40 @@ async function handleLogout() {
               {"Status: "}
               {getBookingStatusLabel(selectedBooking.status)}
             </Text>
+
+            {(isOwnSelectedBooking || isAdmin) &&
+              selectedBooking.status !== BookingStatus.Rejected && (
+                <Pressable
+                  style={{
+                    backgroundColor: colors.danger,
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 6,
+                    alignSelf: "flex-start",
+                    marginTop: 10,
+                  }}
+                  onPress={async () => {
+                    await updateBookingStatus(
+                      selectedBooking.id,
+                      BookingStatus.Rejected,
+                    );
+                    setSelectedBooking(null);
+                  }}
+                >
+                  <Text style={{ color: colors.white, fontWeight: "bold" }}>
+                    Odwołaj
+                  </Text>
+                </Pressable>
+              )}
+
             <Pressable
               style={{ marginTop: 16, alignSelf: "flex-end" }}
               onPress={() => setSelectedBooking(null)}
             >
               <Text style={theme.link}>Zamknij</Text>
             </Pressable>
-          </View>
-        </View>
+          </Pressable>
+        </Pressable>
       )}
     </View>
   );

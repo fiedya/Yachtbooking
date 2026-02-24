@@ -134,10 +134,11 @@ export const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     fontSize: text.base,
     backgroundColor: colors.white,
+    color: colors.textPrimary,
   },
 
   inputDefaultText: {
-    color: colors.textSecondary,
+    color: colors.textPrimary,
   },
 
   label: {
