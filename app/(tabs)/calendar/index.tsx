@@ -20,18 +20,18 @@ import { styles, styles as theme } from "@/src/theme/styles";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Alert,
-  Animated,
-  Image,
-  PanResponder,
-  Platform,
-  Pressable,
-  ScrollView,
-  Switch,
-  Text,
-  TextInput,
-  View,
-  useWindowDimensions
+    Alert,
+    Animated,
+    Image,
+    PanResponder,
+    Platform,
+    Pressable,
+    ScrollView,
+    Switch,
+    Text,
+    TextInput,
+    View,
+    useWindowDimensions
 } from "react-native";
 
 function startOfWeek(date: Date) {
@@ -614,8 +614,18 @@ useEffect(() => {
             {days.map((day) => {
               const isToday = sameDay(day, today);
               return (
-                <View
+                <Pressable
                   key={day.toISOString()}
+                  onPress={() => {
+                    router.push({
+                      pathname: "/(tabs)/calendar/day",
+                      params: {
+                        day: day.toISOString(),
+                        showCancelled: showCancelledBookings ? "1" : "0",
+                        selectedYachts: selectedYachtIds.join(","),
+                      },
+                    });
+                  }}
                   style={[
                     theme.gridCellCenter,
                     theme.gridBorderRight,
@@ -635,7 +645,7 @@ useEffect(() => {
                   >
                     {formatDate(day)}
                   </Text>
-                </View>
+                </Pressable>
               );
             })}
           </View>
