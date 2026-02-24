@@ -11,6 +11,8 @@ export function getBookingStatusLabel(status: BookingStatus): string {
       return "Zatwierdzona";
     case BookingStatus.Rejected:
       return "Odrzucona";
+    case BookingStatus.Cancelled:
+      return "Odwołany";
     default:
       return "Nieznany";
   }

@@ -26,6 +26,7 @@ import {
   PanResponder,
   Pressable,
   ScrollView,
+  Switch,
   Text,
   TextInput,
   View
@@ -117,8 +118,9 @@ function getBookingBackgroundColor(
   const isUserBooking = booking.userId === currentUserId;
   const isApproved = booking.status === BookingStatus.Approved;
   const isRejected = booking.status === BookingStatus.Rejected;
+  const isCancelled = booking.status === BookingStatus.Cancelled;
 
-  if (isRejected) {
+  if (isRejected || isCancelled) {
     return colors.dangerSoft;
   }
 
@@ -283,18 +285,24 @@ export default function CalendarScreen() {
   const [showWeekPicker, setShowWeekPicker] = useState(false);
   // Debug log for showWeekPicker state changes
 
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showCancelled, setShowCancelled] = useState(false);
   const [yachts, setYachts] = useState<any[]>([]);
   const [selectedYachtIds, setSelectedYachtIds] = useState<string[]>([]); // empty = all
 
   const canEditSelectedBooking =
     !!selectedBooking &&
     selectedBooking.status !== BookingStatus.Rejected &&
+    selectedBooking.status !== BookingStatus.Cancelled &&
     (isAdmin || selectedBooking.userId === user?.uid);
 
   const isOwnSelectedBooking =
     !!selectedBooking && selectedBooking.userId === user?.uid;
+
+  const canCancelSelectedBooking =
+    !!selectedBooking &&
+    selectedBooking.status !== BookingStatus.Rejected &&
+    selectedBooking.status !== BookingStatus.Cancelled &&
+    (isOwnSelectedBooking || isAdmin);
 
   const today = new Date();
 
@@ -344,32 +352,32 @@ export default function CalendarScreen() {
       result = result.filter((b) => b.status !== BookingStatus.Rejected);
     }
 
+    if (!showCancelled) {
+      result = result.filter((b) => b.status !== BookingStatus.Cancelled);
+    }
+
     if (selectedYachtIds.length === 0) {
       return result;
     }
     return result.filter((b) => selectedYachtIds.includes(b.yachtId));
-  }, [bookings, selectedYachtIds, isAdmin]);
+  }, [bookings, selectedYachtIds, isAdmin, showCancelled]);
 
 useEffect(() => {
   const weekEnd = addDays(weekStart, 7);
-
-  setIsRefreshing(true);
 
   const unsub = subscribeToWeekBookings(
     weekStart,
     weekEnd,
     (bookings) => {
       setBookings(bookings);
-      setIsRefreshing(false);
     },
     (error) => {
       console.error("[CALENDAR] error", error);
-      setIsRefreshing(false);
     },
   );
 
   return unsub;
-}, [weekStart, refreshKey]);
+}, [weekStart]);
 
 
   const days = useMemo(
@@ -423,16 +431,30 @@ useEffect(() => {
           headerStyle: headerStyles.header,
           headerTitleStyle: headerStyles.title,
           headerRight: () => (
-            <Pressable
-              onPress={() => setRefreshKey((k) => k + 1)}
-              style={{ margin: 10, paddingRight: "5%" }}
+            <View
+              style={{
+                margin: 10,
+                paddingRight: "5%",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+              }}
             >
-              <Icon
-                name="refresh"
-                size={24}
-                color={isRefreshing ? "#999" : "#000"}
+              <Text
+                style={{
+                  color: colors.black,
+                  fontWeight: "600",
+                }}
+              >
+                Anulowane
+              </Text>
+              <Switch
+                value={showCancelled}
+                onValueChange={setShowCancelled}
+                trackColor={{ false: colors.lightGrey, true: colors.primary }}
+                thumbColor={colors.white}
               />
-            </Pressable>
+            </View>
           ),
         }}
       />
@@ -886,22 +908,52 @@ useEffect(() => {
             )}
 
             {(isOwnSelectedBooking || isAdmin) && (
-              <Pressable
+              <View
                 style={{
-                  backgroundColor: colors.lightGrey,
-                  paddingHorizontal: 14,
-                  paddingVertical: 8,
-                  borderRadius: 6,
-                  alignSelf: "flex-start",
+                  flexDirection: "row",
+                  alignItems: "center",
                   marginBottom: 8,
-                }}
-                onPress={() => {
-                  setBookingNote("");
-                  setShowNoteEditor(true);
+                  gap: 8,
                 }}
               >
-                <Text style={theme.textPrimary}>Zgłoś</Text>
-              </Pressable>
+                <Pressable
+                  style={{
+                    backgroundColor: colors.lightGrey,
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 6,
+                  }}
+                  onPress={() => {
+                    setBookingNote("");
+                    setShowNoteEditor(true);
+                  }}
+                >
+                  <Text style={theme.textPrimary}>Zgłoś</Text>
+                </Pressable>
+
+                {canCancelSelectedBooking && (
+                  <Pressable
+                    style={{
+                      backgroundColor: colors.danger,
+                      paddingHorizontal: 14,
+                      paddingVertical: 8,
+                      borderRadius: 6,
+                    }}
+                    onPress={async () => {
+                      await updateBookingStatus(
+                        selectedBooking.id,
+                        BookingStatus.Cancelled,
+                      );
+                      setSelectedBooking(null);
+                      setShowNoteEditor(false);
+                    }}
+                  >
+                    <Text style={{ color: colors.white, fontWeight: "600" }}>
+                      Odwołaj
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
             )}
 
             {/* Admin Approve/Reject Buttons */}

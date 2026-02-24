@@ -115,8 +115,11 @@ export default function BookScreen() {
         return;
       }
 
-      if (data.status === BookingStatus.Rejected) {
-        Alert.alert("Brak dostępu", "Nie można edytować odrzuconej rezerwacji");
+      if (
+        data.status === BookingStatus.Rejected ||
+        data.status === BookingStatus.Cancelled
+      ) {
+        Alert.alert("Brak dostępu", "Nie można edytować odrzuconej lub odwołanej rezerwacji");
         router.replace("/(tabs)/calendar");
         return;
       }
@@ -195,8 +198,11 @@ export default function BookScreen() {
       }
 
       if (edit && bookingId) {
-        if (editingBooking?.status === BookingStatus.Rejected) {
-          Alert.alert("Błąd", "Nie można edytować odrzuconej rezerwacji");
+        if (
+          editingBooking?.status === BookingStatus.Rejected ||
+          editingBooking?.status === BookingStatus.Cancelled
+        ) {
+          Alert.alert("Błąd", "Nie można edytować odrzuconej lub odwołanej rezerwacji");
           return;
         }
 
@@ -294,7 +300,7 @@ export default function BookScreen() {
         }}
       />
       {isAdmin && (
-        <View style={{ marginTop: 16 }}>
+        <View>
           <Text style={styles.label}>Osoba rezerwująca</Text>
           <TextInput
             value={bookingName}
@@ -355,7 +361,6 @@ export default function BookScreen() {
           )}
         </>
       )}
-      {/* Start */}
       <Text style={styles.label}>Od</Text>
       {isWeb ? (
         <WebDatePicker
@@ -401,7 +406,6 @@ export default function BookScreen() {
           )}
         </>
       )}
-      {/* End */}
       <Text style={styles.label}>Do</Text>
       {isWeb ? (
         <WebDatePicker
@@ -513,7 +517,7 @@ export default function BookScreen() {
       </View>
       {/* Submit */}
       <Pressable
-        style={[styles.submit, { marginTop: 12 }, loading && styles.submitDisabled]}
+        style={[styles.submit, { marginTop: 10 }, loading && styles.submitDisabled]}
         onPress={handleBook}
         disabled={loading}
       >

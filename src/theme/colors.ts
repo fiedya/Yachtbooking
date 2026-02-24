@@ -1,8 +1,8 @@
 export const colors = {
-  primary: "#003366", // dark blue (club color)
-  primaryLight: "#afb5ca", // light blue
-  secondary: "#FF7A00", // orange (club accent)
-  secondaryLight: "#FFBB7D", // light orange
+  primary: "#003366",
+  primaryLight: "#afb5ca",
+  secondary: "#FF7A00",
+  secondaryLight: "#FFBB7D",
   white: "#ffffff",
   grey: "#666666",
   lightGrey: "#e0e0e0",

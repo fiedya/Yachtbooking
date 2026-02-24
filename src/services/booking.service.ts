@@ -61,7 +61,10 @@ export function subscribeToBooking(
 
 export async function updateBookingStatus(
   bookingId: string,
-  status: BookingStatus.Approved | BookingStatus.Rejected,
+  status:
+    | BookingStatus.Approved
+    | BookingStatus.Rejected
+    | BookingStatus.Cancelled,
 ) {
   return updateDoc("bookings", bookingId, { status });
 }

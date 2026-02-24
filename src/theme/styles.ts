@@ -142,8 +142,8 @@ export const styles = StyleSheet.create({
 
   label: {
     fontSize: text.md,
-    marginBottom: spacing.xs,
-    padding:8 
+    marginBottom: 0,
+    padding:4 
   },
 
   /* ---------- Cards ---------- */
@@ -397,4 +397,18 @@ export const styles = StyleSheet.create({
     borderColor: "#ddd",
     backgroundColor: "#fafafa",
   },
+
+  datePickerOverlay: {
+  flex: 1,
+  justifyContent: "center",
+  alignItems: "center",
+  backgroundColor: "rgba(0,0,0,0.4)",
+},
+
+datePickerContainer: {
+  backgroundColor: "white",
+  borderRadius: 12,
+  padding: 10,
+},
 });
+
