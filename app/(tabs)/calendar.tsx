@@ -24,11 +24,13 @@ import {
   Animated,
   Image,
   PanResponder,
+  Platform,
   Pressable,
   ScrollView,
   Text,
   TextInput,
-  View
+  View,
+  useWindowDimensions
 } from "react-native";
 
 function startOfWeek(date: Date) {
@@ -139,6 +141,7 @@ function getBookingFontColor(booking: any, currentUserId: string | undefined) {
 -------------------------------- */
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const HOUR_ROW_HEIGHT = 36;
 const NOTE_VISIBLE_COUNT = 3;
 const NOTE_LINE_HEIGHT = 20;
 const NOTE_VERTICAL_PADDING = 4;
@@ -163,6 +166,7 @@ function formatNoteDate(value: any) {
 -------------------------------- */
 
 export default function CalendarScreen() {
+  const { height: viewportHeight } = useWindowDimensions();
   // User preferences state
   const [settings, setSettings] = useState({ useYachtShortcuts: false });
   const [yachtMap, setYachtMap] = useState<{
@@ -282,11 +286,48 @@ export default function CalendarScreen() {
   }, [selectedBooking]);
   const [showWeekPicker, setShowWeekPicker] = useState(false);
   // Debug log for showWeekPicker state changes
+  const [calendarGridTopOffset, setCalendarGridTopOffset] = useState<number | null>(null);
+  const calendarScrollRef = useRef<ScrollView | null>(null);
 
   const [refreshKey, setRefreshKey] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [yachts, setYachts] = useState<any[]>([]);
   const [selectedYachtIds, setSelectedYachtIds] = useState<string[]>([]); // empty = all
+
+  const updateCalendarGridTopOffset = () => {
+    if (Platform.OS !== "web") return;
+    const ref = calendarScrollRef.current as any;
+    if (typeof ref?.measureInWindow !== "function") return;
+
+    ref.measureInWindow((_x: number, y: number) => {
+      setCalendarGridTopOffset((prev) => {
+        if (prev !== null && Math.abs(prev - y) < 1) {
+          return prev;
+        }
+        return y;
+      });
+    });
+  };
+
+  const webCalendarScrollHeight = useMemo(() => {
+    if (Platform.OS !== "web" || calendarGridTopOffset === null) {
+      return undefined;
+    }
+
+    return Math.max(220, viewportHeight - calendarGridTopOffset - spacing.sm);
+  }, [viewportHeight, calendarGridTopOffset]);
+
+  const calendarScrollBottomPadding = useMemo(() => {
+    if (Platform.OS !== "web") {
+      return spacing.xl;
+    }
+
+    return HOUR_ROW_HEIGHT * 2;
+  }, []);
+
+  useEffect(() => {
+    updateCalendarGridTopOffset();
+  }, [viewportHeight]);
 
   const canEditSelectedBooking =
     !!selectedBooking &&
@@ -582,7 +623,19 @@ useEffect(() => {
             })}
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={true} nestedScrollEnabled={true} scrollEnabled={true}>
+          <ScrollView
+            ref={calendarScrollRef}
+            showsVerticalScrollIndicator={true}
+            nestedScrollEnabled={true}
+            scrollEnabled={true}
+            onLayout={updateCalendarGridTopOffset}
+            contentContainerStyle={{ paddingBottom: calendarScrollBottomPadding }}
+            style={
+              Platform.OS === "web" && webCalendarScrollHeight
+                ? { height: webCalendarScrollHeight }
+                : undefined
+            }
+          >
             {/* Time grid */}
             {HOURS.map((h) => (
               <View key={h} style={styles.row}>
@@ -607,7 +660,7 @@ useEffect(() => {
                       style={[
                         theme.gridBorderRight,
                         theme.gridBorderBottom,
-                        { flex: 1, height: 36 },
+                        { flex: 1, height: HOUR_ROW_HEIGHT },
                         isToday && {
                           backgroundColor: "rgba(0, 80, 200, 0.08)", // 👈 translucent
                         },
