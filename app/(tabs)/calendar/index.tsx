@@ -509,7 +509,11 @@ export default function CalendarScreen() {
           b.status !== BookingStatus.Cancelled,
       );
     } else if (!isAdmin) {
-      result = result.filter((b) => b.status !== BookingStatus.Rejected);
+      result = result.filter(
+        (b) =>
+          b.status !== BookingStatus.Rejected &&
+          (b.status !== BookingStatus.Cancelled || b.userId === user?.uid),
+      );
     }
 
     if (selectedYachtIds.length === 0) {
@@ -520,7 +524,7 @@ export default function CalendarScreen() {
       const bookingYachtIds = getBookingYachtIds(b);
       return bookingYachtIds.some((id) => selectedYachtIds.includes(id));
     });
-  }, [bookings, selectedYachtIds, showCancelledBookings, isAdmin]);
+  }, [bookings, selectedYachtIds, showCancelledBookings, isAdmin, user?.uid]);
 
 useEffect(() => {
   const weekEnd = addDays(weekStart, 7);
@@ -1119,7 +1123,8 @@ useEffect(() => {
                   <Text style={theme.textPrimary}>Zgłoś</Text>
                 </Pressable>
 
-                {selectedBooking.status !== BookingStatus.Rejected && (
+                {selectedBooking.status !== BookingStatus.Rejected &&
+                  selectedBooking.status !== BookingStatus.Cancelled && (
                   <Pressable
                     style={{
                       backgroundColor: colors.danger,
@@ -1130,7 +1135,7 @@ useEffect(() => {
                     onPress={async () => {
                       await updateBookingStatus(
                         selectedBooking.id,
-                        BookingStatus.Rejected,
+                        BookingStatus.Cancelled,
                       );
                       setSelectedBooking(null);
                       setShowNoteEditor(false);

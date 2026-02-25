@@ -14,20 +14,20 @@ import Constants from "expo-constants";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  Image,
-  Pressable,
-  ScrollView,
-  Text,
-  View
+    Image,
+    Pressable,
+    ScrollView,
+    Text,
+    View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { User } from "../../../src/entities/user";
 import { useMode } from "../../../src/providers/ModeProvider";
 import {
-  getUserPhotoUrl,
-  subscribeToUser,
-  updateUserAvatar,
-  updateUserProfile,
+    getUserPhotoUrl,
+    subscribeToUser,
+    updateUserAvatar,
+    updateUserProfile,
 } from "../../../src/services/userService";
 
 export default function ProfileScreen() {
@@ -412,7 +412,8 @@ async function handleLogout() {
             </Text>
 
             {(isOwnSelectedBooking || isAdmin) &&
-              selectedBooking.status !== BookingStatus.Rejected && (
+              selectedBooking.status !== BookingStatus.Rejected &&
+              selectedBooking.status !== BookingStatus.Cancelled && (
                 <Pressable
                   style={{
                     backgroundColor: colors.danger,
@@ -425,7 +426,7 @@ async function handleLogout() {
                   onPress={async () => {
                     await updateBookingStatus(
                       selectedBooking.id,
-                      BookingStatus.Rejected,
+                      BookingStatus.Cancelled,
                     );
                     setSelectedBooking(null);
                   }}

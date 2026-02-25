@@ -268,7 +268,11 @@ export default function CalendarDayScreen() {
         (b) => b.status !== BookingStatus.Rejected && b.status !== BookingStatus.Cancelled,
       );
     } else if (!isAdmin) {
-      result = result.filter((b) => b.status !== BookingStatus.Rejected);
+      result = result.filter(
+        (b) =>
+          b.status !== BookingStatus.Rejected &&
+          (b.status !== BookingStatus.Cancelled || b.userId === user?.uid),
+      );
     }
 
     if (selectedYachtIds.length === 0) {
@@ -279,7 +283,7 @@ export default function CalendarDayScreen() {
       const bookingYachtIds = getBookingYachtIds(b);
       return bookingYachtIds.some((id) => selectedYachtIds.includes(id));
     });
-  }, [bookings, showCancelledBookings, isAdmin, selectedYachtIds]);
+  }, [bookings, showCancelledBookings, isAdmin, selectedYachtIds, user?.uid]);
 
   const dayBookingLayout = useMemo(
     () => getDayBookingLayout(selectedDay, filteredBookings),
