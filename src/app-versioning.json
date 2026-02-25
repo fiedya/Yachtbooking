@@ -67,6 +67,14 @@
       "[Book] Prawdopodobnie działające sprawdzanie jachtów przy edycji bookingu",
       "[Kal] widok dnia po kliknięciu w dzień kalendarza"
     ]
+  },
+    {
+    "version": "0.1.0",
+    "date": "2026-02-25",
+    "notes": [
+      "[Kal] Wyświetlanie lepszych bookingów",
+      "[All] Wyświetlanie nazw jachtów w bookingu"
+    ]
   }
 
 ]
