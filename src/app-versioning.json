@@ -53,7 +53,7 @@
       "[Admin] Dodanie listy wszystkich bookingów",
       "[Admin] Zamykanie okienka szczegołów bookingu po approve/reject",
       "[Admin] Możliwość zmiany statusu jachtu w liście jachtów",
-      "[Admin] Dodanie możliwości odrzucenia lub oznaczenia jako przeczytaną notatki/uwagi",
+      "[Admin] Dodanie możliwości odrzucenia lub oznaczenia jako przeczytaną notatki/uwagi"
     ]
   },
   {
@@ -73,7 +73,8 @@
     "date": "2026-02-25",
     "notes": [
       "[Kal] Wyświetlanie lepszych bookingów",
-      "[All] Wyświetlanie nazw jachtów w bookingu"
+      "[All] Wyświetlanie nazw jachtów w bookingu",
+      "[All] Optymalizacje w bazie danych i subskrypcjach"
     ]
   }
 
