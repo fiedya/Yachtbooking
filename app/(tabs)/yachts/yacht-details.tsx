@@ -2,11 +2,11 @@ import Icon from "@/src/components/Icon";
 import { Yacht, YachtStatus } from "@/src/entities/yacht";
 import { getYachtStatusLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
+import { useTheme } from "@/src/providers/ThemeContext";
 import { subscribeToUser } from "@/src/services/userService";
 import { getYachtById, updateYacht } from "@/src/services/yachtService";
-import { colors } from "@/src/theme/colors";
-import { headerStyles } from "@/src/theme/header";
-import { styles as theme } from "@/src/theme/styles";
+import { createHeaderStyles } from "@/src/theme/header";
+import { createStyles } from "@/src/theme/styles";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -20,6 +20,9 @@ import {
 import { useMode } from "../../../src/providers/ModeProvider";
 
 export default function YachtDetailsScreen() {
+  const { colors } = useTheme();
+  const theme = createStyles(colors);
+  const headerStyles = createHeaderStyles(colors);
   const { mode } = useMode();
   const [isAdmin, setIsAdmin] = useState(false);
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -155,7 +158,7 @@ export default function YachtDetailsScreen() {
                   disabled={saving}
                 >
                   <Text
-                    style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}
+                    style={{ color: colors.white, fontSize: 12, fontWeight: "600" }}
                   >
                     {saving ? "Zapisywanie..." : "Zapisz"}
                   </Text>
@@ -214,7 +217,7 @@ export default function YachtDetailsScreen() {
                   disabled={saving}
                 >
                   <Text
-                    style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}
+                    style={{ color: colors.white, fontSize: 12, fontWeight: "600" }}
                   >
                     {saving ? "Zapisywanie..." : "Zapisz"}
                   </Text>
@@ -274,7 +277,7 @@ export default function YachtDetailsScreen() {
                   disabled={saving}
                 >
                   <Text
-                    style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}
+                    style={{ color: colors.white, fontSize: 12, fontWeight: "600" }}
                   >
                     {saving ? "Zapisywanie..." : "Zapisz"}
                   </Text>

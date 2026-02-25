@@ -1,7 +1,8 @@
 import { UserStatus } from "@/src/entities/user";
 import { getUserStatusLabel } from "@/src/helpers/enumHelper";
+import { useTheme } from "@/src/providers/ThemeContext";
 import { subscribeToUser, updateUserStatus } from "@/src/services/userService";
-import { styles as theme } from "@/src/theme/styles";
+import { createStyles } from "@/src/theme/styles";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, Platform, Pressable, Text, View } from "react-native";
@@ -15,6 +16,8 @@ type UserDetails = {
 };
 
 export default function UserDetailsScreen() {
+  const { colors } = useTheme();
+  const theme = createStyles(colors);
   const { uid } = useLocalSearchParams<{ uid: string }>();
   const router = useRouter();
   const [user, setUser] = useState<UserDetails | null>(null);

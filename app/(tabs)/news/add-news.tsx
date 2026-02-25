@@ -1,17 +1,20 @@
 import { NewsCategory, NewsStatus } from "@/src/entities/news";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { useMode } from "@/src/providers/ModeProvider";
+import { useTheme } from "@/src/providers/ThemeContext";
 import { addNews } from "@/src/services/newsService";
 import { subscribeToUser } from "@/src/services/userService";
-import { colors } from "@/src/theme/colors";
-import { headerStyles } from "@/src/theme/header";
-import { styles as theme } from "@/src/theme/styles";
+import { createHeaderStyles } from "@/src/theme/header";
+import { createStyles } from "@/src/theme/styles";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 export default function AddNewsScreen() {
+  const { colors } = useTheme();
+  const theme = createStyles(colors);
+  const headerStyles = createHeaderStyles(colors);
   const router = useRouter();
   const { mode } = useMode();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -219,9 +222,9 @@ export default function AddNewsScreen() {
           left: 0,
           right: 0,
           padding: 16,
-          backgroundColor: "#fff",
+          backgroundColor: colors.background,
           borderTopWidth: 1,
-          borderTopColor: "#eee",
+          borderTopColor: colors.border,
         }}
       >
         <Pressable

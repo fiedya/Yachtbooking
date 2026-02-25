@@ -2,10 +2,11 @@ import { BookingStatus } from "@/src/entities/booking";
 import { Note } from "@/src/entities/note";
 import { User } from "@/src/entities/user";
 import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
+import { useTheme } from "@/src/providers/ThemeContext";
 import { subscribeToBooking, updateBookingStatus } from "@/src/services/booking.service";
 import { subscribeToNotesForBooking } from "@/src/services/noteService";
 import { subscribeToAllUsers } from "@/src/services/userService";
-import { styles as theme } from "@/src/theme/styles";
+import { createStyles } from "@/src/theme/styles";
 import dayjs from "dayjs";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -64,6 +65,8 @@ type BookingDetails = {
 };
 
 export default function BookingDetailsScreen() {
+  const { colors } = useTheme();
+  const theme = createStyles(colors);
   const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
   const router = useRouter();
   const [booking, setBooking] = useState<BookingDetails | null>(null);

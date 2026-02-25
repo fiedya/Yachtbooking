@@ -3,31 +3,34 @@ import { BookingStatus } from "@/src/entities/booking";
 import { Yacht } from "@/src/entities/yacht";
 import { getDoc, updateDoc } from "@/src/firebase/init";
 import { useAuth } from "@/src/providers/AuthProvider";
+import { useTheme } from "@/src/providers/ThemeContext";
 import { createBooking } from "@/src/services/booking.service";
 import { getAvailableYachtIds } from "@/src/services/calendarService";
 import { getUser, subscribeToUser } from "@/src/services/userService";
 import { getAvailableYachts } from "@/src/services/yachtService";
-import { colors } from "@/src/theme/colors";
-import { headerStyles } from "@/src/theme/header";
-import { styles } from "@/src/theme/styles";
+import { createHeaderStyles } from "@/src/theme/header";
+import { createStyles } from "@/src/theme/styles";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useIsFocused } from "@react-navigation/native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Alert,
-  FlatList,
-  Image,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
+    Alert,
+    FlatList,
+    Image,
+    Platform,
+    Pressable,
+    ScrollView,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { useMode } from "../../src/providers/ModeProvider";
 
 export default function BookScreen() {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+  const headerStyles = createHeaderStyles(colors);
   const { user } = useAuth();
   const router = useRouter();
   const isFocused = useIsFocused();
@@ -504,7 +507,7 @@ export default function BookScreen() {
       <Text style={styles.label}>Jacht</Text>
       <View style={{ marginTop: 8 }}>
         {orderedYachts.length === 0 ? (
-          <Text style={{ color: "#999", marginTop: 8 }}>Brak dostępnych jachtów</Text>
+          <Text style={{ color: colors.textMuted, marginTop: 8 }}>Brak dostępnych jachtów</Text>
         ) : (
           <FlatList
             data={orderedYachts}
@@ -559,7 +562,7 @@ export default function BookScreen() {
                     style={[
                       styles.yachtName,
                       selected && styles.yachtNameActive,
-                      !isAvailable && { color: "#999" },
+                      !isAvailable && { color: colors.textMuted },
                     ]}
                     numberOfLines={1}
                   >
@@ -569,7 +572,7 @@ export default function BookScreen() {
                     <Text
                       style={{
                         fontSize: 10,
-                        color: "#cc0000",
+                        color: colors.danger,
                         marginTop: 4,
                         marginLeft: 8,
                         marginBottom: 5,

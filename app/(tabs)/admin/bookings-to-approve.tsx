@@ -1,8 +1,8 @@
 import WebDatePicker from "@/src/components/WebDatePicker";
 import { Booking } from "@/src/entities/booking";
+import { useTheme } from "@/src/providers/ThemeContext";
 import { subscribeToUpcomingPendingBookings } from "@/src/services/booking.service";
-import { colors } from "@/src/theme/colors";
-import { styles as theme } from "@/src/theme/styles";
+import { createStyles } from "@/src/theme/styles";
 import dayjs from "dayjs";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -21,6 +21,8 @@ type BookingRow = {
 type SortOption = "yachtName" | "userName" | "createdAt" | "bookingDay";
 
 export default function BookingsToApproveScreen() {
+  const { colors } = useTheme();
+  const theme = createStyles(colors);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [searchText, setSearchText] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("bookingDay");

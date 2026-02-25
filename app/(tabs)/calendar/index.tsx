@@ -8,30 +8,30 @@ import { User } from "@/src/entities/user";
 import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { useMode } from "@/src/providers/ModeProvider";
+import { useTheme } from "@/src/providers/ThemeContext";
 import { subscribeToWeekBookings, updateBookingStatus } from "@/src/services/booking.service";
 import { createNote, subscribeToNotesForBooking } from "@/src/services/noteService";
 import { getUserPhotoUrl, subscribeToAllUsers, subscribeToUser } from "@/src/services/userService";
 import { subscribeToAvailableYachts } from "@/src/services/yachtService";
-import { colors } from "@/src/theme/colors";
-import { headerStyles } from "@/src/theme/header";
+import { createHeaderStyles } from "@/src/theme/header";
 import { spacing } from "@/src/theme/spacing";
-import { styles, styles as theme } from "@/src/theme/styles";
+import { createStyles } from "@/src/theme/styles";
 
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Alert,
-  Animated,
-  Image,
-  PanResponder,
-  Platform,
-  Pressable,
-  ScrollView,
-  Switch,
-  Text,
-  TextInput,
-  View,
-  useWindowDimensions
+    Alert,
+    Animated,
+    Image,
+    PanResponder,
+    Platform,
+    Pressable,
+    ScrollView,
+    Switch,
+    Text,
+    TextInput,
+    View,
+    useWindowDimensions
 } from "react-native";
 
 function startOfWeek(date: Date) {
@@ -180,6 +180,7 @@ function getDayBookingLayout(day: Date, allBookings: any[]) {
 function getBookingBackgroundColor(
   booking: any,
   currentUserId: string | undefined,
+  colors: ReturnType<typeof useTheme>["colors"],
 ) {
   const isUserBooking = booking.userId === currentUserId;
   const isApproved = booking.status === BookingStatus.Approved;
@@ -197,7 +198,11 @@ function getBookingBackgroundColor(
   }
 }
 
-function getBookingFontColor(booking: any, currentUserId: string | undefined) {
+function getBookingFontColor(
+  booking: any,
+  currentUserId: string | undefined,
+  colors: ReturnType<typeof useTheme>["colors"],
+) {
   const isApproved = booking.status === BookingStatus.Approved;
   return isApproved ? colors.white : colors.black;
 }
@@ -286,6 +291,10 @@ function formatNoteDate(value: any) {
 -------------------------------- */
 
 export default function CalendarScreen() {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+  const theme = styles;
+  const headerStyles = createHeaderStyles(colors);
   const { height: viewportHeight } = useWindowDimensions();
   // User preferences state
   const [settings, setSettings] = useState({ useYachtShortcuts: false });
@@ -806,7 +815,7 @@ useEffect(() => {
                         theme.gridBorderBottom,
                         { flex: 1, height: HOUR_ROW_HEIGHT },
                         isToday && {
-                          backgroundColor: "rgba(0, 80, 200, 0.08)", // 👈 translucent
+                          backgroundColor: colors.backgroundSoft,
                         },
                       ]}
                     >
@@ -862,7 +871,7 @@ useEffect(() => {
                                 borderWidth: 1,
                                 borderColor: colors.primary,
                                 borderRadius: 6,
-                                backgroundColor: "rgba(0,0,0,0)",
+                                backgroundColor: colors.transparent,
                                 zIndex: 10,
                               }}
                             />
@@ -879,9 +888,14 @@ useEffect(() => {
                           const backgroundColor = getBookingBackgroundColor(
                             b,
                             user?.uid,
+                            colors,
                           );
 
-                          const fontColor = getBookingFontColor(b, user?.uid);
+                          const fontColor = getBookingFontColor(
+                            b,
+                            user?.uid,
+                            colors,
+                          );
 
                           const displayYacht = getBookingYachtLabel(
                             b,

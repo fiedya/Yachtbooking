@@ -1,10 +1,11 @@
-import { colors } from "@/src/theme/colors";
+import { useTheme } from "@/src/providers/ThemeContext";
 
 import Icon from "@/src/components/Icon";
 import { Tabs } from "expo-router";
 import { useMode } from "../../src/providers/ModeProvider";
 
 export default function TabsLayout() {
+  const { colors } = useTheme();
   const { mode } = useMode();
   const isAdmin = mode === "admin";
 

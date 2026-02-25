@@ -1,8 +1,8 @@
 import { UserStatus } from "@/src/entities/user";
 import { getUserStatusLabel } from "@/src/helpers/enumHelper";
+import { useTheme } from "@/src/providers/ThemeContext";
 import { subscribeToAllUsers } from "@/src/services/userService";
-import { colors } from "@/src/theme/colors";
-import { styles as theme } from "@/src/theme/styles";
+import { createStyles } from "@/src/theme/styles";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, Text, TextInput, View } from "react-native";
@@ -21,14 +21,9 @@ type UserRow = {
 
 const getStatusLabel = getUserStatusLabel;
 
-function getStatusPillStyle(status: UserStatus) {
-  if (status === UserStatus.Verified) return theme.pillInvisible;
-  if (status === UserStatus.ToVerify) return theme.pillSecondary;
-  if (status === UserStatus.Rejected) return theme.pillActive;
-  return theme.pill;
-}
-
 export default function AllUsersScreen() {
+  const { colors } = useTheme();
+  const theme = createStyles(colors);
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
@@ -161,7 +156,18 @@ export default function AllUsersScreen() {
                   <Text style={theme.textMuted}>{item.phone}</Text>
                 </View>
 
-                <View style={[theme.pill, getStatusPillStyle(item.status)]}>
+                <View
+                  style={[
+                    theme.pill,
+                    item.status === UserStatus.Verified
+                      ? theme.pillInvisible
+                      : item.status === UserStatus.ToVerify
+                        ? theme.pillSecondary
+                        : item.status === UserStatus.Rejected
+                          ? theme.pillActive
+                          : theme.pillDefault,
+                  ]}
+                >
                   <Text style={theme.textXs}>
                     {getStatusLabel(item.status)}
                   </Text>

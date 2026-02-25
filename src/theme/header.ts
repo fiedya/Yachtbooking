@@ -1,11 +1,12 @@
-import { colors } from "./colors";
+import { AppColors } from "./colors";
 
-export const headerStyles = {
+export const createHeaderStyles = (colors: AppColors) => ({
   header: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.background,
   },
   title: {
     fontSize: 20,
+    color: colors.textPrimary,
   },
   adminButton: {
     paddingHorizontal: 8,
@@ -17,4 +18,4 @@ export const headerStyles = {
     fontWeight: "600" as const,
     color: colors.primary,
   },
-};
+});

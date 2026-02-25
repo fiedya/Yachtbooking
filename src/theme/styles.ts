@@ -1,8 +1,8 @@
 import { StyleSheet } from "react-native";
-import { colors } from "./colors";
+import { AppColors } from "./colors";
 import { radius, spacing, text } from "./spacing";
 
-export const styles = StyleSheet.create({
+export const createStyles = (colors: AppColors) => StyleSheet.create({
   /* ---------- Layout ---------- */
   screen: {
     flex: 1,
@@ -67,13 +67,13 @@ export const styles = StyleSheet.create({
     fontWeight: "500",
   },
   textOnPrimary: {
-    color: "#ffffff",
+    color: colors.white,
     fontWeight: "500",
   },
 
   versionText: {
     fontSize: 14,
-    color: "#999",
+    color: colors.textMuted,
     margin: 0,
     paddingVertical: 4,
   },
@@ -133,12 +133,12 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: spacing.sm,
     fontSize: text.base,
-    backgroundColor: colors.white,
-    color: colors.textPrimary,
+    backgroundColor: colors.primaryLight,
+    color: colors.white,
   },
 
   inputDefaultText: {
-    color: colors.textPrimary,
+    color: colors.white,
   },
 
   label: {
@@ -179,7 +179,7 @@ export const styles = StyleSheet.create({
     width: 104,
     height: 104,
     borderRadius: 52,
-    backgroundColor: "#e6f0ff",
+    backgroundColor: colors.primaryLight,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -270,7 +270,7 @@ export const styles = StyleSheet.create({
   /* ---------- Highlight states ---------- */
 
   highlightBackground: {
-    backgroundColor: "#eef6ff",
+    backgroundColor: colors.backgroundSoft,
   },
 
   highlightText: {
@@ -323,13 +323,13 @@ export const styles = StyleSheet.create({
     marginRight: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#ddd",
-    backgroundColor: "#fff",
+    borderColor: colors.border,
+    backgroundColor: colors.background,
     overflow: "hidden",
   },
   yachtCardActive: {
     borderColor: colors.primary,
-    backgroundColor: "#eef3ff",
+    backgroundColor: colors.backgroundSoft,
   },
   yachtCardDisabled: {
     opacity: 0.5,
@@ -337,7 +337,7 @@ export const styles = StyleSheet.create({
   yachtImage: {
     width: "100%",
     height: 96,
-    backgroundColor: "#eee",
+    backgroundColor: colors.lightGrey,
   },
   yachtName: {
     paddingVertical: 6,
@@ -353,19 +353,19 @@ export const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     marginTop: 15,
-    backgroundColor: "#fff",
+    backgroundColor: colors.background,
   },
   yacht: {
     marginTop: 8,
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: colors.border,
   },
 
   yachtActive: {
     borderColor: colors.primary,
-    backgroundColor: "#eef3ff",
+    backgroundColor: colors.backgroundSoft,
   },
 
   yachtText: {
@@ -385,7 +385,7 @@ export const styles = StyleSheet.create({
   },
 
   submitText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -395,8 +395,8 @@ export const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#ddd",
-    backgroundColor: "#fafafa",
+    borderColor: colors.border,
+    backgroundColor: colors.backgroundSoft,
   },
 
   datePickerOverlay: {
@@ -407,7 +407,7 @@ export const styles = StyleSheet.create({
 },
 
 datePickerContainer: {
-  backgroundColor: "white",
+  backgroundColor: colors.background,
   borderRadius: 12,
   padding: 10,
 },

@@ -1,3 +1,4 @@
+import { useTheme } from "@/src/providers/ThemeContext";
 import Constants from "expo-constants";
 import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
@@ -10,6 +11,8 @@ type VersionNote = {
 };
 
 export default function AppVersioningScreen() {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const [versions, setVersions] = useState<VersionNote[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,7 +29,7 @@ export default function AppVersioningScreen() {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff" }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Stack.Screen options={{ title: "Historia wersji" }} />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.currentVersion}>
@@ -42,7 +45,7 @@ export default function AppVersioningScreen() {
               key={v.version}
               style={[
                 styles.card,
-                isCurrent && { borderWidth: 2, borderColor: "#FF7A00" },
+                isCurrent && { borderWidth: 2, borderColor: colors.secondary },
               ]}
             >
               <Text style={styles.version}>
@@ -67,7 +70,7 @@ export default function AppVersioningScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) => StyleSheet.create({
   container: {
     padding: 16,
     paddingBottom: 32,
@@ -76,19 +79,19 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     marginBottom: 8,
-    color: "#003366",
+    color: colors.primary,
   },
   currentVersion: {
     fontSize: 16,
-    color: "#003366",
+    color: colors.primary,
     marginBottom: 16,
   },
   card: {
-    backgroundColor: "#f7f7fa",
+    backgroundColor: colors.backgroundSoft,
     borderRadius: 8,
     padding: 14,
     marginBottom: 14,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOpacity: 0.04,
     shadowRadius: 2,
     shadowOffset: { width: 0, height: 1 },
@@ -97,13 +100,13 @@ const styles = StyleSheet.create({
   version: {
     fontWeight: "bold",
     fontSize: 16,
-    color: "#003366",
+    color: colors.primary,
     marginBottom: 2,
   },
   date: {
     fontWeight: "normal",
     fontSize: 13,
-    color: "#888",
+    color: colors.textMuted,
   },
   notesList: {
     marginTop: 4,
@@ -111,11 +114,11 @@ const styles = StyleSheet.create({
   },
   noteItem: {
     fontSize: 15,
-    color: "#222",
+    color: colors.textPrimary,
     marginBottom: 2,
   },
   error: {
-    color: "red",
+    color: colors.danger,
     marginBottom: 10,
   },
 });

@@ -1,14 +1,16 @@
 import { useAuth } from "@/src/providers/AuthProvider";
+import { useTheme } from "@/src/providers/ThemeContext";
 import {
     subscribeToUser,
     updateUserPreferences,
 } from "@/src/services/userService";
-import { colors } from "@/src/theme/colors";
-import { styles as theme } from "@/src/theme/styles";
+import { createStyles } from "@/src/theme/styles";
 import { useEffect, useState } from "react";
 import { Alert, Switch, Text, View } from "react-native";
 
 export default function SettingsScreen() {
+  const { colors, themeMode, toggleTheme } = useTheme();
+  const theme = createStyles(colors);
   const { user } = useAuth();
   const [prefs, setPrefs] = useState({
     usePseudonims: false,
@@ -82,6 +84,15 @@ export default function SettingsScreen() {
             prefs.useYachtShortcuts ? colors.primary : colors.primaryLight
           }
           disabled={!!updating.useYachtShortcuts}
+        />
+      </View>
+      <View style={{ flexDirection: "row", alignItems: "center", marginTop: 24 }}>
+        <Text style={[theme.label, { flex: 1 }]}>Tryb ciemny</Text>
+        <Switch
+          value={themeMode === "dark"}
+          onValueChange={toggleTheme}
+          trackColor={{ false: colors.lightGrey, true: colors.primary }}
+          thumbColor={themeMode === "dark" ? colors.primary : colors.primaryLight}
         />
       </View>
     </View>

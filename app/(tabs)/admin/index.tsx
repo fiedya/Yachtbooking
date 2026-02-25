@@ -1,13 +1,17 @@
 import { useAuth } from "@/src/providers/AuthProvider";
+import { useTheme } from "@/src/providers/ThemeContext";
 import { subscribeToUser } from "@/src/services/userService";
-import { headerStyles } from "@/src/theme/header";
-import { styles } from "@/src/theme/styles";
+import { createHeaderStyles } from "@/src/theme/header";
+import { createStyles } from "@/src/theme/styles";
 import { Stack, useRootNavigationState, useRouter } from "expo-router";
 import { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useMode } from "../../../src/providers/ModeProvider";
 
 export default function AdminScreen() {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+  const headerStyles = createHeaderStyles(colors);
   const router = useRouter();
   const rootNavigationState = useRootNavigationState();
   const { mode } = useMode();

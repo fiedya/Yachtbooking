@@ -1,8 +1,8 @@
 import WebDatePicker from "@/src/components/WebDatePicker";
 import { Booking } from "@/src/entities/booking";
+import { useTheme } from "@/src/providers/ThemeContext";
 import { subscribeToUpcomingBookings } from "@/src/services/booking.service";
-import { colors } from "@/src/theme/colors";
-import { styles as theme } from "@/src/theme/styles";
+import { createStyles } from "@/src/theme/styles";
 import dayjs from "dayjs";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -11,6 +11,8 @@ import { FlatList, Pressable, Text, TextInput, View } from "react-native";
 type SortOption = "yachtName" | "userName" | "createdAt" | "bookingDay";
 
 export default function AllBookingsScreen() {
+  const { colors } = useTheme();
+  const theme = createStyles(colors);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [searchText, setSearchText] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("bookingDay");

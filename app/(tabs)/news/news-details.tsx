@@ -2,18 +2,21 @@ import Icon from "@/src/components/Icon";
 import { News, NewsCategory } from "@/src/entities/news";
 import { getNewsCategoryLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
+import { useTheme } from "@/src/providers/ThemeContext";
 import { getNewsById, updateNews } from "@/src/services/newsService";
 import { subscribeToUser } from "@/src/services/userService";
-import { colors } from "@/src/theme/colors";
-import { headerStyles } from "@/src/theme/header";
+import { createHeaderStyles } from "@/src/theme/header";
 import { spacing } from "@/src/theme/spacing";
-import { styles as theme } from "@/src/theme/styles";
+import { createStyles } from "@/src/theme/styles";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useMode } from "../../../src/providers/ModeProvider";
 
 export default function NewsDetailsScreen() {
+  const { colors } = useTheme();
+  const theme = createStyles(colors);
+  const headerStyles = createHeaderStyles(colors);
   const { mode } = useMode();
   const [isAdmin, setIsAdmin] = useState(false);
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -92,7 +95,7 @@ export default function NewsDetailsScreen() {
       >
         <View style={[theme.card, theme.cardPadding]}>
 
-          <Text style={{ color: '#888', marginBottom: 8 }}>
+          <Text style={{ color: colors.textMuted, marginBottom: 8 }}>
             Dodano: {news.createdAt?.toDate ? news.createdAt.toDate().toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}
           </Text>
 
@@ -123,7 +126,7 @@ export default function NewsDetailsScreen() {
                 onPress={() => saveField("description")}
                 disabled={saving}
               >
-                <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>
+                <Text style={{ color: colors.white, fontSize: 12, fontWeight: "600" }}>
                   {saving ? "Zapisywanie..." : "Zapisz"}
                 </Text>
               </Pressable>
@@ -132,7 +135,7 @@ export default function NewsDetailsScreen() {
                 onPress={() => setEditingField(null)}
                 disabled={saving}
               >
-                <Text style={{ color: "#cc0000" }}>Anuluj</Text>
+                <Text style={{ color: colors.danger }}>Anuluj</Text>
               </Pressable>
             </View>
           ) : (
@@ -164,7 +167,7 @@ export default function NewsDetailsScreen() {
           )}
 
           {/* Editable Category */}
-          <Text style={{ color: '#888', marginBottom: 8 }}>
+          <Text style={{ color: colors.textMuted, marginBottom: 8 }}>
             Kategoria: {editingField === 'category' ? (
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
                 {Object.entries(NewsCategory)
@@ -203,7 +206,7 @@ export default function NewsDetailsScreen() {
           </Text>
 
           {/* Deactivation Date (same format as createdAt) */}
-          <Text style={{ color: '#888', marginBottom: 8 }}>
+          <Text style={{ color: colors.textMuted, marginBottom: 8 }}>
             Info zniknie: {news.dateOfDeactivate?.toDate ? news.dateOfDeactivate.toDate().toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}
           </Text>
 

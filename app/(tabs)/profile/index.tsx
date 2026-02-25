@@ -4,13 +4,13 @@ import { Note } from "@/src/entities/note";
 import { getCurrentUser, signOut } from "@/src/firebase/init";
 import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
+import { useTheme } from "@/src/providers/ThemeContext";
 import { updateBookingStatus } from "@/src/services/booking.service";
 import { subscribeToBookings } from "@/src/services/calendarService";
 import { uploadImage } from "@/src/services/imageUploadService";
 import { createNote, subscribeToNotesForBooking } from "@/src/services/noteService";
-import { colors } from "@/src/theme/colors";
-import { headerStyles } from "@/src/theme/header";
-import { styles as theme } from "@/src/theme/styles";
+import { createHeaderStyles } from "@/src/theme/header";
+import { createStyles } from "@/src/theme/styles";
 import { pickImageFromGallery } from "@/src/utils/pickImage";
 import Constants from "expo-constants";
 import { Stack, useRouter } from "expo-router";
@@ -20,7 +20,7 @@ import {
     Pressable,
     ScrollView,
     Text,
-  TextInput,
+    TextInput,
     View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -53,6 +53,9 @@ function formatNoteDate(value: any) {
 }
 
 export default function ProfileScreen() {
+  const { colors } = useTheme();
+  const theme = createStyles(colors);
+  const headerStyles = createHeaderStyles(colors);
   const router = useRouter();
   const [profile, setProfile] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -244,7 +247,7 @@ async function handleLogout() {
                 style={{ marginLeft: 12, padding: 4 }}
                 accessibilityLabel="Ustawienia"
               >
-                <Icon type="material" name="settings" size={26} color="#003366" />
+                <Icon type="material" name="settings" size={26} color={colors.primary} />
               </Pressable>
             </View>
           ),
@@ -317,7 +320,7 @@ async function handleLogout() {
                 onPress={() => saveField('description')}
                 disabled={saving}
               >
-                <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>
+                <Text style={{ color: colors.white, fontSize: 12, fontWeight: '600' }}>
                   {saving ? 'Zapisywanie...' : 'Zapisz'}
                 </Text>
               </Pressable>
@@ -343,7 +346,7 @@ async function handleLogout() {
                   style={{
                     paddingVertical: 10,
                     borderBottomWidth: 1,
-                    borderColor: "#eee",
+                    borderColor: colors.border,
                   }}
                   onPress={() => setSelectedBooking(b)}
                 >

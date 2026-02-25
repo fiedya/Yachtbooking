@@ -2,16 +2,18 @@ import Icon from "@/src/components/Icon";
 import { Yacht, YachtStatus } from "@/src/entities/yacht";
 import { getYachtStatusLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
+import { useTheme } from "@/src/providers/ThemeContext";
 import { subscribeToUser } from "@/src/services/userService";
 import { subscribeToYachts } from "@/src/services/yachtService";
-import { colors } from "@/src/theme/colors";
-import { styles as theme } from "@/src/theme/styles";
+import { createStyles } from "@/src/theme/styles";
 import { router, Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { FlatList, Image, Pressable, Text, View } from "react-native";
 import { useMode } from "../../../src/providers/ModeProvider";
 
 export default function YachtsScreen() {
+  const { colors } = useTheme();
+  const theme = createStyles(colors);
   const [allYachts, setAllYachts] = useState<Yacht[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<YachtStatus | "all">(YachtStatus.Available);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
@@ -182,7 +184,7 @@ export default function YachtsScreen() {
             elevation: 4,
           }}
         >
-          <Icon name="add" size={28} color="#fff" />
+          <Icon name="add" size={28} color={colors.white} />
         </Pressable>
       )}
     </>

@@ -2,11 +2,11 @@ import WebDatePicker from "@/src/components/WebDatePicker";
 import { Booking } from "@/src/entities/booking";
 import { Note } from "@/src/entities/note";
 import { User } from "@/src/entities/user";
+import { useTheme } from "@/src/providers/ThemeContext";
 import { subscribeToUpcomingBookings } from "@/src/services/booking.service";
 import { subscribeToNotesForBookingIds } from "@/src/services/noteService";
 import { subscribeToAllUsers } from "@/src/services/userService";
-import { colors } from "@/src/theme/colors";
-import { styles as theme } from "@/src/theme/styles";
+import { createStyles } from "@/src/theme/styles";
 import dayjs from "dayjs";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -15,6 +15,8 @@ import { FlatList, Pressable, Text, TextInput, View } from "react-native";
 type SortOption = "yachtName" | "userName" | "createdAt" | "bookingDay" | "read";
 
 export default function NewNotesScreen() {
+  const { colors } = useTheme();
+  const theme = createStyles(colors);
   const [notes, setNotes] = useState<Note[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [users, setUsers] = useState<User[]>([]);

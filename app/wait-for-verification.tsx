@@ -1,12 +1,15 @@
 import { UserStatus } from "@/src/entities/user";
 import { useAuth } from "@/src/providers/AuthProvider";
+import { useTheme } from "@/src/providers/ThemeContext";
 import { subscribeToUser } from "@/src/services/userService";
-import { styles as theme } from "@/src/theme/styles";
+import { createStyles } from "@/src/theme/styles";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { Text, View } from "react-native";
 
 export default function WaitForVerificationScreen() {
+  const { colors } = useTheme();
+  const theme = createStyles(colors);
   const { user } = useAuth();
   const router = useRouter();
 

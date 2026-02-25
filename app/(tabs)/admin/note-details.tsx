@@ -2,11 +2,11 @@ import Icon from "@/src/components/Icon";
 import { Booking } from "@/src/entities/booking";
 import { Note } from "@/src/entities/note";
 import { User } from "@/src/entities/user";
+import { useTheme } from "@/src/providers/ThemeContext";
 import { subscribeToBooking } from "@/src/services/booking.service";
 import { rejectNote, subscribeToNote, updateNoteReadStatus } from "@/src/services/noteService";
 import { subscribeToAllUsers } from "@/src/services/userService";
-import { colors } from "@/src/theme/colors";
-import { styles as theme } from "@/src/theme/styles";
+import { createStyles } from "@/src/theme/styles";
 import dayjs from "dayjs";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -15,6 +15,8 @@ import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 type BookingInfo = Booking | null;
 
 export default function NoteDetailsScreen() {
+  const { colors } = useTheme();
+  const theme = createStyles(colors);
   const { noteId } = useLocalSearchParams<{ noteId: string }>();
   const router = useRouter();
   const [note, setNote] = useState<Note | null>(null);

@@ -1,17 +1,20 @@
 import Icon from "@/src/components/Icon";
 import { News } from "@/src/entities/news";
 import { useAuth } from "@/src/providers/AuthProvider";
+import { useTheme } from "@/src/providers/ThemeContext";
 import { subscribeToNews } from "@/src/services/newsService";
 import { subscribeToUser } from "@/src/services/userService";
-import { colors } from "@/src/theme/colors";
-import { headerStyles } from "@/src/theme/header";
-import { styles as theme } from "@/src/theme/styles";
+import { createHeaderStyles } from "@/src/theme/header";
+import { createStyles } from "@/src/theme/styles";
 import { Stack, router } from "expo-router";
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 import { useMode } from "../../../src/providers/ModeProvider";
 
 export default function NewsScreen() {
+  const { colors } = useTheme();
+  const theme = createStyles(colors);
+  const headerStyles = createHeaderStyles(colors);
   const { mode } = useMode();
   const [isAdmin, setIsAdmin] = useState(false);
   const [news, setNews] = useState<News[]>([]);
@@ -101,7 +104,7 @@ export default function NewsScreen() {
             elevation: 4,
           }}
         >
-          <Icon name="add" size={28} color="#fff" />
+          <Icon name="add" size={28} color={colors.white} />
         </Pressable>
       )}
     </View>

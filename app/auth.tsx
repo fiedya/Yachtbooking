@@ -1,15 +1,15 @@
-import { colors } from "@/src/theme/colors";
-import { styles as theme } from "@/src/theme/styles";
+import { useTheme } from "@/src/providers/ThemeContext";
+import { createStyles } from "@/src/theme/styles";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Image,
-  Platform,
-  Pressable,
-  Text,
-  TextInput,
-  View,
+    ActivityIndicator,
+    Image,
+    Platform,
+    Pressable,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 
 
@@ -20,6 +20,8 @@ declare global {
 }
 
 export default function AuthScreen() {
+  const { colors } = useTheme();
+  const theme = createStyles(colors);
   const router = useRouter();
   const confirmationRef = useRef<any>(null);
 
@@ -151,7 +153,7 @@ export default function AuthScreen() {
               disabled={loading || phone.length < 6}
             >
               {loading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={colors.white} />
               ) : (
                 <Text style={theme.buttonText}>Wyślij kod</Text>
               )}
@@ -178,7 +180,7 @@ export default function AuthScreen() {
               disabled={loading || code.length < 4}
             >
               {loading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={colors.white} />
               ) : (
                 <Text style={theme.buttonText}>Zaloguj</Text>
               )}

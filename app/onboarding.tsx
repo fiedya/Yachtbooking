@@ -1,20 +1,22 @@
-import { colors } from "@/src/theme/colors";
-import { styles, styles as theme } from "@/src/theme/styles";
+import { useTheme } from "@/src/providers/ThemeContext";
+import { createStyles } from "@/src/theme/styles";
 
 import { useAuth } from "@/src/providers/AuthProvider";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  Text,
-  TextInput,
-  View,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { createOrUpdateUser } from "../src/services/userService";
 
 export default function OnboardingScreen() {
+  const { colors } = useTheme();
+  const theme = createStyles(colors);
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
   const [pseudonim, setPseudonim] = useState("");
@@ -111,7 +113,7 @@ export default function OnboardingScreen() {
         </View>
 
         <Pressable
-          style={[styles.submit, (!name || !surname) && styles.submitDisabled]}
+          style={[theme.submit, (!name || !surname) && theme.submitDisabled]}
           onPress={handleContinue}
           disabled={!name || !surname || loading}
         >

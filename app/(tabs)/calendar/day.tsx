@@ -4,12 +4,12 @@ import { Note } from "@/src/entities/note";
 import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { useMode } from "@/src/providers/ModeProvider";
+import { useTheme } from "@/src/providers/ThemeContext";
 import { subscribeToWeekBookings, updateBookingStatus } from "@/src/services/booking.service";
 import { createNote, subscribeToNotesForBooking } from "@/src/services/noteService";
 import { getUserPhotoUrl } from "@/src/services/userService";
-import { colors } from "@/src/theme/colors";
-import { headerStyles } from "@/src/theme/header";
-import { styles as theme } from "@/src/theme/styles";
+import { createHeaderStyles } from "@/src/theme/header";
+import { createStyles } from "@/src/theme/styles";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Image, Pressable, ScrollView, Switch, Text, TextInput, View } from "react-native";
@@ -160,7 +160,11 @@ function getDayBookingLayout(day: Date, allBookings: any[]) {
   return layoutById;
 }
 
-function getBookingBackgroundColor(booking: any, currentUserId: string | undefined) {
+function getBookingBackgroundColor(
+  booking: any,
+  currentUserId: string | undefined,
+  colors: ReturnType<typeof useTheme>["colors"],
+) {
   const isUserBooking = booking.userId === currentUserId;
   const isApproved = booking.status === BookingStatus.Approved;
   const isRejected = booking.status === BookingStatus.Rejected;
@@ -177,7 +181,10 @@ function getBookingBackgroundColor(booking: any, currentUserId: string | undefin
   return isApproved ? colors.primary : colors.lightGrey;
 }
 
-function getBookingFontColor(booking: any) {
+function getBookingFontColor(
+  booking: any,
+  colors: ReturnType<typeof useTheme>["colors"],
+) {
   const isApproved = booking.status === BookingStatus.Approved;
   return isApproved ? colors.white : colors.black;
 }
@@ -216,6 +223,9 @@ function getBookingYachtLabel(booking: any) {
 }
 
 export default function CalendarDayScreen() {
+  const { colors } = useTheme();
+  const theme = createStyles(colors);
+  const headerStyles = createHeaderStyles(colors);
   const router = useRouter();
   const { user } = useAuth();
   const { mode } = useMode();
@@ -429,8 +439,12 @@ export default function CalendarDayScreen() {
                   const columnLayout = dayBookingLayout[b.id];
                   if (!columnLayout) return null;
 
-                  const backgroundColor = getBookingBackgroundColor(b, user?.uid);
-                  const fontColor = getBookingFontColor(b);
+                  const backgroundColor = getBookingBackgroundColor(
+                    b,
+                    user?.uid,
+                    colors,
+                  );
+                  const fontColor = getBookingFontColor(b, colors);
 
                   return (
                     <Pressable

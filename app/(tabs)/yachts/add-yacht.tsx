@@ -1,12 +1,12 @@
 import { YachtStatus } from "@/src/entities/yacht";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { useMode } from "@/src/providers/ModeProvider";
+import { useTheme } from "@/src/providers/ThemeContext";
 import { uploadImage } from "@/src/services/imageUploadService";
 import { subscribeToUser } from "@/src/services/userService";
 import { addYacht } from "@/src/services/yachtService";
-import { colors } from "@/src/theme/colors";
-import { headerStyles } from "@/src/theme/header";
-import { styles as theme } from "@/src/theme/styles";
+import { createHeaderStyles } from "@/src/theme/header";
+import { createStyles } from "@/src/theme/styles";
 import { pickImageFromGallery } from "@/src/utils/pickImage";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -20,6 +20,9 @@ import {
 } from "react-native";
 
 export default function AddEditYachtScreen() {
+  const { colors } = useTheme();
+  const theme = createStyles(colors);
+  const headerStyles = createHeaderStyles(colors);
   const router = useRouter();
 
   const { mode } = useMode();
@@ -123,7 +126,7 @@ export default function AddEditYachtScreen() {
               height: 200,
               borderRadius: 12,
               overflow: "hidden",
-              backgroundColor: "#eee",
+              backgroundColor: colors.lightGrey,
               marginBottom: 4,
             }}
           >
@@ -268,9 +271,9 @@ export default function AddEditYachtScreen() {
           left: 0,
           right: 0,
           padding: 16,
-          backgroundColor: "#fff",
+          backgroundColor: colors.background,
           borderTopWidth: 1,
-          borderTopColor: "#eee",
+          borderTopColor: colors.border,
         }}
       >
         <Pressable
