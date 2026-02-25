@@ -1,8 +1,9 @@
+import WebDatePicker from "@/src/components/WebDatePicker";
 import { Booking } from "@/src/entities/booking";
 import { Note } from "@/src/entities/note";
 import { User } from "@/src/entities/user";
-import { subscribeToAllBookings } from "@/src/services/booking.service";
-import { subscribeToAllNotes } from "@/src/services/noteService";
+import { subscribeToUpcomingBookings } from "@/src/services/booking.service";
+import { subscribeToNotesForBookingIds } from "@/src/services/noteService";
 import { subscribeToAllUsers } from "@/src/services/userService";
 import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";
@@ -22,35 +23,73 @@ export default function NewNotesScreen() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const [filterStartDate, setFilterStartDate] = useState(() => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return now;
+  });
+
+  const [filterEndDate, setFilterEndDate] = useState(() => {
+    const end = new Date();
+    end.setHours(0, 0, 0, 0);
+    end.setDate(end.getDate() + 14);
+    return end;
+  });
+
+  const windowStart = useMemo(() => {
+    const start = new Date(filterStartDate);
+    start.setHours(0, 0, 0, 0);
+    return start;
+  }, [filterStartDate]);
+
+  const windowEnd = useMemo(() => {
+    const end = new Date(filterEndDate);
+    end.setHours(0, 0, 0, 0);
+    end.setDate(end.getDate() + 1);
+    return end;
+  }, [filterEndDate]);
+
+  useEffect(() => {
+    if (filterEndDate < filterStartDate) {
+      setFilterEndDate(new Date(filterStartDate));
+    }
+  }, [filterStartDate, filterEndDate]);
+
   useEffect(() => {
     setLoading(true);
 
-    const unsub = subscribeToAllNotes(
-      (nextNotes) => {
-        setNotes(nextNotes);
-        setLoading(false);
-      },
-      (error) => {
-        console.error("[NEW NOTES] snapshot error:", error);
-        setLoading(false);
-      },
-    );
-
-    return unsub;
-  }, []);
-
-  useEffect(() => {
-    const unsub = subscribeToAllBookings(
+    const unsub = subscribeToUpcomingBookings(
+      windowStart,
+      windowEnd,
       (nextBookings) => {
         setBookings(nextBookings);
       },
       (error) => {
         console.error("[NEW NOTES] bookings snapshot error:", error);
+        setLoading(false);
       },
     );
 
     return unsub;
-  }, []);
+  }, [windowStart, windowEnd]);
+
+  useEffect(() => {
+    const bookingIds = bookings.map((booking) => booking.id);
+
+    const unsub = subscribeToNotesForBookingIds(
+      bookingIds,
+      (nextNotes) => {
+        setNotes(nextNotes);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("[NEW NOTES] notes snapshot error:", error);
+        setLoading(false);
+      },
+    );
+
+    return unsub;
+  }, [bookings]);
 
   useEffect(() => {
     const unsub = subscribeToAllUsers(
@@ -201,6 +240,25 @@ export default function NewNotesScreen() {
           <SortButton value="createdAt" label="Data utworzenia" />
           <SortButton value="bookingDay" label="Dzień rezerwacji" />
           <SortButton value="read" label="Status" />
+        </View>
+
+        <View style={{ marginTop: 4 }}>
+          <Text style={[theme.textMuted, { marginBottom: 6 }]}>Zakres dat</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Text style={theme.textSecondary}>Start</Text>
+            <WebDatePicker
+              value={filterStartDate}
+              onChange={(date) => setFilterStartDate(date)}
+              mode="date"
+            />
+            <Text style={theme.textSecondary}>End</Text>
+            <WebDatePicker
+              value={filterEndDate}
+              onChange={(date) => setFilterEndDate(date)}
+              mode="date"
+              minDate={filterStartDate}
+            />
+          </View>
         </View>
       </View>
 

@@ -1,5 +1,6 @@
+import WebDatePicker from "@/src/components/WebDatePicker";
 import { Booking } from "@/src/entities/booking";
-import { subscribeToAllBookings } from "@/src/services/booking.service";
+import { subscribeToUpcomingBookings } from "@/src/services/booking.service";
 import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";
 import dayjs from "dayjs";
@@ -16,15 +17,49 @@ export default function AllBookingsScreen() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const [filterStartDate, setFilterStartDate] = useState(() => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return now;
+  });
+
+  const [filterEndDate, setFilterEndDate] = useState(() => {
+    const end = new Date();
+    end.setHours(0, 0, 0, 0);
+    end.setDate(end.getDate() + 14);
+    return end;
+  });
+
   const getBookingYachtLabel = (booking: Booking) => {
     const yachtNames = booking.yachtNames ?? (booking.yachtName ? [booking.yachtName] : []);
     return yachtNames.join(", ");
   };
 
+  const windowStart = useMemo(() => {
+    const start = new Date(filterStartDate);
+    start.setHours(0, 0, 0, 0);
+    return start;
+  }, [filterStartDate]);
+
+  const windowEnd = useMemo(() => {
+    const end = new Date(filterEndDate);
+    end.setHours(0, 0, 0, 0);
+    end.setDate(end.getDate() + 1);
+    return end;
+  }, [filterEndDate]);
+
+  useEffect(() => {
+    if (filterEndDate < filterStartDate) {
+      setFilterEndDate(new Date(filterStartDate));
+    }
+  }, [filterStartDate, filterEndDate]);
+
   useEffect(() => {
     setLoading(true);
 
-    const unsub = subscribeToAllBookings(
+    const unsub = subscribeToUpcomingBookings(
+      windowStart,
+      windowEnd,
       (nextBookings) => {
         setBookings(nextBookings);
         setLoading(false);
@@ -36,7 +71,7 @@ export default function AllBookingsScreen() {
     );
 
     return unsub;
-  }, []);
+  }, [windowStart, windowEnd]);
 
   const filteredAndSortedBookings = useMemo(() => {
     let result = [...bookings];
@@ -123,6 +158,25 @@ export default function AllBookingsScreen() {
           <SortButton value="userName" label="Rezerwujący" />
           <SortButton value="createdAt" label="Data utworzenia" />
           <SortButton value="bookingDay" label="Dzień rezerwacji" />
+        </View>
+
+        <View style={{ marginTop: 4 }}>
+          <Text style={[theme.textMuted, { marginBottom: 6 }]}>Zakres dat</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Text style={theme.textSecondary}>Start</Text>
+            <WebDatePicker
+              value={filterStartDate}
+              onChange={(date) => setFilterStartDate(date)}
+              mode="date"
+            />
+            <Text style={theme.textSecondary}>End</Text>
+            <WebDatePicker
+              value={filterEndDate}
+              onChange={(date) => setFilterEndDate(date)}
+              mode="date"
+              minDate={filterStartDate}
+            />
+          </View>
         </View>
       </View>
 

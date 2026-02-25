@@ -1,33 +1,39 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
 import {
-  browserLocalPersistence,
-  getAuth,
-  RecaptchaVerifier,
-  setPersistence,
-  signInWithPhoneNumber,
+    browserLocalPersistence,
+    getAuth,
+    RecaptchaVerifier,
+    setPersistence,
+    signInWithPhoneNumber,
 } from "firebase/auth";
 
 import {
-  getDoc as _getDoc,
-  onSnapshot as _onSnapshot,
-  setDoc as _setDoc,
-  updateDoc as _updateDoc,
-  addDoc,
-  collection,
-  doc,
-  getDocs,
-  getFirestore,
-  limit,
-  orderBy,
-  query,
-  serverTimestamp,
-  where,
-  WhereFilterOp
+    getDoc as _getDoc,
+    onSnapshot as _onSnapshot,
+    setDoc as _setDoc,
+    updateDoc as _updateDoc,
+    addDoc,
+    collection,
+    doc,
+    getDocs,
+    getFirestore,
+    limit,
+    orderBy,
+    query,
+    serverTimestamp,
+    where,
+    WhereFilterOp
 } from "firebase/firestore";
 
 
 type WhereTuple = [string, WhereFilterOp, any];
 type OrderByTuple = [string, "asc" | "desc"];
+
+type QueryOptions = {
+  where?: WhereTuple | WhereTuple[];
+  orderBy?: OrderByTuple | OrderByTuple[];
+  limit?: number;
+};
 
 
 /* INIT */
@@ -98,20 +104,28 @@ export function updateDoc(col: string, id: string, data: any) {
 
 export function queryDocs(
   col: string,
-  opts: {
-    where?: WhereTuple;
-    orderBy?: OrderByTuple;
-    limit?: number;
-  },
+  opts: QueryOptions,
 ) {
   let q: any = collection(db, col);
 
   if (opts.where) {
-    q = query(q, where(...opts.where));
+    const whereClauses = Array.isArray(opts.where[0])
+      ? (opts.where as WhereTuple[])
+      : [opts.where as WhereTuple];
+
+    whereClauses.forEach((clause) => {
+      q = query(q, where(...clause));
+    });
   }
 
   if (opts.orderBy) {
-    q = query(q, orderBy(...opts.orderBy));
+    const orderByClauses = Array.isArray(opts.orderBy[0])
+      ? (opts.orderBy as OrderByTuple[])
+      : [opts.orderBy as OrderByTuple];
+
+    orderByClauses.forEach((clause) => {
+      q = query(q, orderBy(...clause));
+    });
   }
 
   if (opts.limit) {
@@ -121,9 +135,39 @@ export function queryDocs(
   return getDocs(q);
 }
 
+export function onSnapshot(
+  col: string,
+  cb: any,
+  err?: (error: unknown) => void,
+  opts?: QueryOptions,
+) {
+  let q: any = collection(db, col);
 
-export function onSnapshot(col: string, cb: any) {
-  return _onSnapshot(collection(db, col), cb);
+  if (opts?.where) {
+    const whereClauses = Array.isArray(opts.where[0])
+      ? (opts.where as WhereTuple[])
+      : [opts.where as WhereTuple];
+
+    whereClauses.forEach((clause) => {
+      q = query(q, where(...clause));
+    });
+  }
+
+  if (opts?.orderBy) {
+    const orderByClauses = Array.isArray(opts.orderBy[0])
+      ? (opts.orderBy as OrderByTuple[])
+      : [opts.orderBy as OrderByTuple];
+
+    orderByClauses.forEach((clause) => {
+      q = query(q, orderBy(...clause));
+    });
+  }
+
+  if (opts?.limit) {
+    q = query(q, limit(opts.limit));
+  }
+
+  return _onSnapshot(q, cb, err as any);
 }
 
 export function addDocAuto(col: string, data: any) {

@@ -89,9 +89,6 @@ export function subscribeToPendingBookings(
           id: doc.id,
           ...(doc.data() as Omit<Booking, "id">),
         }))
-        // status == Pending
-        .filter((b: { status: BookingStatus; }) => b.status === BookingStatus.Pending)
-        // orderBy start asc
         .sort(
           (a: { start: { toDate: () => { (): any; new(): any; getTime: { (): number; new(): any; }; }; }; }, b: { start: { toDate: () => { (): any; new(): any; getTime: { (): number; new(): any; }; }; }; }) =>
             a.start?.toDate?.()?.getTime?.() -
@@ -101,6 +98,9 @@ export function subscribeToPendingBookings(
       onChange(bookings);
     },
     onError,
+    {
+      where: ["status", "==", BookingStatus.Pending],
+    },
   );
 }
 
@@ -143,6 +143,90 @@ export function subscribeToAllBookings(
       onChange(bookings);
     },
     onError,
+    {
+      orderBy: ["start", "asc"],
+    },
+  );
+}
+
+export function subscribeToUpcomingBookings(
+  rangeStart: Date,
+  rangeEnd: Date,
+  onChange: (bookings: Booking[]) => void,
+  onError?: (error: unknown) => void,
+) {
+  return onSnapshot(
+    "bookings",
+    (snapshot: any) => {
+      if (!snapshot) {
+        onChange([]);
+        return;
+      }
+
+      const docs = snapshot.docs ?? snapshot._docs ?? [];
+
+      const bookings: Booking[] = docs
+        .map((doc: any) => ({
+          id: doc.id,
+          ...(doc.data() as Omit<Booking, "id">),
+        }))
+        .sort(
+          (a: { start: { toDate: () => { (): any; new(): any; getTime: { (): number; new(): any; }; }; }; }, b: { start: { toDate: () => { (): any; new(): any; getTime: { (): number; new(): any; }; }; }; }) =>
+            a.start?.toDate?.()?.getTime?.() -
+            b.start?.toDate?.()?.getTime?.(),
+        );
+
+      onChange(bookings);
+    },
+    onError,
+    {
+      where: [
+        ["start", ">=", rangeStart],
+        ["start", "<", rangeEnd],
+      ],
+      orderBy: ["start", "asc"],
+    },
+  );
+}
+
+export function subscribeToUpcomingPendingBookings(
+  rangeStart: Date,
+  rangeEnd: Date,
+  onChange: (bookings: Booking[]) => void,
+  onError?: (error: unknown) => void,
+) {
+  return onSnapshot(
+    "bookings",
+    (snapshot: any) => {
+      if (!snapshot) {
+        onChange([]);
+        return;
+      }
+
+      const docs = snapshot.docs ?? snapshot._docs ?? [];
+
+      const bookings: Booking[] = docs
+        .map((doc: any) => ({
+          id: doc.id,
+          ...(doc.data() as Omit<Booking, "id">),
+        }))
+        .sort(
+          (a: { start: { toDate: () => { (): any; new(): any; getTime: { (): number; new(): any; }; }; }; }, b: { start: { toDate: () => { (): any; new(): any; getTime: { (): number; new(): any; }; }; }; }) =>
+            a.start?.toDate?.()?.getTime?.() -
+            b.start?.toDate?.()?.getTime?.(),
+        );
+
+      onChange(bookings);
+    },
+    onError,
+    {
+      where: [
+        ["status", "==", BookingStatus.Pending],
+        ["start", ">=", rangeStart],
+        ["start", "<", rangeEnd],
+      ],
+      orderBy: ["start", "asc"],
+    },
   );
 }
 
@@ -182,6 +266,12 @@ export function subscribeToWeekBookings(
       onChange(bookings);
     },
     onError,
+    {
+      where: [
+        ["start", "<", weekEnd],
+        ["end", ">", weekStart],
+      ],
+    },
   );
 }
 

@@ -114,3 +114,72 @@ export function subscribeToNotesForBooking(
     onError,
   );
 }
+
+export function subscribeToNotesForBookingIds(
+  bookingIds: string[],
+  onChange: (notes: Note[]) => void,
+  onError?: (error: unknown) => void,
+) {
+  const uniqueBookingIds = Array.from(new Set(bookingIds.filter(Boolean)));
+
+  if (uniqueBookingIds.length === 0) {
+    onChange([]);
+    return () => {};
+  }
+
+  const chunkSize = 10;
+  const chunks: string[][] = [];
+
+  for (let i = 0; i < uniqueBookingIds.length; i += chunkSize) {
+    chunks.push(uniqueBookingIds.slice(i, i + chunkSize));
+  }
+
+  const notesByChunk = new Map<number, Note[]>();
+  const unsubs: Array<() => void> = [];
+
+  const emitMerged = () => {
+    const mergedMap = new Map<string, Note>();
+
+    notesByChunk.forEach((chunkNotes) => {
+      chunkNotes.forEach((note) => {
+        mergedMap.set(note.id, note);
+      });
+    });
+
+    onChange(Array.from(mergedMap.values()));
+  };
+
+  chunks.forEach((chunk, chunkIndex) => {
+    const unsub = onSnapshot(
+      "notes",
+      (snapshot: any) => {
+        if (!snapshot) {
+          notesByChunk.set(chunkIndex, []);
+          emitMerged();
+          return;
+        }
+
+        const docs = snapshot.docs ?? snapshot._docs ?? [];
+        const notes: Note[] = docs
+          .map((doc: any) => ({
+            id: doc.id,
+            ...(doc.data() as Omit<Note, "id">),
+          }))
+          .filter((note: Note) => !(note.rejected === true || String(note.rejected).toLowerCase() === "true"));
+
+        notesByChunk.set(chunkIndex, notes);
+        emitMerged();
+      },
+      onError,
+      {
+        where: ["bookingId", "in", chunk],
+      },
+    );
+
+    unsubs.push(unsub);
+  });
+
+  return () => {
+    unsubs.forEach((unsub) => unsub());
+  };
+}

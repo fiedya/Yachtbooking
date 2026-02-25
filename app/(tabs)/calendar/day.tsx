@@ -3,7 +3,7 @@ import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { useMode } from "@/src/providers/ModeProvider";
 import { subscribeToWeekBookings } from "@/src/services/booking.service";
-import { getUserPhotoUrl, subscribeToUser } from "@/src/services/userService";
+import { getUserPhotoUrl } from "@/src/services/userService";
 import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
 import { styles as theme } from "@/src/theme/styles";
@@ -198,6 +198,7 @@ export default function CalendarDayScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { mode } = useMode();
+  const isAdmin = mode === "admin";
   const { day: dayParam, showCancelled: showCancelledParam, selectedYachts: selectedYachtsParam } =
     useLocalSearchParams<{
       day?: string;
@@ -205,7 +206,6 @@ export default function CalendarDayScreen() {
       selectedYachts?: string;
     }>();
 
-  const [isAdmin, setIsAdmin] = useState(false);
   const [bookings, setBookings] = useState<any[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
   const [modalUserPhoto, setModalUserPhoto] = useState<string | null>(null);
@@ -226,14 +226,6 @@ export default function CalendarDayScreen() {
   useEffect(() => {
     setShowCancelledBookings(showCancelledParam === "1");
   }, [showCancelledParam]);
-
-  useEffect(() => {
-    if (!user) return;
-    const unsub = subscribeToUser(user.uid, (profile) => {
-      setIsAdmin(profile?.role === "admin" && mode === "admin");
-    });
-    return unsub;
-  }, [mode, user]);
 
   useEffect(() => {
     const dayStart = new Date(selectedDay);

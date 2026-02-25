@@ -1,5 +1,7 @@
+import type { ReactNode } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { createPortal } from "react-dom";
 import "./webDatePicker.css";
 
 type WebDatePickerProps = {
@@ -17,6 +19,9 @@ export default function WebDatePicker({
   placeholder,
   minDate,
 }: WebDatePickerProps) {
+  const popperContainer = ({ children }: { children: ReactNode }) =>
+    createPortal(children, document.body);
+
   return (
     <DatePicker
       selected={value}
@@ -32,6 +37,9 @@ export default function WebDatePicker({
       timeCaption="Godzina"
       placeholderText={placeholder}
       wrapperClassName="web-date-picker"
+      popperClassName="web-date-picker-popper"
+      popperContainer={popperContainer}
+      popperPlacement="bottom-start"
       minDate={minDate}
     />
   );

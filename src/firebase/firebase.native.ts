@@ -1,6 +1,14 @@
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 
+type WhereTuple = [string, FirebaseFirestoreTypes.WhereFilterOp, any];
+type OrderByTuple = [string, FirebaseFirestoreTypes.OrderByDirection];
+type QueryOptions = {
+  where?: WhereTuple | WhereTuple[];
+  orderBy?: OrderByTuple | OrderByTuple[];
+  limit?: number;
+};
+
 /* AUTH */
 export const onAuthStateChanged = (cb: any) =>
   auth().onAuthStateChanged(cb);
@@ -35,19 +43,64 @@ export function updateDoc(col: string, id: string, data: any) {
 
 export function queryDocs(
   col: string,
-  opts: { where?: any; orderBy?: any; limit?: number },
+  opts: QueryOptions,
 ) {
   let q: any = firestore().collection(col);
 
-  if (opts.where) q = q.where(...opts.where);
-  if (opts.orderBy) q = q.orderBy(...opts.orderBy);
+  if (opts.where) {
+    const whereClauses = Array.isArray(opts.where[0])
+      ? (opts.where as WhereTuple[])
+      : [opts.where as WhereTuple];
+    whereClauses.forEach((clause) => {
+      q = q.where(...clause);
+    });
+  }
+
+  if (opts.orderBy) {
+    const orderByClauses = Array.isArray(opts.orderBy[0])
+      ? (opts.orderBy as OrderByTuple[])
+      : [opts.orderBy as OrderByTuple];
+    orderByClauses.forEach((clause) => {
+      q = q.orderBy(...clause);
+    });
+  }
+
   if (opts.limit) q = q.limit(opts.limit);
 
   return q.get();
 }
 
-export function onSnapshot(col: string, cb: any) {
-  return firestore().collection(col).onSnapshot(cb);
+export function onSnapshot(
+  col: string,
+  cb: any,
+  err?: (error: unknown) => void,
+  opts?: QueryOptions,
+) {
+  let q: any = firestore().collection(col);
+
+  if (opts?.where) {
+    const whereClauses = Array.isArray(opts.where[0])
+      ? (opts.where as WhereTuple[])
+      : [opts.where as WhereTuple];
+    whereClauses.forEach((clause) => {
+      q = q.where(...clause);
+    });
+  }
+
+  if (opts?.orderBy) {
+    const orderByClauses = Array.isArray(opts.orderBy[0])
+      ? (opts.orderBy as OrderByTuple[])
+      : [opts.orderBy as OrderByTuple];
+    orderByClauses.forEach((clause) => {
+      q = q.orderBy(...clause);
+    });
+  }
+
+  if (opts?.limit) {
+    q = q.limit(opts.limit);
+  }
+
+  return q.onSnapshot(cb, err);
 }
 
 export function addDocAuto(col: string, data: any) {

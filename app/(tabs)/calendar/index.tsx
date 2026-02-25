@@ -10,7 +10,7 @@ import { useAuth } from "@/src/providers/AuthProvider";
 import { useMode } from "@/src/providers/ModeProvider";
 import { subscribeToWeekBookings, updateBookingStatus } from "@/src/services/booking.service";
 import { createNote, subscribeToNotesForBooking } from "@/src/services/noteService";
-import { getUserPhotoUrl, probeUserPermissions, subscribeToAllUsers, subscribeToUser } from "@/src/services/userService";
+import { getUserPhotoUrl, subscribeToAllUsers, subscribeToUser } from "@/src/services/userService";
 import { subscribeToAvailableYachts } from "@/src/services/yachtService";
 import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
@@ -298,8 +298,8 @@ export default function CalendarScreen() {
   } | null>(null);
 
   const router = useRouter();
-  const [isAdmin, setIsAdmin] = useState(false);
   const { mode } = useMode();
+  const isAdmin = mode === "admin";
   const [weekmode, setWeekmode] = useState<"week" | "month">("week");
   const [weekOffset, setWeekOffset] = useState(0);
   const [bookings, setBookings] = useState<any[]>([]);
@@ -310,16 +310,8 @@ export default function CalendarScreen() {
   const [bookingNotes, setBookingNotes] = useState<Note[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [modalUserPhoto, setModalUserPhoto] = useState<string | null>(null);
-  const { user, uid, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const suppressGridPressRef = useRef(false);
-
-  useEffect(() => {
-    if (!user) return;
-    const unsub = subscribeToUser(user.uid, (profile) => {
-      setIsAdmin(profile?.role === "admin" && mode === "admin");
-    });
-    return unsub;
-  }, [mode]);
 
   useEffect(() => {
     if (!user) return;
@@ -389,13 +381,6 @@ export default function CalendarScreen() {
     NOTE_VISIBLE_COUNT * (NOTE_LINE_HEIGHT + NOTE_VERTICAL_PADDING * 2) +
     (NOTE_VISIBLE_COUNT - 1) * NOTE_ITEM_GAP;
   const notesShouldScroll = bookingNotes.length > NOTE_VISIBLE_COUNT;
-
-  useEffect(() => {
-    if (!user) return;
-
-    probeUserPermissions(user.uid);
-  }, [user]);
-
 
   useEffect(() => {
     if (selectedBooking) {
