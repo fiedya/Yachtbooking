@@ -16,6 +16,11 @@ export default function AllBookingsScreen() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const getBookingYachtLabel = (booking: Booking) => {
+    const yachtNames = booking.yachtNames ?? (booking.yachtName ? [booking.yachtName] : []);
+    return yachtNames.join(", ");
+  };
+
   useEffect(() => {
     setLoading(true);
 
@@ -41,13 +46,13 @@ export default function AllBookingsScreen() {
       result = result.filter(
         (booking) =>
           (booking.userName ?? "").toLowerCase().includes(lowerSearch) ||
-          (booking.yachtName ?? "").toLowerCase().includes(lowerSearch),
+          getBookingYachtLabel(booking).toLowerCase().includes(lowerSearch),
       );
     }
 
     result.sort((a, b) => {
       if (sortBy === "yachtName") {
-        return (a.yachtName ?? "").localeCompare(b.yachtName ?? "");
+        return getBookingYachtLabel(a).localeCompare(getBookingYachtLabel(b));
       }
       if (sortBy === "userName") {
         return (a.userName ?? "").localeCompare(b.userName ?? "");
@@ -135,7 +140,7 @@ export default function AllBookingsScreen() {
             }
           >
             <View style={[theme.card, theme.cardPadding]}>
-              <Text style={theme.textPrimary}>{item.yachtName}</Text>
+              <Text style={theme.textPrimary}>{getBookingYachtLabel(item)}</Text>
               <Text style={theme.textSecondary}>{item.userName}</Text>
               <Text style={theme.textMuted}>
                 {dayjs(item.start?.toDate?.()).format("DD MMM YYYY")} –{" "}

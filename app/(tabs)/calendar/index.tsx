@@ -83,31 +83,98 @@ function getBookingStyle(booking: any, day: Date) {
   };
 }
 
-function getOverlappingBookingsForBooking(
-  booking: any,
-  allBookings: any[],
-  day: Date,
-) {
-  const start = booking.start.toDate();
-  const end = booking.end.toDate();
+function getDayBookingLayout(day: Date, allBookings: any[]) {
+  const dayBookings = allBookings
+    .filter((booking) => sameDay(booking.start.toDate(), day))
+    .sort((a, b) => {
+      const aStart = a.start.toDate().getTime();
+      const bStart = b.start.toDate().getTime();
+      if (aStart !== bStart) return aStart - bStart;
 
-  if (!sameDay(start, day)) return [];
+      const aEnd = a.end.toDate().getTime();
+      const bEnd = b.end.toDate().getTime();
+      if (aEnd !== bEnd) return aEnd - bEnd;
 
-  return allBookings.filter((b) => {
-    const bStart = b.start.toDate();
-    const bEnd = b.end.toDate();
-    return bStart < end && bEnd > start;
+      return (a.id || "").localeCompare(b.id || "");
+    });
+
+  const layoutById: Record<string, { left: number; width: number }> = {};
+
+  let group: any[] = [];
+  let groupEnd = 0;
+
+  const flushGroup = () => {
+    if (group.length === 0) return;
+
+    const sortedGroup = [...group].sort((a, b) => {
+      const aStart = a.start.toDate().getTime();
+      const bStart = b.start.toDate().getTime();
+      if (aStart !== bStart) return aStart - bStart;
+
+      const aEnd = a.end.toDate().getTime();
+      const bEnd = b.end.toDate().getTime();
+      if (aEnd !== bEnd) return aEnd - bEnd;
+
+      return (a.id || "").localeCompare(b.id || "");
+    });
+
+    const columnEndTimes: number[] = [];
+    const columnByBookingId: Record<string, number> = {};
+
+    sortedGroup.forEach((booking) => {
+      const start = booking.start.toDate().getTime();
+      const end = booking.end.toDate().getTime();
+
+      let columnIndex = columnEndTimes.findIndex((columnEnd) => columnEnd <= start);
+      if (columnIndex === -1) {
+        columnIndex = columnEndTimes.length;
+        columnEndTimes.push(end);
+      } else {
+        columnEndTimes[columnIndex] = end;
+      }
+
+      columnByBookingId[booking.id] = columnIndex;
+    });
+
+    const columnCount = Math.max(1, columnEndTimes.length);
+    const columnWidth = 100 / columnCount;
+
+    sortedGroup.forEach((booking) => {
+      const columnIndex = columnByBookingId[booking.id] ?? 0;
+      layoutById[booking.id] = {
+        left: columnIndex * columnWidth,
+        width: columnWidth,
+      };
+    });
+
+    group = [];
+    groupEnd = 0;
+  };
+
+  dayBookings.forEach((booking) => {
+    const start = booking.start.toDate().getTime();
+    const end = booking.end.toDate().getTime();
+
+    if (group.length === 0) {
+      group = [booking];
+      groupEnd = end;
+      return;
+    }
+
+    if (start < groupEnd) {
+      group.push(booking);
+      groupEnd = Math.max(groupEnd, end);
+      return;
+    }
+
+    flushGroup();
+    group = [booking];
+    groupEnd = end;
   });
-}
 
-function getBookingPosition(booking: any, overlappingBookings: any[]) {
-  const sorted = overlappingBookings.sort((a, b) => {
-    const aStart = a.start.toDate().getTime();
-    const bStart = b.start.toDate().getTime();
-    if (aStart !== bStart) return aStart - bStart;
-    return (a.id || "").localeCompare(b.id || ""); // consistent ordering
-  });
-  return sorted.findIndex((b) => b.id === booking.id);
+  flushGroup();
+
+  return layoutById;
 }
 
 function getBookingBackgroundColor(
@@ -133,6 +200,60 @@ function getBookingBackgroundColor(
 function getBookingFontColor(booking: any, currentUserId: string | undefined) {
   const isApproved = booking.status === BookingStatus.Approved;
   return isApproved ? colors.white : colors.black;
+}
+
+function getBookingYachtIds(booking: any): string[] {
+  if (Array.isArray(booking?.yachtIds)) {
+    return booking.yachtIds.filter(Boolean);
+  }
+
+  if (booking?.yachtId) {
+    return [booking.yachtId];
+  }
+
+  return [];
+}
+
+function getBookingYachtNames(booking: any): string[] {
+  if (Array.isArray(booking?.yachtNames)) {
+    return booking.yachtNames.filter(Boolean);
+  }
+
+  if (booking?.yachtName) {
+    return [booking.yachtName];
+  }
+
+  return [];
+}
+
+function getBookingYachtLabel(
+  booking: any,
+  yachtMap: { [id: string]: { name: string; shortcut?: string } },
+  useYachtShortcuts: boolean,
+) {
+  const ids = getBookingYachtIds(booking);
+  const names = getBookingYachtNames(booking);
+
+  const labels = ids
+    .map((id, index) => {
+      const yachtInfo = yachtMap[id];
+      if (useYachtShortcuts && yachtInfo?.shortcut) {
+        return yachtInfo.shortcut;
+      }
+
+      return yachtInfo?.name ?? names[index];
+    })
+    .filter(Boolean);
+
+  if (labels.length > 0) {
+    return labels.join(", ");
+  }
+
+  if (names.length > 0) {
+    return names.join(", ");
+  }
+
+  return "Unnamed";
 }
 
 /* -----------------------------
@@ -394,7 +515,11 @@ export default function CalendarScreen() {
     if (selectedYachtIds.length === 0) {
       return result;
     }
-    return result.filter((b) => selectedYachtIds.includes(b.yachtId));
+
+    return result.filter((b) => {
+      const bookingYachtIds = getBookingYachtIds(b);
+      return bookingYachtIds.some((id) => selectedYachtIds.includes(id));
+    });
   }, [bookings, selectedYachtIds, showCancelledBookings, isAdmin]);
 
 useEffect(() => {
@@ -423,6 +548,14 @@ useEffect(() => {
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
     [weekStart],
   );
+
+  const bookingLayoutByDay = useMemo(() => {
+    const layout: Record<string, Record<string, { left: number; width: number }>> = {};
+    days.forEach((day) => {
+      layout[day.toISOString()] = getDayBookingLayout(day, filteredBookings);
+    });
+    return layout;
+  }, [days, filteredBookings]);
 
   const slideAnim = useState(new Animated.Value(0))[0];
   const panResponder = PanResponder.create({
@@ -680,6 +813,7 @@ useEffect(() => {
 
                 {days.map((day) => {
                   const isToday = sameDay(day, today);
+                  const dayLayout = bookingLayoutByDay[day.toISOString()] ?? {};
                   return (
                     <View
                       key={day.toISOString() + h}
@@ -756,15 +890,9 @@ useEffect(() => {
                           const layout = getBookingStyle(b, day);
                           if (!layout) return null;
 
-                          const overlaps = getOverlappingBookingsForBooking(
-                            b,
-                            filteredBookings,
-                            day,
-                          );
-                          const position = getBookingPosition(b, overlaps);
-                          const totalOverlaps = overlaps.length;
-                          const width = 100 / totalOverlaps;
-                          const left = position * width;
+                          const columnLayout = dayLayout[b.id];
+                          if (!columnLayout) return null;
+
                           const backgroundColor = getBookingBackgroundColor(
                             b,
                             user?.uid,
@@ -772,14 +900,11 @@ useEffect(() => {
 
                           const fontColor = getBookingFontColor(b, user?.uid);
 
-                          // Show shortcut if enabled and available
-                          const yachtInfo = yachtMap[b.yachtId] || {
-                            name: b.yachtName,
-                          };
-                          const displayYacht =
-                            settings.useYachtShortcuts && yachtInfo.shortcut
-                              ? yachtInfo.shortcut
-                              : yachtInfo.name;
+                          const displayYacht = getBookingYachtLabel(
+                            b,
+                            yachtMap,
+                            settings.useYachtShortcuts,
+                          );
                           return (
                             <Pressable
                               key={b.id}
@@ -787,8 +912,8 @@ useEffect(() => {
                                 theme.absoluteCard,
                                 {
                                   backgroundColor,
-                                  left: `${left}%`,
-                                  width: `${width}%`,
+                                  left: `${columnLayout.left}%`,
+                                  width: `${columnLayout.width}%`,
                                   overflow: "hidden",
 
                                   // 👇 keep bookings above "today" highlight
@@ -858,7 +983,13 @@ useEffect(() => {
                 alignItems: "center",
               }}
             >
-              <Text style={theme.title}>{selectedBooking.yachtName}</Text>
+              <Text style={theme.title}>
+                {getBookingYachtLabel(
+                  selectedBooking,
+                  yachtMap,
+                  settings.useYachtShortcuts,
+                )}
+              </Text>
               {canEditSelectedBooking && (
                 <Pressable
                   onPress={() => {
