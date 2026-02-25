@@ -9,10 +9,6 @@ export default function RootLayout() {
     Ionicons: require("../assets/Ionicons.ttf"),
   });
 
-  if (!fontsLoaded) {
-    return null;
-  }
-
   return (
     <ModeProvider>
       <AuthProvider>

@@ -160,8 +160,7 @@ export default function AllBookingsScreen() {
           <SortButton value="bookingDay" label="Dzień rezerwacji" />
         </View>
 
-        <View style={{ marginTop: 4 }}>
-          <Text style={[theme.textMuted, { marginBottom: 6 }]}>Zakres dat</Text>
+        <View style={{ marginTop: 0 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Text style={theme.textSecondary}>Start</Text>
             <WebDatePicker
@@ -169,7 +168,7 @@ export default function AllBookingsScreen() {
               onChange={(date) => setFilterStartDate(date)}
               mode="date"
             />
-            <Text style={theme.textSecondary}>End</Text>
+            <Text style={theme.textSecondary}>Koniec</Text>
             <WebDatePicker
               value={filterEndDate}
               onChange={(date) => setFilterEndDate(date)}

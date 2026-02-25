@@ -2,17 +2,21 @@ import { useAuth } from "@/src/providers/AuthProvider";
 import { subscribeToUser } from "@/src/services/userService";
 import { headerStyles } from "@/src/theme/header";
 import { styles } from "@/src/theme/styles";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useRootNavigationState, useRouter } from "expo-router";
 import { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useMode } from "../../../src/providers/ModeProvider";
 
 export default function AdminScreen() {
   const router = useRouter();
+  const rootNavigationState = useRootNavigationState();
   const { mode } = useMode();
   const { user, uid, loading: authLoading } = useAuth();
 
   useEffect(() => {
+    if (!rootNavigationState?.key) return;
+    if (authLoading) return;
+
     if (!user) {
       router.replace("/auth");
       return;
@@ -25,7 +29,7 @@ export default function AdminScreen() {
     });
 
     return unsub;
-  }, [user?.uid, mode]);
+  }, [rootNavigationState?.key, authLoading, user?.uid, mode, router]);
 
   return (
     <View style={styles.screenPadded}>
