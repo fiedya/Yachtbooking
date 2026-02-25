@@ -292,7 +292,7 @@ export default function CalendarDayScreen() {
           headerTitleStyle: headerStyles.title,
           headerRight: () => (
             <View style={{ flexDirection: "row", alignItems: "center", marginRight: 10 }}>
-              <Text style={[theme.textSecondary, { marginRight: 6 }]}>Anulowane</Text>
+              <Text style={[theme.textSecondary, { marginRight: 6 }]}>Odwołane</Text>
               <Switch
                 value={showCancelledBookings}
                 onValueChange={setShowCancelledBookings}

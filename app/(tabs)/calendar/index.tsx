@@ -20,18 +20,18 @@ import { styles, styles as theme } from "@/src/theme/styles";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-    Alert,
-    Animated,
-    Image,
-    PanResponder,
-    Platform,
-    Pressable,
-    ScrollView,
-    Switch,
-    Text,
-    TextInput,
-    View,
-    useWindowDimensions
+  Alert,
+  Animated,
+  Image,
+  PanResponder,
+  Platform,
+  Pressable,
+  ScrollView,
+  Switch,
+  Text,
+  TextInput,
+  View,
+  useWindowDimensions
 } from "react-native";
 
 function startOfWeek(date: Date) {
@@ -601,17 +601,6 @@ useEffect(() => {
                 thumbColor={showCancelledBookings ? colors.primary : colors.white}
                 style={{ marginRight: 8 }}
               />
-
-              <Pressable
-                onPress={() => setRefreshKey((k) => k + 1)}
-                style={{ paddingRight: "5%" }}
-              >
-                <Icon
-                  name="refresh"
-                  size={24}
-                  color={isRefreshing ? "#999" : "#000"}
-                />
-              </Pressable>
             </View>
           ),
         }}
