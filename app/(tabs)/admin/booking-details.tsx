@@ -35,8 +35,8 @@ function sameDay(a: Date, b: Date) {
 }
 
 const NOTE_VISIBLE_COUNT = 3;
-const NOTE_LINE_HEIGHT = 20;
-const NOTE_VERTICAL_PADDING = 4;
+const NOTE_LINE_HEIGHT = 18;
+const NOTE_VERTICAL_PADDING = 3;
 const NOTE_ITEM_GAP = 6;
 
 function formatNoteDate(value: any) {
@@ -221,7 +221,7 @@ export default function BookingDetailsScreen() {
       </View>
 
       {notes.length > 0 ? (
-        <View style={{ marginVertical: 16 }}>
+        <View style={{ marginVertical: 10 }}>
           <Text style={theme.textMuted}>Notatki</Text>
           <ScrollView
             nestedScrollEnabled

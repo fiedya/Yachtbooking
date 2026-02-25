@@ -380,7 +380,12 @@ export default function CalendarScreen() {
   const notesMaxHeight =
     NOTE_VISIBLE_COUNT * (NOTE_LINE_HEIGHT + NOTE_VERTICAL_PADDING * 2) +
     (NOTE_VISIBLE_COUNT - 1) * NOTE_ITEM_GAP;
-  const notesShouldScroll = bookingNotes.length > NOTE_VISIBLE_COUNT;
+  const notesContentHeight = Math.max(
+    0,
+    bookingNotes.length * (NOTE_LINE_HEIGHT + NOTE_VERTICAL_PADDING * 2) +
+      Math.max(0, bookingNotes.length - 1) * NOTE_ITEM_GAP,
+  );
+  const notesContainerHeight = Math.min(notesMaxHeight, notesContentHeight);
 
   useEffect(() => {
     if (selectedBooking) {
@@ -1051,7 +1056,9 @@ useEffect(() => {
                 <Text style={[theme.textPrimary, { marginBottom: 8 }]}>Notatki</Text>
                 <ScrollView
                   nestedScrollEnabled
-                  style={notesShouldScroll ? { maxHeight: notesMaxHeight } : undefined}
+                  showsVerticalScrollIndicator
+                  scrollEnabled={bookingNotes.length > NOTE_VISIBLE_COUNT}
+                  style={{ height: notesContainerHeight }}
                   contentContainerStyle={{ paddingRight: 2 }}
                 >
                   {bookingNotes.map((note, index) => (

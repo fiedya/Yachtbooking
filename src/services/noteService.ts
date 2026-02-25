@@ -107,11 +107,14 @@ export function subscribeToNotesForBooking(
           id: doc.id,
           ...(doc.data() as Omit<Note, "id">),
         }))
-        .filter((note: Note) => note.bookingId === bookingId && !(note.rejected === true || String(note.rejected).toLowerCase() === "true"));
+        .filter((note: Note) => !(note.rejected === true || String(note.rejected).toLowerCase() === "true"));
 
       onChange(notes);
     },
     onError,
+    {
+      where: ["bookingId", "==", bookingId],
+    },
   );
 }
 
