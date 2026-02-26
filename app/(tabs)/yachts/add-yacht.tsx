@@ -2,7 +2,6 @@ import { YachtStatus } from "@/src/entities/yacht";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { useMode } from "@/src/providers/ModeProvider";
 import { uploadImage } from "@/src/services/imageUploadService";
-import { subscribeToUser } from "@/src/services/userService";
 import { addYacht } from "@/src/services/yachtService";
 import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
@@ -23,7 +22,6 @@ export default function AddEditYachtScreen() {
   const router = useRouter();
 
   const { mode } = useMode();
-  const [isAdmin, setIsAdmin] = useState(false);
   const [name, setName] = useState("");
   const [type, setType] = useState("");
   const [description, setDescription] = useState("");
@@ -32,14 +30,7 @@ export default function AddEditYachtScreen() {
   const [loading, setLoading] = useState(false);
   const [active, setActive] = useState(true);
   const [status, setStatus] = useState<YachtStatus>(YachtStatus.Available);
-  const { user, uid, loading: authLoading } = useAuth();
-  useEffect(() => {
-    if (!user) return;
-    const unsub = subscribeToUser(user.uid, (profile) => {
-      setIsAdmin(profile?.role === "admin" && mode === "admin");
-    });
-    return unsub;
-  }, [mode]);
+  const { uid, loading: authLoading } = useAuth();
 
 
   useEffect(() => {
@@ -50,14 +41,10 @@ export default function AddEditYachtScreen() {
       return;
     }
 
-    const unsub = subscribeToUser(uid, (profile) => {
-      if (!profile || profile.role !== "admin") {
-        router.replace("/(tabs)/calendar");
-      }
-    });
-
-    return unsub;
-  }, [loading, uid]);
+    if (mode !== "admin") {
+      router.replace("/(tabs)/calendar");
+    }
+  }, [loading, uid, mode, router]);
   async function handlePickImage() {
     const localUri = await pickImageFromGallery();
     if (!localUri) return;

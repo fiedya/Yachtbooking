@@ -1,6 +1,6 @@
 import WebDatePicker from "@/src/components/WebDatePicker";
 import { Booking } from "@/src/entities/booking";
-import { subscribeToUpcomingBookings } from "@/src/services/booking.service";
+import { subscribeToUpcomingBookingsShared } from "@/src/services/booking.service";
 import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";
 import dayjs from "dayjs";
@@ -57,7 +57,7 @@ export default function AllBookingsScreen() {
   useEffect(() => {
     setLoading(true);
 
-    const unsub = subscribeToUpcomingBookings(
+    const unsub = subscribeToUpcomingBookingsShared(
       windowStart,
       windowEnd,
       (nextBookings) => {

@@ -4,34 +4,34 @@
 import Icon from "@/src/components/Icon";
 import { BookingStatus } from "@/src/entities/booking";
 import { Note } from "@/src/entities/note";
-import { User } from "@/src/entities/user";
 import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { useMode } from "@/src/providers/ModeProvider";
-import { subscribeToWeekBookings, updateBookingStatus } from "@/src/services/booking.service";
+import { subscribeToSharedWeekBookings, updateBookingStatus } from "@/src/services/booking.service";
 import { createNote, subscribeToNotesForBooking } from "@/src/services/noteService";
-import { getUserPhotoUrl, subscribeToAllUsers, subscribeToUser } from "@/src/services/userService";
+import { getUserPhotoUrl, subscribeToUser } from "@/src/services/userService";
 import { subscribeToAvailableYachts } from "@/src/services/yachtService";
 import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
 import { spacing } from "@/src/theme/spacing";
 import { styles, styles as theme } from "@/src/theme/styles";
+import { useIsFocused } from "@react-navigation/native";
 
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Alert,
-  Animated,
-  Image,
-  PanResponder,
-  Platform,
-  Pressable,
-  ScrollView,
-  Switch,
-  Text,
-  TextInput,
-  View,
-  useWindowDimensions
+    Alert,
+    Animated,
+    Image,
+    PanResponder,
+    Platform,
+    Pressable,
+    ScrollView,
+    Switch,
+    Text,
+    TextInput,
+    View,
+    useWindowDimensions
 } from "react-native";
 
 function startOfWeek(date: Date) {
@@ -298,6 +298,7 @@ export default function CalendarScreen() {
   } | null>(null);
 
   const router = useRouter();
+  const isFocused = useIsFocused();
   const { mode } = useMode();
   const isAdmin = mode === "admin";
   const [weekmode, setWeekmode] = useState<"week" | "month">("week");
@@ -308,7 +309,6 @@ export default function CalendarScreen() {
   const [bookingNote, setBookingNote] = useState("");
   const [savingNote, setSavingNote] = useState(false);
   const [bookingNotes, setBookingNotes] = useState<Note[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
   const [modalUserPhoto, setModalUserPhoto] = useState<string | null>(null);
   const { user } = useAuth();
   const suppressGridPressRef = useRef(false);
@@ -322,19 +322,6 @@ export default function CalendarScreen() {
       };
       setSettings({ useYachtShortcuts: prefs.useYachtShortcuts ?? false });
     });
-    return unsub;
-  }, []);
-
-  useEffect(() => {
-    const unsub = subscribeToAllUsers(
-      (nextUsers) => {
-        setUsers(nextUsers);
-      },
-      (error) => {
-        console.error("[CALENDAR] users snapshot error", error);
-      },
-    );
-
     return unsub;
   }, []);
 
@@ -362,19 +349,8 @@ export default function CalendarScreen() {
     return unsub;
   }, [selectedBooking?.id]);
 
-  const userNameMap = useMemo(() => {
-    const map: Record<string, string> = {};
-    users.forEach((person) => {
-      const fullName = `${person.name ?? ""} ${person.surname ?? ""}`.trim();
-      if (fullName) {
-        map[person.uid] = fullName;
-      }
-    });
-    return map;
-  }, [users]);
-
   const getNoteAuthorName = (note: Note) => {
-    return userNameMap[note.creatorId] ?? (note.creatorWasAdmin ? "Admin" : "Użytkownik");
+    return note.creatorWasAdmin ? "Admin" : "Użytkownik";
   };
 
   const notesMaxHeight =
@@ -517,11 +493,16 @@ export default function CalendarScreen() {
   }, [bookings, selectedYachtIds, showCancelledBookings, isAdmin, user?.uid]);
 
 useEffect(() => {
+  if (!isFocused) {
+    setIsRefreshing(false);
+    return;
+  }
+
   const weekEnd = addDays(weekStart, 7);
 
   setIsRefreshing(true);
 
-  const unsub = subscribeToWeekBookings(
+  const unsub = subscribeToSharedWeekBookings(
     weekStart,
     weekEnd,
     (bookings) => {
@@ -532,10 +513,13 @@ useEffect(() => {
       console.error("[CALENDAR] error", error);
       setIsRefreshing(false);
     },
+    {
+      isAdmin,
+    },
   );
 
   return unsub;
-}, [weekStart, refreshKey]);
+}, [isFocused, weekStart, refreshKey]);
 
 
   const days = useMemo(

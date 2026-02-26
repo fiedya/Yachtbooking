@@ -4,12 +4,13 @@ import { Note } from "@/src/entities/note";
 import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { useMode } from "@/src/providers/ModeProvider";
-import { subscribeToWeekBookings, updateBookingStatus } from "@/src/services/booking.service";
+import { subscribeToSharedWeekBookings, updateBookingStatus } from "@/src/services/booking.service";
 import { createNote, subscribeToNotesForBooking } from "@/src/services/noteService";
 import { getUserPhotoUrl } from "@/src/services/userService";
 import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
 import { styles as theme } from "@/src/theme/styles";
+import { useIsFocused } from "@react-navigation/native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Image, Pressable, ScrollView, Switch, Text, TextInput, View } from "react-native";
@@ -41,6 +42,20 @@ function sameDay(a: Date, b: Date) {
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate()
   );
+}
+
+function startOfWeek(date: Date) {
+  const d = new Date(date);
+  const day = d.getDay() || 7;
+  d.setDate(d.getDate() - (day - 1));
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function addDays(date: Date, days: number) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
 }
 
 function formatDate(d: Date) {
@@ -217,6 +232,7 @@ function getBookingYachtLabel(booking: any) {
 
 export default function CalendarDayScreen() {
   const router = useRouter();
+  const isFocused = useIsFocused();
   const { user } = useAuth();
   const { mode } = useMode();
   const isAdmin = mode === "admin";
@@ -253,21 +269,25 @@ export default function CalendarDayScreen() {
   }, [showCancelledParam]);
 
   useEffect(() => {
-    const dayStart = new Date(selectedDay);
-    dayStart.setHours(0, 0, 0, 0);
+    if (!isFocused) {
+      return;
+    }
 
-    const dayEnd = new Date(dayStart);
-    dayEnd.setDate(dayEnd.getDate() + 1);
+    const weekStart = startOfWeek(selectedDay);
+    const weekEnd = addDays(weekStart, 7);
 
-    const unsub = subscribeToWeekBookings(
-      dayStart,
-      dayEnd,
+    const unsub = subscribeToSharedWeekBookings(
+      weekStart,
+      weekEnd,
       (nextBookings) => setBookings(nextBookings),
       (error) => console.error("[CALENDAR DAY] error", error),
+      {
+        isAdmin,
+      },
     );
 
     return unsub;
-  }, [selectedDay]);
+  }, [isFocused, selectedDay, isAdmin]);
 
   useEffect(() => {
     if (!selectedBooking?.id) {

@@ -1,10 +1,10 @@
 import {
-  addDocAuto,
-  getDoc,
-  onSnapshot,
-  queryDocs,
-  serverTimestamp,
-  updateDoc,
+    addDocAuto,
+    getDoc,
+    onSnapshot,
+    queryDocs,
+    serverTimestamp,
+    updateDoc,
 } from "@/src/firebase/init";
 import { Yacht, YachtStatus } from "../entities/yacht";
 
@@ -53,18 +53,17 @@ export function subscribeToAvailableYachts(
     (snapshot: any) => {
       const docs = snapshot?.docs ?? snapshot?._docs ?? [];
 
-      const yachts = docs
-        .map((d: any) => ({
-          id: d.id,
-          ...(d.data() as Omit<Yacht, "id">),
-        }))
-        .filter((yacht: { status: YachtStatus }) =>
-          yacht.status === YachtStatus.Available,
-        );
+      const yachts = docs.map((d: any) => ({
+        id: d.id,
+        ...(d.data() as Omit<Yacht, "id">),
+      }));
 
       onChange(yachts);
     },
     onError,
+    {
+      where: ["status", "==", YachtStatus.Available],
+    },
   );
 }
 

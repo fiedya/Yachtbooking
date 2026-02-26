@@ -1,8 +1,6 @@
 import Icon from "@/src/components/Icon";
 import { Yacht, YachtStatus } from "@/src/entities/yacht";
 import { getYachtStatusLabel } from "@/src/helpers/enumHelper";
-import { useAuth } from "@/src/providers/AuthProvider";
-import { subscribeToUser } from "@/src/services/userService";
 import { subscribeToYachts } from "@/src/services/yachtService";
 import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";
@@ -16,8 +14,7 @@ export default function YachtsScreen() {
   const [selectedStatus, setSelectedStatus] = useState<YachtStatus | "all">(YachtStatus.Available);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const { mode } = useMode();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const { user } = useAuth();
+  const isAdmin = mode === "admin";
   const statusOptions: Array<{ value: YachtStatus | "all"; label: string }> = [
     { value: "all", label: "Wszystkie statusy" },
     { value: YachtStatus.Available, label: getYachtStatusLabel(YachtStatus.Available) },
@@ -30,14 +27,6 @@ export default function YachtsScreen() {
     selectedStatus === "all"
       ? allYachts
       : allYachts.filter((y) => y.status === selectedStatus);
-
-  useEffect(() => {
-    if (!user) return;
-    const unsub = subscribeToUser(user.uid, (profile) => {
-      setIsAdmin(profile?.role === "admin" && mode === "admin");
-    });
-    return unsub;
-  }, [mode]);
 
   useEffect(() => {
     const unsub = subscribeToYachts((allYachts) => {

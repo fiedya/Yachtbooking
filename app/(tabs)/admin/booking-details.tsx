@@ -1,14 +1,12 @@
 import { BookingStatus } from "@/src/entities/booking";
 import { Note } from "@/src/entities/note";
-import { User } from "@/src/entities/user";
 import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
 import { subscribeToBooking, updateBookingStatus } from "@/src/services/booking.service";
 import { subscribeToNotesForBooking } from "@/src/services/noteService";
-import { subscribeToAllUsers } from "@/src/services/userService";
 import { styles as theme } from "@/src/theme/styles";
 import dayjs from "dayjs";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, Platform, Pressable, ScrollView, Text, View } from "react-native";
 
 /* Date helpers */
@@ -68,7 +66,6 @@ export default function BookingDetailsScreen() {
   const router = useRouter();
   const [booking, setBooking] = useState<BookingDetails | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
   const [updating, setUpdating] = useState(false);
 
   const getBookingYachtLabel = (booking: BookingDetails) => {
@@ -102,32 +99,8 @@ export default function BookingDetailsScreen() {
     return unsub;
   }, [bookingId]);
 
-  useEffect(() => {
-    const unsub = subscribeToAllUsers(
-      (nextUsers) => {
-        setUsers(nextUsers);
-      },
-      (error) => {
-        console.error("[BOOKING DETAILS] users snapshot error:", error);
-      },
-    );
-
-    return unsub;
-  }, []);
-
-  const userNameMap = useMemo(() => {
-    const map: Record<string, string> = {};
-    users.forEach((person) => {
-      const fullName = `${person.name ?? ""} ${person.surname ?? ""}`.trim();
-      if (fullName) {
-        map[person.uid] = fullName;
-      }
-    });
-    return map;
-  }, [users]);
-
   const getNoteAuthorName = (note: Note) => {
-    return userNameMap[note.creatorId] ?? (note.creatorWasAdmin ? "Admin" : "Użytkownik");
+    return note.creatorWasAdmin ? "Admin" : "Użytkownik";
   };
 
   const notesMaxHeight =

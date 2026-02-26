@@ -2,7 +2,7 @@ import WebDatePicker from "@/src/components/WebDatePicker";
 import { Booking } from "@/src/entities/booking";
 import { Note } from "@/src/entities/note";
 import { User } from "@/src/entities/user";
-import { subscribeToUpcomingBookings } from "@/src/services/booking.service";
+import { subscribeToUpcomingBookingsShared } from "@/src/services/booking.service";
 import { subscribeToNotesForBookingIds } from "@/src/services/noteService";
 import { subscribeToAllUsers } from "@/src/services/userService";
 import { colors } from "@/src/theme/colors";
@@ -58,7 +58,7 @@ export default function NewNotesScreen() {
   useEffect(() => {
     setLoading(true);
 
-    const unsub = subscribeToUpcomingBookings(
+    const unsub = subscribeToUpcomingBookingsShared(
       windowStart,
       windowEnd,
       (nextBookings) => {

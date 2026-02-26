@@ -1,6 +1,6 @@
 import {
-  onSnapshot,
-  queryDocs,
+    onSnapshot,
+    queryDocs,
 } from "@/src/firebase/init";
 import { BookingStatus } from "../entities/booking";
 
@@ -12,6 +12,7 @@ export function subscribeToBookings(
   start: Date,
   end: Date,
   onChange: (bookings: any[]) => void,
+  userId?: string,
 ) {
   return onSnapshot("bookings", async (snapshot: any) => {
     if (!snapshot) {
@@ -34,6 +35,17 @@ export function subscribeToBookings(
       );
 
     onChange(data);
+  }, undefined, {
+    where: userId
+      ? [
+          ["start", "<", end],
+          ["userId", "==", userId],
+          ["status", "in", [BookingStatus.Pending, BookingStatus.Approved]],
+        ]
+      : [
+          ["start", "<", end],
+          ["status", "in", [BookingStatus.Pending, BookingStatus.Approved]],
+        ],
   });
 }
 
@@ -47,7 +59,10 @@ export async function getAvailableYachtIds(
   editingBookingId?: string | null,
 ): Promise<string[]> {
   const snapshot: any = await queryDocs("bookings", {
-    where: ["start", "<", end],
+    where: [
+      ["start", "<", end],
+      ["status", "in", [BookingStatus.Pending, BookingStatus.Approved]],
+    ],
   });
 
   const docs = snapshot.docs ?? snapshot._docs ?? [];

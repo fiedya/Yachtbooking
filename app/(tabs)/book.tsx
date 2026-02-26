@@ -15,15 +15,15 @@ import { useIsFocused } from "@react-navigation/native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Alert,
-  FlatList,
-  Image,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
+    Alert,
+    FlatList,
+    Image,
+    Platform,
+    Pressable,
+    ScrollView,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { useMode } from "../../src/providers/ModeProvider";
 
@@ -43,7 +43,7 @@ export default function BookScreen() {
     edit?: string;
   }>();
   const { mode } = useMode();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const isAdmin = mode === "admin";
   const getDatePart = (iso?: string) => (iso ? new Date(iso) : new Date());
   const getTimePart = (iso?: string) => (iso ? new Date(iso) : new Date());
   const getDefaultEndTime = (startIso?: string, endIso?: string) => {
@@ -93,14 +93,6 @@ export default function BookScreen() {
       setEndTime(new Date(paramEndDate));
     }
   }, [paramStartDate, paramEndDate]);
-
-  useEffect(() => {
-    if (!user) return;
-    const unsub = subscribeToUser(user.uid, (profile) => {
-      setIsAdmin(profile?.role === "admin" && mode === "admin");
-    });
-    return unsub;
-  }, [mode]);
 
   useEffect(() => {
     if (!edit || !bookingId || !user) return;

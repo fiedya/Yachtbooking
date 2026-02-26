@@ -1,9 +1,7 @@
 import Icon from "@/src/components/Icon";
 import { News, NewsCategory } from "@/src/entities/news";
 import { getNewsCategoryLabel } from "@/src/helpers/enumHelper";
-import { useAuth } from "@/src/providers/AuthProvider";
 import { getNewsById, updateNews } from "@/src/services/newsService";
-import { subscribeToUser } from "@/src/services/userService";
 import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
 import { spacing } from "@/src/theme/spacing";
@@ -15,7 +13,7 @@ import { useMode } from "../../../src/providers/ModeProvider";
 
 export default function NewsDetailsScreen() {
   const { mode } = useMode();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const isAdmin = mode === "admin";
   const { id } = useLocalSearchParams<{ id: string }>();
   const [news, setNews] = useState<News | null>(null);
   const [editingField, setEditingField] = useState<null | "title" | "description" | "category">(
@@ -24,20 +22,11 @@ export default function NewsDetailsScreen() {
   const [fieldValue, setFieldValue] = useState<string>("");
   const [categoryValue, setCategoryValue] = useState<NewsCategory | null>(null);
   const [saving, setSaving] = useState(false);
-  const { user, uid, loading: authLoading } = useAuth();
 
   useEffect(() => {
     if (!id || typeof id !== "string") return;
     getNewsById(id).then(setNews);
   }, [id]);
-
-  useEffect(() => {
-    if (!user) return;
-    const unsub = subscribeToUser(user.uid, (profile) => {
-      setIsAdmin(profile?.role === "admin" && mode === "admin");
-    });
-    return unsub;
-  }, [mode]);
 
   const startEdit = (field: "title" | "description" | "category") => {
     setEditingField(field);

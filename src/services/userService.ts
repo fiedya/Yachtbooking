@@ -171,15 +171,99 @@ export function subscribeToUsersToVerify(
           uid: doc.id,
           ...(doc.data() as Omit<User, "uid">),
         }))
-        // where status == ToVerify
-        .filter((u: { status: UserStatus; }) => u.status === UserStatus.ToVerify)
-        // orderBy surname desc
         .sort((a: { surname: any; }, b: { surname: any; }) =>
           (b.surname ?? "").localeCompare(a.surname ?? ""),
         );
 
       onChange(users);
     },
+    onError,
+    {
+      where: ["status", "==", UserStatus.ToVerify],
+      orderBy: ["surname", "desc"],
+    },
+  );
+}
+
+type SharedUsersListener = {
+  onChange: (users: User[]) => void;
+  onError?: (error: unknown) => void;
+};
+
+type SharedUsersCache = {
+  unsub: (() => void) | null;
+  users: User[];
+  listeners: Set<SharedUsersListener>;
+};
+
+const sharedAllUsersCache: SharedUsersCache = {
+  unsub: null,
+  users: [],
+  listeners: new Set<SharedUsersListener>(),
+};
+
+const sharedUsersToVerifyCache: SharedUsersCache = {
+  unsub: null,
+  users: [],
+  listeners: new Set<SharedUsersListener>(),
+};
+
+function subscribeToSharedUsersCache(
+  cache: SharedUsersCache,
+  subscribeFactory: (
+    onChange: (users: User[]) => void,
+    onError?: (error: unknown) => void,
+  ) => () => void,
+  onChange: (users: User[]) => void,
+  onError?: (error: unknown) => void,
+) {
+  if (!cache.unsub) {
+    cache.unsub = subscribeFactory(
+      (users) => {
+        cache.users = users;
+        cache.listeners.forEach((listener) => {
+          listener.onChange(users);
+        });
+      },
+      (error) => {
+        cache.listeners.forEach((listener) => {
+          listener.onError?.(error);
+        });
+      },
+    );
+  }
+
+  const listener: SharedUsersListener = { onChange, onError };
+  cache.listeners.add(listener);
+  onChange(cache.users);
+
+  return () => {
+    cache.listeners.delete(listener);
+  };
+}
+
+export function subscribeToAllUsersShared(
+  onChange: (users: User[]) => void,
+  onError?: (error: unknown) => void,
+) {
+  return subscribeToSharedUsersCache(
+    sharedAllUsersCache,
+    (nextOnChange, nextOnError) =>
+      subscribeToAllUsers(nextOnChange, nextOnError),
+    onChange,
+    onError,
+  );
+}
+
+export function subscribeToUsersToVerifyShared(
+  onChange: (users: User[]) => void,
+  onError?: (error: unknown) => void,
+) {
+  return subscribeToSharedUsersCache(
+    sharedUsersToVerifyCache,
+    (nextOnChange, nextOnError) =>
+      subscribeToUsersToVerify(nextOnChange, nextOnError),
+    onChange,
     onError,
   );
 }

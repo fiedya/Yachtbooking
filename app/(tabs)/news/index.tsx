@@ -1,8 +1,6 @@
 import Icon from "@/src/components/Icon";
 import { News } from "@/src/entities/news";
-import { useAuth } from "@/src/providers/AuthProvider";
 import { subscribeToNews } from "@/src/services/newsService";
-import { subscribeToUser } from "@/src/services/userService";
 import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
 import { styles as theme } from "@/src/theme/styles";
@@ -13,17 +11,8 @@ import { useMode } from "../../../src/providers/ModeProvider";
 
 export default function NewsScreen() {
   const { mode } = useMode();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const isAdmin = mode === "admin";
   const [news, setNews] = useState<News[]>([]);
-  const { user, uid, loading: authLoading } = useAuth();
-
-  useEffect(() => {
-    if (!user) return;
-    const unsub = subscribeToUser(user.uid, (profile) => {
-      setIsAdmin(profile?.role === "admin" && mode === "admin");
-    });
-    return unsub;
-  }, [mode]);
 
   useEffect(() => {
     const unsub = subscribeToNews((allNews) => {

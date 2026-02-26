@@ -1,7 +1,9 @@
 import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";
+import { auth } from "@/src/firebase/auth";
+import { useAuth } from "@/src/providers/AuthProvider";
 import { useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -22,12 +24,20 @@ declare global {
 export default function AuthScreen() {
   const router = useRouter();
   const confirmationRef = useRef<any>(null);
+  const { user, loading: authLoading } = useAuth();
 
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"phone" | "code">("phone");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (user) {
+      router.replace("/post-auth");
+    }
+  }, [authLoading, user, router]);
 
   /* --------------------------------
      SEND SMS CODE
@@ -97,11 +107,26 @@ export default function AuthScreen() {
     setError(null);
 
     try {
-      await confirmation.confirm(code);
+      await confirmation.confirm(code.trim());
       router.replace("/post-auth");
-    } catch (e) {
+    } catch (e: any) {
       console.error("[CODE CONFIRM ERROR]", e);
-      setError("Kod nieprawidłowy");
+
+      const currentUser = auth?.currentUser;
+      if (currentUser) {
+        router.replace("/post-auth");
+        return;
+      }
+
+      const errorCode = e?.code;
+      if (
+        errorCode === "auth/invalid-verification-code" ||
+        errorCode === "auth/code-expired"
+      ) {
+        setError("Kod nieprawidłowy");
+      } else {
+        setError("Nie udało się potwierdzić kodu");
+      }
     } finally {
       setLoading(false);
     }

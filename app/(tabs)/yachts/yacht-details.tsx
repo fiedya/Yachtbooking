@@ -1,8 +1,6 @@
 import Icon from "@/src/components/Icon";
 import { Yacht, YachtStatus } from "@/src/entities/yacht";
 import { getYachtStatusLabel } from "@/src/helpers/enumHelper";
-import { useAuth } from "@/src/providers/AuthProvider";
-import { subscribeToUser } from "@/src/services/userService";
 import { getYachtById, updateYacht } from "@/src/services/yachtService";
 import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
@@ -21,7 +19,7 @@ import { useMode } from "../../../src/providers/ModeProvider";
 
 export default function YachtDetailsScreen() {
   const { mode } = useMode();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const isAdmin = mode === "admin";
   const { id } = useLocalSearchParams<{ id: string }>();
   const [yacht, setYacht] = useState<Yacht | null>(null);
   const [editingField, setEditingField] = useState<
@@ -29,7 +27,6 @@ export default function YachtDetailsScreen() {
   >(null);
   const [fieldValue, setFieldValue] = useState("");
   const [saving, setSaving] = useState(false);
-  const { user, uid, loading: authLoading } = useAuth();
   const yachtStatuses: YachtStatus[] = [
     YachtStatus.Available,
     YachtStatus.Maintenance,
@@ -41,14 +38,6 @@ export default function YachtDetailsScreen() {
     if (!id || typeof id !== "string") return;
     getYachtById(id).then(setYacht);
   }, [id]);
-
-  useEffect(() => {
-    if (!user) return;
-    const unsub = subscribeToUser(user.uid, (profile) => {
-      setIsAdmin(profile?.role === "admin" && mode === "admin");
-    });
-    return unsub;
-  }, [mode]);
 
   const startEdit = (field: "shortcut" | "type" | "description") => {
     setEditingField(field);

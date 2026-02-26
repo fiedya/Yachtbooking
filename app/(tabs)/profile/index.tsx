@@ -20,7 +20,7 @@ import {
     Pressable,
     ScrollView,
     Text,
-  TextInput,
+    TextInput,
     View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -55,7 +55,6 @@ function formatNoteDate(value: any) {
 export default function ProfileScreen() {
   const router = useRouter();
   const [profile, setProfile] = useState<User | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [editingField, setEditingField] = useState<
     "description" | null
   >(null);
@@ -71,14 +70,6 @@ export default function ProfileScreen() {
   const [showNoteEditor, setShowNoteEditor] = useState(false);
   const [bookingNote, setBookingNote] = useState("");
   const [savingNote, setSavingNote] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-    const unsub = subscribeToUser(user.uid, (profile) => {
-      setIsAdmin(profile?.role === "admin" && mode === "admin");
-    });
-    return unsub;
-  }, [mode]);
 
   useEffect(() => {
     if (!selectedBooking?.id) {
@@ -137,14 +128,11 @@ export default function ProfileScreen() {
     const end = new Date();
     end.setFullYear(end.getFullYear() + 2);
     const unsub = subscribeToBookings(start, end, (all: Booking[]) => {
-      // Only this user's bookings, only from today onwards
-      const filtered = all
-        .filter(
-          (b: Booking) => b.userId === user.uid && b.start.toDate() >= start,
-        )
-        .sort((a: Booking, b: Booking) => a.start.toDate() - b.start.toDate());
-      setBookings(filtered);
-    });
+      const sorted = all.sort(
+        (a: Booking, b: Booking) => a.start.toDate() - b.start.toDate(),
+      );
+      setBookings(sorted);
+    }, user.uid);
     return () => {
       if (typeof unsub === "function") unsub();
     };
@@ -201,6 +189,7 @@ async function handleLogout() {
 
   const fullName = `${profile.name} ${profile.surname}`;
   const firstLetter = profile.name?.charAt(0)?.toUpperCase() ?? "?";
+  const isAdmin = mode === "admin";
   const canEditSelectedBooking =
     !!selectedBooking &&
     selectedBooking.status !== BookingStatus.Rejected &&

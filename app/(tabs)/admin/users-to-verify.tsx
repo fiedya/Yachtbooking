@@ -1,6 +1,6 @@
 import { UserStatus } from "@/src/entities/user";
 import { getUserStatusLabel } from "@/src/helpers/enumHelper";
-import { subscribeToUsersToVerify } from "@/src/services/userService";
+import { subscribeToUsersToVerifyShared } from "@/src/services/userService";
 import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";
 import { useRouter } from "expo-router";
@@ -38,7 +38,7 @@ export default function UsersToVerifyScreen() {
   useEffect(() => {
     setLoading(true);
 
-    const unsub = subscribeToUsersToVerify(
+    const unsub = subscribeToUsersToVerifyShared(
       (users) => {
         setUsers(users);
         setLoading(false);
