@@ -1,3 +1,7 @@
+// Save Expo push token to user profile
+export async function updateUserPushToken(uid: string, pushToken: string) {
+  return setDoc("users", uid, { pushToken }, { merge: true });
+}
 import {
     getDoc,
     onDocSnapshot,

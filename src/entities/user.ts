@@ -21,4 +21,5 @@ export type User = {
   role: "user" | "admin";
   status: UserStatus;
   preferences?: UserPreferences;
+  pushToken?: string; // Expo push token
 };

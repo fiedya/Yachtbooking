@@ -166,15 +166,13 @@ export default function AllBookingsScreen() {
             <WebDatePicker
               value={filterStartDate}
               onChange={(date) => setFilterStartDate(date)}
-              mode="date"
-            />
+              mode="date"/>
             <Text style={theme.textSecondary}>Koniec</Text>
             <WebDatePicker
               value={filterEndDate}
               onChange={(date) => setFilterEndDate(date)}
               mode="date"
-              minDate={filterStartDate}
-            />
+              minDate={filterStartDate}/>
           </View>
         </View>
       </View>

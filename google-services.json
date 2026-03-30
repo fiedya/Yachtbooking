@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "878201914009",
+    "project_id": "yachtbooking-34dce",
+    "storage_bucket": "yachtbooking-34dce.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:878201914009:android:ea95e9cf7214d17eb8ae08",
+        "android_client_info": {
+          "package_name": "com.syc.yachtbooking"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAk4Aoci1XRTNrmeJzdhYmGT0rF-aBC0uM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

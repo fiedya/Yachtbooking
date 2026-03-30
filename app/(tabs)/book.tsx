@@ -6,7 +6,7 @@ import { useAuth } from "@/src/providers/AuthProvider";
 import { createBooking } from "@/src/services/booking.service";
 import { getAvailableYachtIds } from "@/src/services/calendarService";
 import { getUser, subscribeToUser } from "@/src/services/userService";
-import { getAvailableYachts } from "@/src/services/yachtService";
+import { getAvailableYachts, getYachts } from "@/src/services/yachtService";
 import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
 import { styles } from "@/src/theme/styles";
@@ -15,15 +15,15 @@ import { useIsFocused } from "@react-navigation/native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-    Alert,
-    FlatList,
-    Image,
-    Platform,
-    Pressable,
-    ScrollView,
-    Text,
-    TextInput,
-    View,
+  Alert,
+  FlatList,
+  Image,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import { useMode } from "../../src/providers/ModeProvider";
 
@@ -181,7 +181,7 @@ export default function BookScreen() {
     const editingId = edit && bookingId ? bookingId : undefined;
     const busyIdsAtSave = await getAvailableYachtIds(start, end, editingId);
     const stillAvailableYachts = selectedYachts.filter(
-      (yacht) => !busyIdsAtSave.includes(yacht.id),
+      (yacht: { id: string; }) => !busyIdsAtSave.includes(yacht.id),
     );
 
     if (stillAvailableYachts.length !== selectedYachts.length) {
@@ -223,8 +223,8 @@ export default function BookScreen() {
 
         await updateDoc("bookings", bookingId, {
           userName: fullName,
-          yachtIds: stillAvailableYachts.map((y) => y.id),
-          yachtNames: stillAvailableYachts.map((y) => y.name),
+          yachtIds: stillAvailableYachts.map((y: { id: any; }) => y.id),
+          yachtNames: stillAvailableYachts.map((y: { name: any; }) => y.name),
           start,
           end,
           status: BookingStatus.Pending,
@@ -236,8 +236,8 @@ export default function BookScreen() {
         await createBooking({
           userId: user.uid,
           userName: fullName,
-          yachtIds: stillAvailableYachts.map((y) => y.id),
-          yachtNames: stillAvailableYachts.map((y) => y.name),
+          yachtIds: stillAvailableYachts.map((y: { id: any; }) => y.id),
+          yachtNames: stillAvailableYachts.map((y: { name: any; }) => y.name),
           start,
           end,
         });
@@ -252,11 +252,21 @@ export default function BookScreen() {
     }
   }
 
+
   useEffect(() => {
-    getAvailableYachts().then((data) => {
-      setYachts(data);
-    });
-  }, [edit, bookingId]);
+    // Always show only yachts with status === YachtStatus.Available in user mode
+    if (mode === "admin") {
+      // Admin mode: show all yachts (if needed, can use getYachts or getAllYachts)
+      getYachts().then((data) => {
+        setYachts(data);
+      });
+    } else {
+      // User mode: show only available yachts
+      getAvailableYachts().then((data) => {
+        setYachts(data);
+      });
+    }
+  }, [edit, bookingId, mode]);
 
   useEffect(() => {
     if (!isFocused) {
@@ -281,7 +291,7 @@ export default function BookScreen() {
 
         setAvailableYachtIds(busyIds);
 
-        setSelectedYachts((prev) => prev.filter((y) => !busyIds.includes(y.id)));
+        setSelectedYachts((prev: any[]) => prev.filter((y) => !busyIds.includes(y.id)));
       }).finally(() => {
         if (requestId === availabilityRequestIdRef.current) {
           setValidatingAvailability(false);
@@ -385,10 +395,10 @@ export default function BookScreen() {
               value={date}
               mode="date"
               minimumDate={isAdmin ? undefined : now}
-              onChange={(event, selectedDate) => {
+              onChange={(event, date) => {
                 setShowDatePicker(false);
-                if (selectedDate) {
-                  const selectedDateOnly = new Date(selectedDate);
+                if (date) {
+                  const selectedDateOnly = new Date(date);
                   selectedDateOnly.setHours(0, 0, 0, 0);
                   const todayOnly = new Date(now);
                   todayOnly.setHours(0, 0, 0, 0);
@@ -396,7 +406,7 @@ export default function BookScreen() {
                     Alert.alert("Błąd", "Nie można wybrać przeszłej daty");
                     return;
                   }
-                  setDate(selectedDate);
+                  setDate(date);
                 }
               }}
             />
@@ -429,17 +439,15 @@ export default function BookScreen() {
               value={startTime}
               mode="time"
               display={Platform.OS === "android" ? "spinner" : "default"}
-              onChange={(event, selectedDate) => {
+              onChange={(event, date) => {
                 if (event.type === "dismissed") {
                   setShowStartPicker(false);
                   return;
                 }
-
-                if (selectedDate) {
-                  const snapped = snapToQuarter(selectedDate);
+                if (date) {
+                  const snapped = snapToQuarter(date);
                   setStartTime(snapped);
                 }
-
                 if (Platform.OS === "android") {
                   setShowStartPicker(false);
                 }
@@ -474,17 +482,15 @@ export default function BookScreen() {
               value={endTime}
               mode="time"
               display={Platform.OS === "android" ? "spinner" : "default"}
-              onChange={(event, selectedDate) => {
+              onChange={(event, date) => {
                 if (event.type === "dismissed") {
                   setShowEndPicker(false);
                   return;
                 }
-
-                if (selectedDate) {
-                  const snapped = snapToQuarter(selectedDate);
+                if (date) {
+                  const snapped = snapToQuarter(date);
                   setEndTime(snapped);
                 }
-
                 if (Platform.OS === "android") {
                   setShowEndPicker(false);
                 }
@@ -500,19 +506,19 @@ export default function BookScreen() {
         ) : (
           <FlatList
             data={orderedYachts}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item: { id: any; }) => item.id}
             numColumns={2}
             showsVerticalScrollIndicator={true}
             columnWrapperStyle={{ justifyContent: "space-between" }}
             contentContainerStyle={{ paddingBottom: 8 }}
             renderItem={({ item: y }) => {
-              const selected = selectedYachts.some((item) => item.id === y.id);
+              const selected = selectedYachts.some((item: { id: any; }) => item.id === y.id);
               const isAvailable = !availableYachtIds.includes(y.id);
               return (
                 <Pressable
                   onPress={() => {
                     if (!isAvailable) return;
-                    setSelectedYachts((prev) => {
+                    setSelectedYachts((prev: any[]) => {
                       const exists = prev.some((item) => item.id === y.id);
                       
                       if (isAdmin) {
