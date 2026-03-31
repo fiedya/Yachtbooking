@@ -32,12 +32,31 @@ setGlobalOptions({ maxInstances: 10, region: "europe-west1" });
 // });
 
 import * as admin from "firebase-admin";
-import { onDocumentUpdated } from "firebase-functions/v2/firestore";
+import { onDocumentUpdated, onDocumentCreated } from "firebase-functions/v2/firestore";
 import fetch from "node-fetch";
 
 // Initialize Firebase Admin SDK only once
 if (!admin.apps.length) {
   admin.initializeApp();
+}
+
+async function getAdminPushTokens(): Promise<string[]> {
+  const snapshot = await admin.firestore().collection("users")
+    .where("role", "==", "admin")
+    .get();
+  return snapshot.docs
+    .map(doc => doc.get("pushToken"))
+    .filter(Boolean);
+}
+
+async function sendPushNotifications(tokens: string[], title: string, body: string) {
+  await Promise.all(tokens.map(token =>
+    fetch("https://exp.host/--/api/v2/push/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to: token, title, body }),
+    })
+  ));
 }
 
 export const notifyBookingApproved = onDocumentUpdated(
@@ -73,3 +92,27 @@ export const notifyBookingApproved = onDocumentUpdated(
     }
   }
 });
+
+export const notifyAdminsNewBooking = onDocumentCreated(
+  { document: "bookings/{bookingId}", region: "europe-west1" },
+  async (event) => {
+    const data = event.data?.data();
+    if (!data) return;
+    const tokens = await getAdminPushTokens();
+    if (!tokens.length) return;
+    const userName = data.userName ?? "A user";
+    await sendPushNotifications(tokens, "New Booking", `${userName} has made a new booking.`);
+  }
+);
+
+export const notifyAdminsNewUser = onDocumentCreated(
+  { document: "users/{userId}", region: "europe-west1" },
+  async (event) => {
+    const data = event.data?.data();
+    if (!data) return;
+    const tokens = await getAdminPushTokens();
+    if (!tokens.length) return;
+    const name = data.name && data.surname ? `${data.name} ${data.surname}` : "Someone";
+    await sendPushNotifications(tokens, "New User", `${name} has created an account.`);
+  }
+);

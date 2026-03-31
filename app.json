@@ -18,6 +18,10 @@
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE"
       },
+      "notification": {
+        "icon": "./assets/images/icon.png",
+        "color": "#FF7A00"
+      },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
