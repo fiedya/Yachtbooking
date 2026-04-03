@@ -32,7 +32,7 @@ setGlobalOptions({ maxInstances: 10, region: "europe-west1" });
 // });
 
 import * as admin from "firebase-admin";
-import { onDocumentUpdated, onDocumentCreated } from "firebase-functions/v2/firestore";
+import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
 import fetch from "node-fetch";
 
 // Initialize Firebase Admin SDK only once
@@ -59,39 +59,50 @@ async function sendPushNotifications(tokens: string[], title: string, body: stri
   ));
 }
 
-export const notifyBookingApproved = onDocumentUpdated(
+const userStatusMessages: Record<number, { title: string; body: string }> = {
+  1: { title: "Zaakceptowano booking", body: "Twój booking został zaakceptowany." },
+  2: { title: "Odrzucono booking", body: "Twój booking został odrzucony." },
+};
+
+export const notifyBookingUpdated = onDocumentUpdated(
   { document: "bookings/{bookingId}", region: "europe-west1" },
   async (event) => {
-  console.log("PUSH: BOOKING FIRED", JSON.stringify(event.data?.before?.data()), JSON.stringify(event.data?.after?.data()));
-  const before = event.data?.before?.data();
-  const after = event.data?.after?.data();
-  if (!before || !after) return;
-  // Only notify if status changed to Approved (1)
-  if (before.status !== 1 && after.status === 1) {
-    const userId = after.userId;
-    if (!userId) return;
-    const userDoc = await admin.firestore().collection("users").doc(userId).get();
-    const pushToken = userDoc.get("pushToken");
-    if (!pushToken) return;
+    const before = event.data?.before?.data();
+    const after = event.data?.after?.data();
+    if (!before || !after) return;
+    if (before.status === after.status) return;
 
-    // Send push notification via Expo
-    try {
-      const response = await fetch("https://exp.host/--/api/v2/push/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          to: pushToken,
-          title: "Booking Approved!",
-          body: "Your yacht booking has been approved.",
-        }),
-      });
-      const result = await response.json();
-      console.log("Expo push response:", JSON.stringify(result));
-    } catch (err) {
-      console.error("Failed to send push notification", err);
+    // Notify user on approved/rejected
+    const userMessage = userStatusMessages[after.status];
+    if (userMessage) {
+      const userId = after.userId;
+      if (userId) {
+        const userDoc = await admin.firestore().collection("users").doc(userId).get();
+        const pushToken = userDoc.get("pushToken");
+        if (pushToken) {
+          try {
+            const response = await fetch("https://exp.host/--/api/v2/push/send", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ to: pushToken, title: userMessage.title, body: userMessage.body }),
+            });
+            const result = await response.json();
+            console.log("Expo push response:", JSON.stringify(result));
+          } catch (err) {
+            console.error("Failed to send push notification to user", err);
+          }
+        }
+      }
+    }
+
+    // Notify admins on cancelled (status 3)
+    if (after.status === 3) {
+      const tokens = await getAdminPushTokens();
+      const userName = after.userName ?? "A user";
+      await sendPushNotifications(tokens, "Booking anulowany", `${userName} anulował swój booking.`);
     }
   }
-});
+);
 
 export const notifyAdminsNewBooking = onDocumentCreated(
   { document: "bookings/{bookingId}", region: "europe-west1" },
@@ -101,7 +112,7 @@ export const notifyAdminsNewBooking = onDocumentCreated(
     const tokens = await getAdminPushTokens();
     if (!tokens.length) return;
     const userName = data.userName ?? "A user";
-    await sendPushNotifications(tokens, "New Booking", `${userName} has made a new booking.`);
+    await sendPushNotifications(tokens, "Nowy booking", `${userName} zarezerwował jacht.`);
   }
 );
 
@@ -113,6 +124,6 @@ export const notifyAdminsNewUser = onDocumentCreated(
     const tokens = await getAdminPushTokens();
     if (!tokens.length) return;
     const name = data.name && data.surname ? `${data.name} ${data.surname}` : "Someone";
-    await sendPushNotifications(tokens, "New User", `${name} has created an account.`);
+    await sendPushNotifications(tokens, "Nowy użytkownik", `${name} utworzył konto.`);
   }
 );

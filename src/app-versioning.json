@@ -111,6 +111,19 @@
     "notes": [
       "Kolejke sklepowe dramaty"
     ]
+  },
+   {
+    "version": "0.2.5",
+    "date": "2026-03-31",
+    "notes": [
+      "Prototyp powiadomień przy zmianie statusu bookingu i nowym użytkowniku"
+    ]
+  },
+     {
+    "version": "0.2.6",
+    "date": "2026-04-03",
+    "notes": [
+      "Powiadomienia o bookingu i nowym użytkowniku po polsku"
+    ]
   }
-
 ]
