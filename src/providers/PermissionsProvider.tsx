@@ -44,7 +44,6 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
 
   const resolvedPermissions = useMemo<Set<Permission>>(() => {
     if (!userProfile) return new Set();
-    if (userProfile.role === "admin") return new Set(Object.values(Permission));
 
     const groupIds = new Set(userProfile.permissionGroups ?? []);
     const perms = new Set<Permission>();

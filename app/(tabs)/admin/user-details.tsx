@@ -9,6 +9,7 @@ import {
   updateUserStatus,
 } from "@/src/services/userService";
 import { usePermissions } from "@/src/providers/PermissionsProvider";
+import { useMode } from "@/src/providers/ModeProvider";
 import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -50,8 +51,9 @@ export default function UserDetailsScreen() {
   const { uid } = useLocalSearchParams<{ uid: string }>();
   const { uid: adminUid } = useAuth();
   const router = useRouter();
+  const { mode } = useMode();
   const { can } = usePermissions();
-  const canVerifyUsers = can(Permission.VerifyUsers);
+  const canVerifyUsers = mode === "admin" || can(Permission.VerifyUsers);
   const [user, setUser] = useState<UserDetails | null>(null);
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
