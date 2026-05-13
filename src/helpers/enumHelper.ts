@@ -13,6 +13,8 @@ export function getBookingStatusLabel(status: BookingStatus): string {
       return "Odrzucona";
     case BookingStatus.Cancelled:
       return "Odwołany";
+    case BookingStatus.NoDutyOfficer:
+      return "Brak dyżurnego";
     default:
       return "Nieznany";
   }

@@ -1,4 +1,5 @@
 import { AuthProvider } from "@/src/providers/AuthProvider";
+import { CalendarModeProvider } from "@/src/providers/CalendarModeProvider";
 
 import { registerForPushNotificationsAsync } from "@/src/services/notificationService";
 import { useFonts } from "expo-font";
@@ -15,7 +16,6 @@ export default function RootLayout() {
   useEffect(() => {
     registerForPushNotificationsAsync().then(token => {
       if (token) {
-        // You can send this token to your backend if needed
         console.log('Expo push token:', token);
       }
     });
@@ -24,7 +24,9 @@ export default function RootLayout() {
   return (
     <ModeProvider>
       <AuthProvider>
-        <Stack screenOptions={{ headerShown: false }} />
+        <CalendarModeProvider>
+          <Stack screenOptions={{ headerShown: false }} />
+        </CalendarModeProvider>
       </AuthProvider>
     </ModeProvider>
   );

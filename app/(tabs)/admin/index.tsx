@@ -23,6 +23,9 @@ const TILES: NavTile[] = [
   { label: "Nowe bookingi", description: "Do zatwierdzenia", route: "/admin/bookings-to-approve", icon: "time-outline" },
   { label: "Notatki", description: "Wszystkie zgłoszenia", route: "/admin/all-notes", icon: "document-text-outline" },
   { label: "Nowe notatki", description: "Nieodczytane zgłoszenia", route: "/admin/new-notes", icon: "notifications-outline" },
+  { label: "Wszystkie dyżury", description: "Historia dyżurów", route: "/admin/all-duties", icon: "shield-checkmark-outline" },
+  { label: "Dyżurni", description: "Zapisani dyżurni", route: "/admin/duty-officers", icon: "person-circle-outline" },
+  { label: "Statystyki dyżurów", description: "Czas dyżurów per osoba", route: "/admin/duty-stats", icon: "bar-chart-outline" },
 ];
 
 export default function AdminScreen() {

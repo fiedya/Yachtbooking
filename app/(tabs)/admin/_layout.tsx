@@ -18,6 +18,9 @@ export default function AdminLayout() {
       <Stack.Screen name="note-details" options={{ title: "Szczegóły notatki" }} />
 
       <Stack.Screen name="new-notes" options={{ title: "Nowe notatki" }} />
+      <Stack.Screen name="all-duties" options={{ title: "Wszystkie dyżury" }} />
+      <Stack.Screen name="duty-officers" options={{ title: "Dyżurni" }} />
+      <Stack.Screen name="duty-stats" options={{ title: "Statystyki dyżurów" }} />
     </Stack>
   );
 }

@@ -115,5 +115,29 @@ service cloud.firestore {
       // Only admins can delete notes
       allow delete: if isAdmin();
     }
+
+    // =============================================
+    // DUTIES COLLECTION
+    // =============================================
+
+    match /duties/{dutyId} {
+      // Anyone signed in can read duties (for calendar view)
+      allow read: if isSignedIn();
+
+      // Only admins can create, update, or delete duties
+      allow create, update, delete: if isAdmin();
+    }
+
+    // =============================================
+    // DUTY OFFICERS COLLECTION
+    // =============================================
+
+    match /dutyOfficers/{officerId} {
+      // Anyone signed in can read duty officers (for autocomplete)
+      allow read: if isSignedIn();
+
+      // Only admins can create, update, or delete duty officers
+      allow create, update, delete: if isAdmin();
+    }
   }
 }

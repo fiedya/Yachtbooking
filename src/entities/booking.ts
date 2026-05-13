@@ -3,6 +3,7 @@ export enum BookingStatus {
   Approved = 1,
   Rejected = 2,
   Cancelled = 3,
+  NoDutyOfficer = 4,
 }
 
 export type Booking = {

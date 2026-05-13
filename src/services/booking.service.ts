@@ -17,6 +17,7 @@ export async function createBooking(params: {
   yachtNames: string[];
   start: Date;
   end: Date;
+  status?: BookingStatus.Pending | BookingStatus.NoDutyOfficer;
 }) {
   return addDocAuto("bookings", {
     userId: params.userId,
@@ -25,7 +26,7 @@ export async function createBooking(params: {
     yachtNames: params.yachtNames,
     start: params.start,
     end: params.end,
-    status: BookingStatus.Pending,
+    status: params.status ?? BookingStatus.Pending,
     createdAt: serverTimestamp(),
   });
 }
@@ -104,7 +105,7 @@ export function subscribeToPendingBookings(
     },
     onError,
     {
-      where: ["status", "==", BookingStatus.Pending],
+      where: ["status", "in", [BookingStatus.Pending, BookingStatus.NoDutyOfficer]],
     },
   );
 }
@@ -226,7 +227,7 @@ export function subscribeToUpcomingPendingBookings(
     onError,
     {
       where: [
-        ["status", "==", BookingStatus.Pending],
+        ["status", "in", [BookingStatus.Pending, BookingStatus.NoDutyOfficer]],
         ["start", ">=", rangeStart],
         ["start", "<", rangeEnd],
       ],
@@ -422,6 +423,7 @@ function subscribeToRangeBookings(
                 BookingStatus.Pending,
                 BookingStatus.Approved,
                 BookingStatus.Cancelled,
+                BookingStatus.NoDutyOfficer,
               ],
             ],
           ],

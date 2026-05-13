@@ -31,7 +31,7 @@ export function subscribeToBookings(
         (b: any) =>
           b.start?.toDate?.() < end &&
           b.end?.toDate?.() > start &&
-          [BookingStatus.Pending, BookingStatus.Approved].includes(b.status),
+          [BookingStatus.Pending, BookingStatus.Approved, BookingStatus.NoDutyOfficer].includes(b.status),
       );
 
     onChange(data);
@@ -40,11 +40,11 @@ export function subscribeToBookings(
       ? [
           ["start", "<", end],
           ["userId", "==", userId],
-          ["status", "in", [BookingStatus.Pending, BookingStatus.Approved]],
+          ["status", "in", [BookingStatus.Pending, BookingStatus.Approved, BookingStatus.NoDutyOfficer]],
         ]
       : [
           ["start", "<", end],
-          ["status", "in", [BookingStatus.Pending, BookingStatus.Approved]],
+          ["status", "in", [BookingStatus.Pending, BookingStatus.Approved, BookingStatus.NoDutyOfficer]],
         ],
   });
 }
@@ -94,7 +94,7 @@ export async function getAvailableYachtIds(
   const snapshot: any = await queryDocs("bookings", {
     where: [
       ["start", "<", end],
-      ["status", "in", [BookingStatus.Pending, BookingStatus.Approved]],
+      ["status", "in", [BookingStatus.Pending, BookingStatus.Approved, BookingStatus.NoDutyOfficer]],
     ],
   });
 
@@ -111,7 +111,7 @@ export async function getAvailableYachtIds(
     if (
       d.start?.toDate?.() < end &&
       d.end?.toDate?.() > start &&
-      [BookingStatus.Pending, BookingStatus.Approved].includes(d.status)
+      [BookingStatus.Pending, BookingStatus.Approved, BookingStatus.NoDutyOfficer].includes(d.status)
     ) {
       const yachtIds = d.yachtIds ?? (d.yachtId ? [d.yachtId] : []);
       yachtIds.forEach((id: string) => busyYachtIds.add(id));
