@@ -17,4 +17,5 @@ export type Booking = {
   end: any;
   status: BookingStatus;
   createdAt: any;
+  rejectionReason?: string;
 };

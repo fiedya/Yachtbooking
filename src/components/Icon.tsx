@@ -28,7 +28,10 @@ export default function Icon({
       const map: any = {
         edit: MaterialWebIcons.MdEdit,
         delete: MaterialWebIcons.MdDelete,
-        // add your material mappings here
+        settings: MaterialWebIcons.MdSettings,
+        "photo-camera": MaterialWebIcons.MdPhotoCamera,
+        "keyboard-arrow-up": MaterialWebIcons.MdKeyboardArrowUp,
+        "keyboard-arrow-down": MaterialWebIcons.MdKeyboardArrowDown,
       };
       const Comp = map[name];
       return Comp ? <Comp size={size} color={color} /> : null;
@@ -41,6 +44,17 @@ export default function Icon({
       "add-circle-outline": WebIcons.IoAddCircleOutline,
       "person-outline": WebIcons.IoPersonOutline,
       "key-outline": WebIcons.IoKeyOutline,
+      "camera-outline": WebIcons.IoCameraOutline,
+      "chevron-forward-outline": WebIcons.IoChevronForwardOutline,
+      "people-outline": WebIcons.IoPeopleOutline,
+      "person-add-outline": WebIcons.IoPersonAddOutline,
+      "time-outline": WebIcons.IoTimeOutline,
+      "document-text-outline": WebIcons.IoDocumentTextOutline,
+      "notifications-outline": WebIcons.IoNotificationsOutline,
+      "add": WebIcons.IoAdd,
+      "pencil": WebIcons.IoPencil,
+      "alert-circle-outline": WebIcons.IoAlertCircleOutline,
+      "copy-outline": WebIcons.IoCopyOutline,
     };
 
     const Comp = map[name];

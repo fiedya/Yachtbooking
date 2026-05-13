@@ -275,8 +275,14 @@ export function subscribeToUsersToVerifyShared(
 export async function updateUserStatus(
   userId: string,
   status: UserStatus.Verified | UserStatus.Rejected,
+  rejectionData?: { reason: string; adminUid: string },
 ) {
-  return updateDoc("users", userId, { status });
+  const data: any = { status };
+  if (status === UserStatus.Rejected && rejectionData) {
+    data.rejectionReason = rejectionData.reason;
+    data.rejectedByAdminUid = rejectionData.adminUid;
+  }
+  return updateDoc("users", userId, data);
 }
 
 

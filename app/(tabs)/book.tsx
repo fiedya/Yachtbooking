@@ -36,11 +36,13 @@ export default function BookScreen() {
     endDate: paramEndDate,
     bookingId,
     edit,
+    copyBookingId,
   } = useLocalSearchParams<{
     startDate?: string;
     endDate?: string;
     bookingId?: string;
     edit?: string;
+    copyBookingId?: string;
   }>();
   const { mode } = useMode();
   const isAdmin = mode === "admin";
@@ -95,7 +97,21 @@ export default function BookScreen() {
   }, [paramStartDate, paramEndDate]);
 
   useEffect(() => {
-    if (!edit || !bookingId || !user) return;
+    if (!edit || !bookingId || !user) {
+      setEditingBooking(null);
+      setSelectedYachts([]);
+      setBookingName("");
+      // Reset dates to "now" only when no calendar slot was clicked
+      if (!paramStartDate) {
+        const now = new Date();
+        setDate(now);
+        setStartTime(now);
+        const defaultEnd = new Date(now);
+        defaultEnd.setHours(now.getHours() + 1, now.getMinutes(), 0, 0);
+        setEndTime(defaultEnd);
+      }
+      return;
+    }
 
     getDoc("bookings", bookingId).then((snap: any) => {
       if (!snap.exists()) return;
@@ -144,7 +160,37 @@ export default function BookScreen() {
         );
       }
     });
-  }, [edit, bookingId, isAdmin, user, router]);
+  }, [edit, bookingId, isAdmin, user, router, paramStartDate]);
+
+  useEffect(() => {
+    if (!copyBookingId) return;
+
+    getDoc("bookings", copyBookingId).then((snap: any) => {
+      if (!snap.exists()) return;
+      const data = snap.data();
+      if (!data) return;
+
+      if (data.start && typeof data.start.toDate === "function") {
+        const startDate = data.start.toDate();
+        setDate(startDate);
+        setStartTime(startDate);
+      }
+      if (data.end && typeof data.end.toDate === "function") {
+        setEndTime(data.end.toDate());
+      }
+
+      const yachtIds: string[] = data.yachtIds ?? (data.yachtId ? [data.yachtId] : []);
+      const yachtNames: string[] = data.yachtNames ?? (data.yachtName ? [data.yachtName] : []);
+      if (yachtIds.length > 0) {
+        setSelectedYachts(
+          yachtIds.map((id, index) => ({
+            id,
+            name: yachtNames[index] ?? yachtNames[0] ?? "",
+          })) as Yacht[],
+        );
+      }
+    });
+  }, [copyBookingId]);
 
 
   useEffect(() => {
@@ -178,25 +224,24 @@ export default function BookScreen() {
       return;
     }
 
-    const editingId = edit && bookingId ? bookingId : undefined;
-    const busyIdsAtSave = await getAvailableYachtIds(start, end, editingId);
-    const stillAvailableYachts = selectedYachts.filter(
-      (yacht: { id: string; }) => !busyIdsAtSave.includes(yacht.id),
-    );
-
-    if (stillAvailableYachts.length !== selectedYachts.length) {
-      setAvailableYachtIds(busyIdsAtSave);
-      setSelectedYachts(stillAvailableYachts);
-      Alert.alert(
-        "Błąd",
-        "Wybrany jacht jest już zajęty w tym terminie. Wybierz inny jacht.",
-      );
-      return;
-    }
-
     setLoading(true);
 
     try {
+      const editingId = edit && bookingId ? bookingId : undefined;
+      const busyIdsAtSave = await getAvailableYachtIds(start, end, editingId);
+      const stillAvailableYachts = selectedYachts.filter(
+        (yacht: { id: string; }) => !busyIdsAtSave.includes(yacht.id),
+      );
+
+      if (stillAvailableYachts.length !== selectedYachts.length) {
+        setAvailableYachtIds(busyIdsAtSave);
+        setSelectedYachts(stillAvailableYachts);
+        Alert.alert(
+          "Błąd",
+          "Wybrany jacht jest już zajęty w tym terminie. Wybierz inny jacht.",
+        );
+        return;
+      }
       const profile = await getUser(user.uid);
       let fullName = "";
 
@@ -345,7 +390,7 @@ export default function BookScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: "Nowa rezerwacja",
+          title: copyBookingId ? "Kopiuj rezerwację" : edit ? "Edytuj rezerwację" : "Nowa rezerwacja",
           headerStyle: headerStyles.header,
           headerTitleStyle: headerStyles.title,
         }}

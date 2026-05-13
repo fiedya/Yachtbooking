@@ -63,7 +63,7 @@ export default function AddEditYachtScreen() {
   }
 
   async function handleSave() {
-    if (!name || !type) return;
+    if (!name) return;
 
     setLoading(true);
     try {
@@ -263,10 +263,10 @@ export default function AddEditYachtScreen() {
         <Pressable
           style={[
             theme.button,
-            { opacity: loading || !name || !type ? 0.5 : 1 },
+            { opacity: loading || !name ? 0.5 : 1 },
           ]}
           onPress={handleSave}
-          disabled={loading || !name || !type}
+          disabled={loading || !name}
         >
           <Text style={theme.buttonText}>
             {loading ? "Zapisywanie…" : "Zapisz"}

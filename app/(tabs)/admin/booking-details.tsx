@@ -3,34 +3,12 @@ import { Note } from "@/src/entities/note";
 import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
 import { subscribeToBooking, updateBookingStatus } from "@/src/services/booking.service";
 import { subscribeToNotesForBooking } from "@/src/services/noteService";
+import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";
 import dayjs from "dayjs";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, Platform, Pressable, ScrollView, Text, View } from "react-native";
-
-/* Date helpers */
-function startOfWeek(date: Date) {
-  const d = new Date(date);
-  const day = d.getDay() || 7;
-  d.setDate(d.getDate() - (day - 1));
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function addDays(date: Date, days: number) {
-  const d = new Date(date);
-  d.setDate(d.getDate() + days);
-  return d;
-}
-
-function sameDay(a: Date, b: Date) {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
-}
+import { Alert, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 const NOTE_VISIBLE_COUNT = 3;
 const NOTE_LINE_HEIGHT = 18;
@@ -39,16 +17,37 @@ const NOTE_ITEM_GAP = 6;
 
 function formatNoteDate(value: any) {
   const date = value?.toDate?.() ?? null;
-
   if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
     return "--:--:----";
   }
-
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
-
   return `${day}:${month}:${year}`;
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 8, borderBottomWidth: 1, borderColor: colors.border }}>
+      <Text style={theme.textSecondary}>{label}</Text>
+      <Text style={[theme.textPrimary, { fontWeight: "500", flexShrink: 1, textAlign: "right" }]}>{value}</Text>
+    </View>
+  );
+}
+
+function StatusBadge({ status }: { status: BookingStatus }) {
+  const label = getBookingStatusLabel(status);
+  let bg = colors.lightGrey;
+  let fg = colors.textSecondary;
+  if (status === BookingStatus.Approved) { bg = colors.secondary; fg = colors.white; }
+  if (status === BookingStatus.Rejected || status === BookingStatus.Cancelled) {
+    bg = colors.dangerSoft; fg = colors.danger;
+  }
+  return (
+    <View style={{ backgroundColor: bg, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 5, alignSelf: "flex-start" }}>
+      <Text style={{ fontSize: 13, fontWeight: "600", color: fg }}>{label}</Text>
+    </View>
+  );
 }
 
 type BookingDetails = {
@@ -59,6 +58,7 @@ type BookingDetails = {
   start: any;
   end: any;
   status: BookingStatus;
+  rejectionReason?: string;
 };
 
 export default function BookingDetailsScreen() {
@@ -67,6 +67,8 @@ export default function BookingDetailsScreen() {
   const [booking, setBooking] = useState<BookingDetails | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [updating, setUpdating] = useState(false);
+  const [showRejectInput, setShowRejectInput] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
   const getBookingYachtLabel = (booking: BookingDetails) => {
     const yachtNames = booking.yachtNames ?? (booking.yachtName ? [booking.yachtName] : []);
@@ -75,18 +77,15 @@ export default function BookingDetailsScreen() {
 
   useEffect(() => {
     if (!bookingId) return;
-
     const unsub = subscribeToBooking(bookingId, (booking) => {
       if (!booking) return;
       setBooking(booking);
     });
-
     return unsub;
   }, [bookingId]);
 
   useEffect(() => {
     if (!bookingId) return;
-
     const unsub = subscribeToNotesForBooking(bookingId, (nextNotes) => {
       const sorted = [...nextNotes].sort((a, b) => {
         const aTime = a.createdAt?.toDate?.()?.getTime?.() ?? 0;
@@ -95,41 +94,33 @@ export default function BookingDetailsScreen() {
       });
       setNotes(sorted);
     });
-
     return unsub;
   }, [bookingId]);
 
-  const getNoteAuthorName = (note: Note) => {
-    return note.creatorWasAdmin ? "Admin" : "Użytkownik";
-  };
+  const getNoteAuthorName = (note: Note) => note.creatorWasAdmin ? "Admin" : "Użytkownik";
 
   const notesMaxHeight =
     NOTE_VISIBLE_COUNT * (NOTE_LINE_HEIGHT + NOTE_VERTICAL_PADDING * 2) +
     (NOTE_VISIBLE_COUNT - 1) * NOTE_ITEM_GAP;
   const notesShouldScroll = notes.length > NOTE_VISIBLE_COUNT;
 
-
   if (!booking) {
     return (
       <View style={[theme.screenPadded, theme.center]}>
-        <Text style={theme.textMuted}>Loading booking…</Text>
+        <Text style={theme.textMuted}>Ładowanie…</Text>
       </View>
     );
   }
-  
-  async function updateStatus(
-    nextStatus: BookingStatus.Approved | BookingStatus.Rejected,
-  ) {
-    const actionLabel =
-      nextStatus === BookingStatus.Approved ? "zaakceptować" : "odrzucić";
-    const message = `Na pewno chcesz ${actionLabel} ten booking?`;
+
+  async function handleApprove() {
+    if (!booking) return;
+    const message = "Na pewno chcesz zaakceptować ten booking?";
 
     if (Platform.OS === "web") {
-      const confirmed = window.confirm(message);
-      if (!confirmed || !booking) return;
+      if (!window.confirm(message)) return;
       setUpdating(true);
       try {
-        await updateBookingStatus(booking.id, nextStatus);
+        await updateBookingStatus(booking.id, BookingStatus.Approved);
         router.back();
       } finally {
         setUpdating(false);
@@ -144,10 +135,9 @@ export default function BookingDetailsScreen() {
         style: "destructive",
         onPress: async () => {
           if (!booking) return;
-
           setUpdating(true);
           try {
-            await updateBookingStatus(booking.id, nextStatus);
+            await updateBookingStatus(booking.id, BookingStatus.Approved);
             router.back();
           } finally {
             setUpdating(false);
@@ -157,48 +147,57 @@ export default function BookingDetailsScreen() {
     ]);
   }
 
+  async function handleRejectConfirm() {
+    if (!booking) return;
+    const reason = rejectReason.trim();
+    if (!reason) return;
+    setUpdating(true);
+    try {
+      await updateBookingStatus(booking.id, BookingStatus.Rejected, reason);
+      router.back();
+    } finally {
+      setUpdating(false);
+    }
+  }
 
   const startDate = booking.start?.toDate?.();
   const endDate = booking.end?.toDate?.();
   const isApproved = booking.status === BookingStatus.Approved;
   const isRejected = booking.status === BookingStatus.Rejected;
 
-  const startHour = Math.max(0, (startDate?.getHours?.() ?? 0) - 2);
-  const endHour = Math.min(
-    24,
-    Math.ceil(
-      (endDate?.getHours?.() ?? 0) +
-        (endDate?.getMinutes?.() ?? 0) / 60 +
-        2,
-    ),
-  );
-
   return (
     <ScrollView style={theme.screenPadded} contentContainerStyle={{ paddingBottom: 80 }}>
-      <Text style={theme.title}>{getBookingYachtLabel(booking)}</Text>
-      <Text style={theme.textSecondary}>{booking.userName}</Text>
-
-      <View style={{ marginVertical: 24 }}>
-        <Text style={theme.textMuted}>Daty rezerwacji</Text>
-        <Text style={theme.textPrimary}>
-          {dayjs(startDate).format("DD MMM YYYY HH:mm")} –{" "}
-          {dayjs(endDate).format("DD MMM YYYY HH:mm")}
-        </Text>
+      {/* Booking info card */}
+      <View style={{ backgroundColor: colors.backgroundSoft, borderRadius: 12, padding: 16, marginBottom: 20 }}>
+        <InfoRow label="Jacht" value={getBookingYachtLabel(booking)} />
+        <InfoRow label="Użytkownik" value={booking.userName} />
+        <InfoRow
+          label="Od"
+          value={dayjs(startDate).format("DD MMM YYYY HH:mm")}
+        />
+        <InfoRow
+          label="Do"
+          value={dayjs(endDate).format("DD MMM YYYY HH:mm")}
+        />
+        <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 8 }}>
+          <Text style={theme.textSecondary}>Status</Text>
+          <StatusBadge status={booking.status} />
+        </View>
       </View>
 
-      <View style={{ marginVertical: 16 }}>
-        <Text style={theme.textMuted}>Current status</Text>
-        <Text style={theme.textPrimary}>
-          {getBookingStatusLabel(booking.status)}
-        </Text>
-      </View>
+      {isRejected && booking.rejectionReason && (
+        <View style={{ backgroundColor: colors.dangerSoft, borderRadius: 10, padding: 14, marginBottom: 16 }}>
+          <Text style={{ color: colors.danger, fontWeight: "600", marginBottom: 4 }}>Powód odrzucenia</Text>
+          <Text style={{ color: colors.danger }}>{booking.rejectionReason}</Text>
+        </View>
+      )}
 
-      {notes.length > 0 ? (
-        <View style={{ marginVertical: 10 }}>
-          <Text style={theme.textMuted}>Notatki</Text>
+      {notes.length > 0 && (
+        <View style={{ marginBottom: 20 }}>
+          <Text style={theme.sectionTitle}>Notatki</Text>
           <ScrollView
             nestedScrollEnabled
-            style={notesShouldScroll ? { maxHeight: notesMaxHeight, marginTop: 8 } : { marginTop: 8 }}
+            style={notesShouldScroll ? { maxHeight: notesMaxHeight } : undefined}
             contentContainerStyle={{ paddingRight: 2 }}
           >
             {notes.map((note, index) => (
@@ -218,12 +217,12 @@ export default function BookingDetailsScreen() {
             ))}
           </ScrollView>
         </View>
-      ) : null}
+      )}
 
       {!isApproved && (
         <Pressable
-          style={[theme.button, { opacity: updating ? 0.5 : 1 }]}
-          onPress={() => updateStatus(BookingStatus.Approved)}
+          style={[theme.button, { marginBottom: 12, opacity: updating ? 0.5 : 1 }]}
+          onPress={handleApprove}
           disabled={updating}
         >
           <Text style={theme.buttonText}>
@@ -232,20 +231,49 @@ export default function BookingDetailsScreen() {
         </Pressable>
       )}
 
-      {!isRejected && (
+      {!isRejected && !showRejectInput && (
         <Pressable
-          style={[
-            theme.button,
-            theme.buttonDanger,
-            { opacity: updating ? 0.5 : 1 },
-          ]}
-          onPress={() => updateStatus(BookingStatus.Rejected)}
+          style={[theme.button, theme.buttonDanger, { opacity: updating ? 0.5 : 1 }]}
+          onPress={() => { setRejectReason(""); setShowRejectInput(true); }}
           disabled={updating}
         >
-          <Text style={theme.buttonDangerText}>
-            {updating ? "Przetwarzanie..." : "Odrzuć"}
-          </Text>
+          <Text style={theme.buttonDangerText}>Odrzuć</Text>
         </Pressable>
+      )}
+
+      {showRejectInput && (
+        <View style={[theme.card, theme.cardPadding, { marginTop: 8 }]}>
+          <Text style={[theme.sectionTitle, { marginBottom: 8 }]}>Podaj powód odrzucenia</Text>
+          <TextInput
+            value={rejectReason}
+            onChangeText={setRejectReason}
+            placeholder="Wpisz powód odrzucenia..."
+            placeholderTextColor={colors.textSecondary}
+            style={[theme.input, theme.inputDefaultText, { minHeight: 80 }]}
+            multiline
+            numberOfLines={3}
+            textAlignVertical="top"
+            autoFocus
+          />
+          <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
+            <Pressable
+              style={[theme.button, theme.buttonDanger, { flex: 1, opacity: updating || !rejectReason.trim() ? 0.5 : 1 }]}
+              onPress={handleRejectConfirm}
+              disabled={updating || !rejectReason.trim()}
+            >
+              <Text style={theme.buttonDangerText}>
+                {updating ? "Zapisywanie..." : "Potwierdź odrzucenie"}
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[theme.button, { flex: 1 }]}
+              onPress={() => setShowRejectInput(false)}
+              disabled={updating}
+            >
+              <Text style={theme.buttonText}>Anuluj</Text>
+            </Pressable>
+          </View>
+        </View>
       )}
     </ScrollView>
   );

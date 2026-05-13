@@ -309,6 +309,8 @@ export default function CalendarScreen() {
   const [bookingNote, setBookingNote] = useState("");
   const [savingNote, setSavingNote] = useState(false);
   const [bookingNotes, setBookingNotes] = useState<Note[]>([]);
+  const [showAdminRejectInput, setShowAdminRejectInput] = useState(false);
+  const [adminRejectReason, setAdminRejectReason] = useState("");
   const [modalUserPhoto, setModalUserPhoto] = useState<string | null>(null);
   const { user } = useAuth();
   const suppressGridPressRef = useRef(false);
@@ -940,6 +942,8 @@ useEffect(() => {
           onPress={() => {
             setSelectedBooking(null);
             setShowNoteEditor(false);
+            setShowAdminRejectInput(false);
+            setAdminRejectReason("");
           }}
         >
           <Pressable style={theme.modal} onPress={(e) => e.stopPropagation()}>
@@ -957,24 +961,41 @@ useEffect(() => {
                   settings.useYachtShortcuts,
                 )}
               </Text>
-              {canEditSelectedBooking && (
-                <Pressable
-                  onPress={() => {
-                    setSelectedBooking(null);
-                    router.push({
-                      pathname: "/(tabs)/book",
-                      params: {
-                        bookingId: selectedBooking.id,
-                        edit: "1",
-                      },
-                    });
-                  }}
-                  style={{ marginLeft: 8 }}
-                  accessibilityLabel="Edytuj rezerwację"
-                >
-                  <Icon name="pencil" size={24} color={colors.primary} />
-                </Pressable>
-              )}
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                {isAdmin && (
+                  <Pressable
+                    onPress={() => {
+                      setSelectedBooking(null);
+                      router.push({
+                        pathname: "/(tabs)/book",
+                        params: { copyBookingId: selectedBooking.id },
+                      });
+                    }}
+                    style={{ padding: 4 }}
+                    accessibilityLabel="Kopiuj rezerwację"
+                  >
+                    <Icon name="copy-outline" size={22} color={colors.primary} />
+                  </Pressable>
+                )}
+                {canEditSelectedBooking && (
+                  <Pressable
+                    onPress={() => {
+                      setSelectedBooking(null);
+                      router.push({
+                        pathname: "/(tabs)/book",
+                        params: {
+                          bookingId: selectedBooking.id,
+                          edit: "1",
+                        },
+                      });
+                    }}
+                    style={{ padding: 4 }}
+                    accessibilityLabel="Edytuj rezerwację"
+                  >
+                    <Icon name="pencil" size={22} color={colors.primary} />
+                  </Pressable>
+                )}
+              </View>
             </View>
             <View
               style={{
@@ -1023,17 +1044,26 @@ useEffect(() => {
                 .toDate()
                 .toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </Text>
-            <Text
-              style={[
-                theme.textPrimary,
-                {
-                  marginBottom: 8,
-                },
-              ]}
-            >
-              {"Status: "}
-              {getBookingStatusLabel(selectedBooking.status)}
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <Text style={theme.textPrimary}>
+                {"Status: "}{getBookingStatusLabel(selectedBooking.status)}
+              </Text>
+              {selectedBooking.status === BookingStatus.Rejected && selectedBooking.rejectionReason ? (
+                <Pressable
+                  onPress={() => Alert.alert("Powód odrzucenia", selectedBooking.rejectionReason)}
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    backgroundColor: colors.danger,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text style={{ color: colors.white, fontSize: 11, fontWeight: "700" }}>?</Text>
+                </Pressable>
+              ) : null}
+            </View>
 
             {bookingNotes.length > 0 && (
               <View style={{ marginBottom: 12 }}>
@@ -1154,16 +1184,13 @@ useEffect(() => {
                     minWidth: 90,
                     alignItems: "center",
                   }}
-                  onPress={async () => {
-                    updateBookingStatus(
-                      selectedBooking.id,
-                      BookingStatus.Rejected,
-                    );
-                    setSelectedBooking(null);
+                  onPress={() => {
+                    setAdminRejectReason("");
+                    setShowAdminRejectInput(true);
                   }}
                 >
                   <Text style={{ color: colors.white, fontWeight: "bold" }}>
-                    Odrzuc
+                    Odrzuć
                   </Text>
                 </Pressable>
               </View>
@@ -1174,11 +1201,54 @@ useEffect(() => {
               onPress={() => {
                 setSelectedBooking(null);
                 setShowNoteEditor(false);
+                setShowAdminRejectInput(false);
+                setAdminRejectReason("");
               }}
             >
               <Text style={theme.link}>Zamknij</Text>
             </Pressable>
           </Pressable>
+
+          {showAdminRejectInput && (
+            <Pressable
+              style={theme.modalOverlay}
+              onPress={() => setShowAdminRejectInput(false)}
+            >
+              <Pressable style={theme.modal} onPress={(e) => e.stopPropagation()}>
+                <Text style={theme.title}>Powód odrzucenia</Text>
+                <TextInput
+                  value={adminRejectReason}
+                  onChangeText={setAdminRejectReason}
+                  style={[theme.input, theme.inputDefaultText, { minHeight: 90 }]}
+                  placeholder="Wpisz powód odrzucenia"
+                  placeholderTextColor={colors.textSecondary}
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                  autoFocus
+                />
+                <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10, marginTop: 12 }}>
+                  <Pressable onPress={() => setShowAdminRejectInput(false)}>
+                    <Text style={theme.link}>Anuluj</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={async () => {
+                      const reason = adminRejectReason.trim();
+                      if (!reason || !selectedBooking?.id) return;
+                      await updateBookingStatus(selectedBooking.id, BookingStatus.Rejected, reason);
+                      setShowAdminRejectInput(false);
+                      setSelectedBooking(null);
+                    }}
+                    disabled={!adminRejectReason.trim()}
+                  >
+                    <Text style={[theme.link, !adminRejectReason.trim() && { opacity: 0.4 }]}>
+                      Odrzuć
+                    </Text>
+                  </Pressable>
+                </View>
+              </Pressable>
+            </Pressable>
+          )}
 
           {showNoteEditor && (
             <Pressable

@@ -125,5 +125,16 @@
     "notes": [
       "Powiadomienia o bookingu i nowym użytkowniku po polsku"
     ]
+  },
+     {
+    "version": "0.2.7",
+    "date": "2026-05-06",
+    "notes": [
+      "Rework estetyki w większości aplikacji",
+      "Anulowane rezerwacje nie były wyświetlane w profilu",
+      "Widok powodu odrzucenia bookingu",
+      "Reset danych przy tworzeniu nowego bookingu (zapamiętywało dane poprzedniej rezerwacji",
+      "Kopiowanie bookingu możliwe dla adminów"
+    ]
   }
 ]

@@ -1,11 +1,29 @@
+import Icon from "@/src/components/Icon";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { subscribeToUser } from "@/src/services/userService";
+import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
 import { styles } from "@/src/theme/styles";
 import { Stack, useRootNavigationState, useRouter } from "expo-router";
 import { useEffect } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { useMode } from "../../../src/providers/ModeProvider";
+
+type NavTile = {
+  label: string;
+  description: string;
+  route: string;
+  icon: string;
+};
+
+const TILES: NavTile[] = [
+  { label: "Użytkownicy", description: "Wszyscy członkowie klubu", route: "/admin/all-users", icon: "people-outline" },
+  { label: "Nowi użytkownicy", description: "Oczekują na weryfikację", route: "/admin/users-to-verify", icon: "person-add-outline" },
+  { label: "Wszystkie bookingi", description: "Historia rezerwacji", route: "/admin/all-bookings", icon: "calendar-outline" },
+  { label: "Nowe bookingi", description: "Do zatwierdzenia", route: "/admin/bookings-to-approve", icon: "time-outline" },
+  { label: "Notatki", description: "Wszystkie zgłoszenia", route: "/admin/all-notes", icon: "document-text-outline" },
+  { label: "Nowe notatki", description: "Nieodczytane zgłoszenia", route: "/admin/new-notes", icon: "notifications-outline" },
+];
 
 export default function AdminScreen() {
   const router = useRouter();
@@ -32,55 +50,50 @@ export default function AdminScreen() {
   }, [rootNavigationState?.key, authLoading, user?.uid, mode, router]);
 
   return (
-    <View style={styles.screenPadded}>
+    <View style={styles.screen}>
       <Stack.Screen
         options={{
           headerShown: true,
-          title: "Admin",
+          title: "Panel Admina",
           headerStyle: headerStyles.header,
           headerTitleStyle: headerStyles.title,
         }}
       />
-      <Pressable
-        style={[styles.button, { marginBottom: 12 }]}
-        onPress={() => router.push("/admin/all-users")}>
-        <Text style={styles.buttonText}>Użytkownicy</Text>
-      </Pressable>
-
-      <Pressable
-        style={[styles.button, { marginBottom: 12 }]}
-        onPress={() => router.push("/admin/users-to-verify")} >
-        <Text style={styles.buttonText}>Nowi użytkownicy</Text>
-      </Pressable>
-
-      <Pressable
-        style={[styles.button, { marginTop: 12 }]}
-        onPress={() => router.push("/admin/all-bookings")}>
-        <Text style={styles.buttonText}>Wszystkie bookingi</Text>
-      </Pressable>
-
-      <Pressable
-        style={[styles.button, { marginTop: 12 }]}
-        onPress={() => router.push("/admin/bookings-to-approve")}
-      >
-        <Text style={styles.buttonText}>Nowe bookingi</Text>
-      </Pressable>
-
-      <Pressable
-        style={[styles.button, { marginTop: 12 }]}
-        onPress={() => router.push("/admin/all-notes")}
-      >
-        <Text style={styles.buttonText}>Notatki</Text>
-      </Pressable>
-
-      <Pressable
-        style={[styles.button, { marginTop: 12 }]}
-        onPress={() => router.push("/admin/new-notes")}
-      >
-        <Text style={styles.buttonText}>Nowe notatki</Text>
-      </Pressable>
-
-
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 48 }}>
+        {TILES.map((tile) => (
+          <Pressable
+            key={tile.route}
+            onPress={() => router.push(tile.route as any)}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: colors.backgroundSoft,
+              borderRadius: 12,
+              padding: 16,
+              marginBottom: 12,
+              gap: 14,
+            }}
+          >
+            <View
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: colors.primary,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Icon name={tile.icon} size={22} color={colors.white} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.textPrimary, { fontWeight: "600" }]}>{tile.label}</Text>
+              <Text style={styles.textSecondary}>{tile.description}</Text>
+            </View>
+            <Icon name="chevron-forward-outline" size={20} color={colors.textMuted} />
+          </Pressable>
+        ))}
+      </ScrollView>
     </View>
   );
 }

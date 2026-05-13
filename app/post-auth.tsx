@@ -45,6 +45,11 @@ export default function PostAuthScreen() {
         return;
       }
 
+      if (userDoc.status === 2 /* Rejected */) {
+        router.replace("/user-rejected");
+        return;
+      }
+
       router.replace("/(tabs)/calendar");
     }
 

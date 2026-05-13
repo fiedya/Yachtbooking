@@ -49,6 +49,39 @@ export function subscribeToBookings(
   });
 }
 
+// Returns ALL bookings (all statuses) for a specific user in a date range.
+// Uses a single-field where clause to avoid composite index requirements.
+export function subscribeToUserAllBookings(
+  userId: string,
+  rangeStart: Date,
+  rangeEnd: Date,
+  onChange: (bookings: any[]) => void,
+) {
+  return onSnapshot("bookings", (snapshot: any) => {
+    if (!snapshot) {
+      onChange([]);
+      return;
+    }
+
+    const docs = snapshot.docs ?? snapshot._docs ?? [];
+
+    const data = docs
+      .map((doc: any) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+      .filter(
+        (b: any) =>
+          b.start?.toDate?.() < rangeEnd &&
+          b.end?.toDate?.() > rangeStart,
+      );
+
+    onChange(data);
+  }, undefined, {
+    where: [["userId", "==", userId]],
+  });
+}
+
 /* ----------------------------------
    Availability query
 ----------------------------------- */

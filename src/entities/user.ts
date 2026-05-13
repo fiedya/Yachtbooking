@@ -22,4 +22,6 @@ export type User = {
   status: UserStatus;
   preferences?: UserPreferences;
   pushToken?: string; // Expo push token
+  rejectionReason?: string;
+  rejectedByAdminUid?: string;
 };

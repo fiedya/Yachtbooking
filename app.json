@@ -2,7 +2,7 @@
   "expo": {
     "name": "YachtBooking",
     "slug": "YachtBooking",
-    "version": "0.2.6",
+    "version": "0.2.7",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "yachtbooking",
@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "com.syc.yachtbooking",
-      "versionCode": 7,
+      "versionCode": 8,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE"

@@ -60,3 +60,14 @@ export function addNotificationReceivedListener(listener: (notification: Notific
 export function addNotificationResponseReceivedListener(listener: (response: Notifications.NotificationResponse) => void) {
   return Notifications.addNotificationResponseReceivedListener(listener);
 }
+
+export async function sendLocalNotification(title: string, body: string) {
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: { title, body },
+      trigger: null,
+    });
+  } catch (e) {
+    console.log('[Push] Error scheduling local notification:', e);
+  }
+}

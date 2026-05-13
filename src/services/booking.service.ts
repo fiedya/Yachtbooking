@@ -65,8 +65,13 @@ export async function updateBookingStatus(
     | BookingStatus.Approved
     | BookingStatus.Rejected
     | BookingStatus.Cancelled,
+  rejectionReason?: string,
 ) {
-  return updateDoc("bookings", bookingId, { status });
+  const data: any = { status };
+  if (status === BookingStatus.Rejected && rejectionReason) {
+    data.rejectionReason = rejectionReason;
+  }
+  return updateDoc("bookings", bookingId, data);
 }
 
 

@@ -1,5 +1,6 @@
 import { UserStatus } from "@/src/entities/user";
 import { useAuth } from "@/src/providers/AuthProvider";
+import { sendLocalNotification } from "@/src/services/notificationService";
 import { subscribeToUser } from "@/src/services/userService";
 import { styles as theme } from "@/src/theme/styles";
 import { useRouter } from "expo-router";
@@ -16,14 +17,24 @@ export default function WaitForVerificationScreen() {
       return;
     }
 
-    const unsubscribe = subscribeToUser(user.uid, (profile) => {
+    const unsubscribe = subscribeToUser(user.uid, async (profile) => {
       if (!profile) {
         router.replace("/auth");
         return;
       }
 
-      if (profile.status !== UserStatus.ToVerify) {
+      if (profile.status === UserStatus.Verified) {
+        await sendLocalNotification(
+          "Konto zaakceptowane",
+          "Twoje konto zostało zaakceptowane. Możesz teraz korzystać z aplikacji.",
+        );
         router.replace("/post-auth");
+      } else if (profile.status === UserStatus.Rejected) {
+        await sendLocalNotification(
+          "Konto odrzucone",
+          "Twoje konto zostało odrzucone przez administratora.",
+        );
+        router.replace("/user-rejected");
       }
     });
 
