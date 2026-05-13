@@ -143,5 +143,12 @@
     "notes": [
       "Prototyp dyżurów"
     ]
+  },
+ {
+    "version": "0.3.1",
+    "date": "2026-05-13",
+    "notes": [
+      "Poprawki do dyżurów - data od-do i utkniecie na ktorymś kalendarzu"
+    ]
   }
 ]

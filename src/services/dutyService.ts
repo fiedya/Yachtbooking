@@ -30,10 +30,7 @@ function isFullyCovered(
 export async function checkDutyCoverage(start: Date, end: Date): Promise<boolean> {
   try {
     const snapshot: any = await queryDocs("duties", {
-      where: [
-        ["start", "<", end],
-        ["end", ">", start],
-      ],
+      where: [["start", "<", end]],
     });
 
     const docs = snapshot.docs ?? snapshot._docs ?? [];
@@ -53,13 +50,11 @@ export async function checkDutyCoverage(start: Date, end: Date): Promise<boolean
 
 export async function checkDutyOverlap(start: Date, end: Date, excludeId?: string): Promise<boolean> {
   const snapshot: any = await queryDocs("duties", {
-    where: [
-      ["start", "<", end],
-      ["end", ">", start],
-    ],
+    where: [["start", "<", end]],
   });
   const docs = snapshot.docs ?? snapshot._docs ?? [];
-  const filtered = excludeId ? docs.filter((d: any) => d.id !== excludeId) : docs;
+  const filtered = (excludeId ? docs.filter((d: any) => d.id !== excludeId) : docs)
+    .filter((d: any) => d.data().end.toDate() > start);
   return filtered.length > 0;
 }
 
@@ -172,13 +167,12 @@ export async function getDutyOfficersOnce(): Promise<DutyOfficer[]> {
 
 export async function getDutiesInRange(start: Date, end: Date): Promise<Duty[]> {
   const snapshot: any = await queryDocs("duties", {
-    where: [
-      ["start", "<", end],
-      ["end", ">", start],
-    ],
+    where: [["start", "<", end]],
   });
   const docs = snapshot.docs ?? snapshot._docs ?? [];
-  return docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as Duty));
+  return docs
+    .filter((doc: any) => doc.data().end.toDate() > start)
+    .map((doc: any) => ({ id: doc.id, ...doc.data() } as Duty));
 }
 
 /* ----------------------------------
@@ -210,10 +204,7 @@ export function subscribeToWeekDuties(
     },
     onError,
     {
-      where: [
-        ["start", "<", weekEnd],
-        ["end", ">", weekStart],
-      ],
+      where: [["start", "<", weekEnd]],
     },
   );
 }

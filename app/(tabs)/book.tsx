@@ -600,7 +600,12 @@ export default function BookScreen() {
             <WebDatePicker
               mode="date"
               value={dutyStartDate}
-              onChange={setDutyStartDate}
+              onChange={(d) => {
+                setDutyStartDate(d);
+                const dDay = new Date(d); dDay.setHours(0, 0, 0, 0);
+                const eDay = new Date(dutyEndDate); eDay.setHours(0, 0, 0, 0);
+                if (eDay < dDay) setDutyEndDate(d);
+              }}
               placeholder="YYYY-MM-DD"
             />
           ) : (
@@ -612,7 +617,15 @@ export default function BookScreen() {
                 <DateTimePicker
                   value={dutyStartDate}
                   mode="date"
-                  onChange={(_, d) => { setShowDutyStartDatePicker(false); if (d) setDutyStartDate(d); }}
+                  onChange={(_, d) => {
+                    setShowDutyStartDatePicker(false);
+                    if (d) {
+                      setDutyStartDate(d);
+                      const dDay = new Date(d); dDay.setHours(0, 0, 0, 0);
+                      const eDay = new Date(dutyEndDate); eDay.setHours(0, 0, 0, 0);
+                      if (eDay < dDay) setDutyEndDate(d);
+                    }
+                  }}
                 />
               )}
             </>

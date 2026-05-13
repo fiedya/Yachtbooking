@@ -27,6 +27,12 @@ export function CalendarModeProvider({ children }: { children: React.ReactNode }
   const { mode } = useMode();
 
   useEffect(() => {
+    if (mode !== "admin") {
+      setCalendarMode("yachtbooking");
+    }
+  }, [mode]);
+
+  useEffect(() => {
     if (mode !== "admin" || !user) {
       setDutyOfficers([]);
       return;
