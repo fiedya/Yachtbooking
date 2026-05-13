@@ -23,6 +23,7 @@ const TILES: NavTile[] = [
   { label: "Nowe bookingi", description: "Do zatwierdzenia", route: "/admin/bookings-to-approve", icon: "time-outline" },
   { label: "Notatki", description: "Wszystkie zgłoszenia", route: "/admin/all-notes", icon: "document-text-outline" },
   { label: "Nowe notatki", description: "Nieodczytane zgłoszenia", route: "/admin/new-notes", icon: "notifications-outline" },
+  { label: "Grupy uprawnień", description: "Zarządzaj rolami i dostępem", route: "/admin/permission-groups", icon: "shield-checkmark-outline" },
 ];
 
 export default function AdminScreen() {

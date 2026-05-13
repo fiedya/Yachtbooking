@@ -7,6 +7,8 @@ import { Note } from "@/src/entities/note";
 import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { useMode } from "@/src/providers/ModeProvider";
+import { Permission } from "@/src/entities/permissionGroup";
+import { usePermissions } from "@/src/providers/PermissionsProvider";
 import { subscribeToSharedWeekBookings, updateBookingStatus } from "@/src/services/booking.service";
 import { createNote, subscribeToNotesForBooking } from "@/src/services/noteService";
 import { getUserPhotoUrl, subscribeToUser } from "@/src/services/userService";
@@ -301,6 +303,8 @@ export default function CalendarScreen() {
   const isFocused = useIsFocused();
   const { mode } = useMode();
   const isAdmin = mode === "admin";
+  const { can } = usePermissions();
+  const canApproveBooking = isAdmin || can(Permission.ApproveBooking);
   const [weekmode, setWeekmode] = useState<"week" | "month">("week");
   const [weekOffset, setWeekOffset] = useState(0);
   const [bookings, setBookings] = useState<any[]>([]);
@@ -1145,7 +1149,7 @@ useEffect(() => {
             )}
 
             {/* Admin Approve/Reject Buttons */}
-            {isAdmin && selectedBooking && (
+            {canApproveBooking && selectedBooking && (
               <View
                 style={{
                   flexDirection: "row",

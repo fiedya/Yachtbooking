@@ -293,6 +293,13 @@ export async function updateUserAvatar(
   return updateDoc("users", userId, { photoUrl });
 }
 
+export async function updateUserPermissionGroups(
+  userId: string,
+  permissionGroups: string[],
+) {
+  return updateDoc("users", userId, { permissionGroups });
+}
+
 export async function probeUserPermissions(userId: string) {
   try {
     await getDoc("settings", userId);

@@ -103,6 +103,10 @@ export function onSnapshot(
   return q.onSnapshot(cb, err);
 }
 
+export function deleteDoc(col: string, id: string) {
+  return firestore().collection(col).doc(id).delete();
+}
+
 export function addDocAuto(col: string, data: any) {
   return firestore().collection(col).add(data);
 }

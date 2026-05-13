@@ -96,6 +96,18 @@ service cloud.firestore {
     }
     
     // =============================================
+    // PERMISSION GROUPS COLLECTION
+    // =============================================
+
+    match /permissionGroups/{groupId} {
+      // All signed-in users can read groups (needed to resolve own permissions)
+      allow read: if isSignedIn();
+
+      // Only admins can create, update, or delete groups
+      allow create, update, delete: if isAdmin();
+    }
+
+    // =============================================
     // NOTES COLLECTION
     // =============================================
     

@@ -18,6 +18,9 @@ export default function AdminLayout() {
       <Stack.Screen name="note-details" options={{ title: "Szczegóły notatki" }} />
 
       <Stack.Screen name="new-notes" options={{ title: "Nowe notatki" }} />
+
+      <Stack.Screen name="permission-groups" options={{ title: "Grupy uprawnień" }} />
+      <Stack.Screen name="permission-group-details" options={{ title: "Szczegóły grupy" }} />
     </Stack>
   );
 }

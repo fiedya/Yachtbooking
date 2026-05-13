@@ -25,6 +25,8 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { Permission } from "@/src/entities/permissionGroup";
+import { usePermissions } from "@/src/providers/PermissionsProvider";
 import { useMode } from "../../src/providers/ModeProvider";
 
 export default function BookScreen() {
@@ -46,6 +48,8 @@ export default function BookScreen() {
   }>();
   const { mode } = useMode();
   const isAdmin = mode === "admin";
+  const { can } = usePermissions();
+  const canMultiYacht = isAdmin || can(Permission.MultiYachtBooking);
   const getDatePart = (iso?: string) => (iso ? new Date(iso) : new Date());
   const getTimePart = (iso?: string) => (iso ? new Date(iso) : new Date());
   const getDefaultEndTime = (startIso?: string, endIso?: string) => {
@@ -566,14 +570,12 @@ export default function BookScreen() {
                     setSelectedYachts((prev: any[]) => {
                       const exists = prev.some((item) => item.id === y.id);
                       
-                      if (isAdmin) {
-                        // Admin: toggle multi-select
+                      if (canMultiYacht) {
                         if (exists) {
                           return prev.filter((item) => item.id !== y.id);
                         }
                         return [...prev, y];
                       } else {
-                        // Non-admin: single selection (radio-button)
                         if (exists) {
                           return prev.filter((item) => item.id !== y.id);
                         }

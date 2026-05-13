@@ -10,7 +10,7 @@ export type UserPreferences = {
 };
 
 export type User = {
-  uid: string; // Firebase Auth UID (doc ID)
+  uid: string;
   phone: string;
   name: string;
   surname: string;
@@ -21,7 +21,8 @@ export type User = {
   role: "user" | "admin";
   status: UserStatus;
   preferences?: UserPreferences;
-  pushToken?: string; // Expo push token
+  pushToken?: string;
   rejectionReason?: string;
   rejectedByAdminUid?: string;
+  permissionGroups?: string[];
 };

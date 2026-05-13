@@ -1,5 +1,5 @@
 import { AuthProvider } from "@/src/providers/AuthProvider";
-
+import { PermissionsProvider } from "@/src/providers/PermissionsProvider";
 import { registerForPushNotificationsAsync } from "@/src/services/notificationService";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
@@ -24,7 +24,9 @@ export default function RootLayout() {
   return (
     <ModeProvider>
       <AuthProvider>
-        <Stack screenOptions={{ headerShown: false }} />
+        <PermissionsProvider>
+          <Stack screenOptions={{ headerShown: false }} />
+        </PermissionsProvider>
       </AuthProvider>
     </ModeProvider>
   );

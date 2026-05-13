@@ -23,5 +23,6 @@ export const updateDoc = impl.updateDoc;
 export const queryDocs = impl.queryDocs;
 export const onSnapshot = impl.onSnapshot;
 export const serverTimestamp = impl.serverTimestamp;
+export const deleteDoc = impl.deleteDoc;
 export const addDocAuto = impl.addDocAuto;
 export const onDocSnapshot = impl.onDocSnapshot;
