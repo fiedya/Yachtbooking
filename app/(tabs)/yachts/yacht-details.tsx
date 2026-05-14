@@ -17,6 +17,8 @@ import {
     TextInput,
     View,
 } from "react-native";
+import { Permission } from "@/src/entities/permissionGroup";
+import { usePermissions } from "@/src/providers/PermissionsProvider";
 import { useMode } from "../../../src/providers/ModeProvider";
 
 const yachtStatuses: YachtStatus[] = [
@@ -122,6 +124,9 @@ function EditableRow({
 export default function YachtDetailsScreen() {
   const { mode } = useMode();
   const isAdmin = mode === "admin";
+  const { can } = usePermissions();
+  const canEditYacht = isAdmin || can(Permission.EditYacht);
+  const canChangeStatus = isAdmin || can(Permission.ChangeYachtStatus);
   const { id } = useLocalSearchParams<{ id: string }>();
   const [yacht, setYacht] = useState<Yacht | null>(null);
   const [editingField, setEditingField] = useState<null | "shortcut" | "type" | "description">(null);
@@ -170,7 +175,7 @@ export default function YachtDetailsScreen() {
 
   const changeStatus = async (status: YachtStatus) => {
     if (!id || typeof id !== "string") return;
-    if (!isAdmin || !yacht || yacht.status === status) return;
+    if (!canChangeStatus || !yacht || yacht.status === status) return;
     setSaving(true);
     try {
       await updateYacht(id, { status });
@@ -205,8 +210,8 @@ export default function YachtDetailsScreen() {
         {/* Hero image */}
         <Pressable
           style={{ width: "100%", height: 240 }}
-          onPress={isAdmin ? handleChangePhoto : undefined}
-          disabled={!isAdmin || saving}
+          onPress={canEditYacht ? handleChangePhoto : undefined}
+          disabled={!canEditYacht || saving}
         >
           <Image
             source={
@@ -217,7 +222,7 @@ export default function YachtDetailsScreen() {
             style={{ width: "100%", height: "100%", opacity: saving ? 0.6 : 1 }}
             resizeMode="cover"
           />
-          {isAdmin && (
+          {canEditYacht && (
             <View
               style={{
                 position: "absolute",
@@ -242,7 +247,7 @@ export default function YachtDetailsScreen() {
             editingField={editingField}
             fieldValue={fieldValue}
             saving={saving}
-            isAdmin={isAdmin}
+            isAdmin={canEditYacht}
             placeholder="Brak skrótu"
             onStartEdit={() => startEdit("shortcut")}
             onChangeText={setFieldValue}
@@ -256,7 +261,7 @@ export default function YachtDetailsScreen() {
             editingField={editingField}
             fieldValue={fieldValue}
             saving={saving}
-            isAdmin={isAdmin}
+            isAdmin={canEditYacht}
             placeholder="Brak typu"
             onStartEdit={() => startEdit("type")}
             onChangeText={setFieldValue}
@@ -270,7 +275,7 @@ export default function YachtDetailsScreen() {
             editingField={editingField}
             fieldValue={fieldValue}
             saving={saving}
-            isAdmin={isAdmin}
+            isAdmin={canEditYacht}
             multiline
             placeholder="Brak opisu"
             onStartEdit={() => startEdit("description")}
@@ -282,7 +287,7 @@ export default function YachtDetailsScreen() {
           {/* Status */}
           <View style={{ paddingVertical: 12 }}>
             <Text style={[theme.textSecondary, { marginBottom: 10 }]}>Status</Text>
-            {isAdmin ? (
+            {canChangeStatus ? (
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
                 {yachtStatuses.map((statusValue) => {
                   const isActive = yacht.status === statusValue;

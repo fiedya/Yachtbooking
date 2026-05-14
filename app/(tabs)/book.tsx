@@ -1,9 +1,11 @@
 import WebDatePicker from "@/src/components/WebDatePicker";
 import { BookingStatus } from "@/src/entities/booking";
+import { Permission } from "@/src/entities/permissionGroup";
 import { Yacht } from "@/src/entities/yacht";
 import { getDoc, updateDoc } from "@/src/firebase/init";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { useCalendarMode } from "@/src/providers/CalendarModeProvider";
+import { usePermissions } from "@/src/providers/PermissionsProvider";
 import { createBooking } from "@/src/services/booking.service";
 import { getAvailableYachtIds } from "@/src/services/calendarService";
 import { checkDutyCoverage, createDuty, getDuty, updateDuty } from "@/src/services/dutyService";
@@ -51,9 +53,11 @@ export default function BookScreen() {
   const { mode } = useMode();
   const isAdmin = mode === "admin";
   const { calendarMode, dutyOfficers } = useCalendarMode();
-  const isEditingDuty = isAdmin && !!dutyId && edit === "1";
-  const isDutyMode = (calendarMode === "duties" && isAdmin && !edit && !copyBookingId) || isEditingDuty;
-
+  const { can } = usePermissions();
+  const canMultiYacht = isAdmin || can(Permission.MultiYachtBooking);
+  const canManageDuty = isAdmin || can(Permission.ManageDuty);
+  const isEditingDuty = canManageDuty && !!dutyId && edit === "1";
+  const isDutyMode = (calendarMode === "duties" && canManageDuty && !edit && !copyBookingId) || isEditingDuty;
   const getDatePart = (iso?: string) => (iso ? new Date(iso) : new Date());
   const getTimePart = (iso?: string) => (iso ? new Date(iso) : new Date());
   const getDefaultEndTime = (startIso?: string, endIso?: string) => {
@@ -897,7 +901,7 @@ export default function BookScreen() {
                       if (!isAvailable) return;
                       setSelectedYachts((prev: any[]) => {
                         const exists = prev.some((item) => item.id === y.id);
-                        if (isAdmin) {
+                        if (canMultiYacht) {
                           if (exists) return prev.filter((item) => item.id !== y.id);
                           return [...prev, y];
                         } else {

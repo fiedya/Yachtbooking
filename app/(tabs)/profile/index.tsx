@@ -26,6 +26,7 @@ import {
 } from "react-native";
 import { User } from "../../../src/entities/user";
 import { useMode } from "../../../src/providers/ModeProvider";
+import { usePermissions } from "../../../src/providers/PermissionsProvider";
 import {
   getUserPhotoUrl,
   subscribeToUser,
@@ -128,6 +129,7 @@ export default function ProfileScreen() {
   const [saving, setSaving] = useState(false);
   const { mode, toggleMode } = useMode();
   const { user, uid, loading: authLoading } = useAuth();
+  const { permissionGroups } = usePermissions();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [rejectedBookings, setRejectedBookings] = useState<Booking[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
@@ -223,6 +225,9 @@ export default function ProfileScreen() {
   }
 
   const isAdmin = mode === "admin";
+  const userGroups = permissionGroups.filter((g) =>
+    profile.permissionGroups?.includes(g.id),
+  );
   const canEditSelectedBooking =
     !!selectedBooking &&
     selectedBooking.status !== BookingStatus.Rejected &&
@@ -321,6 +326,30 @@ export default function ProfileScreen() {
           {!!profile.phone && <InfoRow label="Telefon" value={profile.phone} />}
           {!!profile.pseudonim && <InfoRow label="Pseudonim" value={profile.pseudonim} />}
           <InfoRow label="Rola" value={isAdmin ? "Administrator" : "Użytkownik"} />
+          {userGroups.length > 0 && (
+            <View style={{ paddingVertical: 8, borderBottomWidth: 1, borderColor: colors.border }}>
+              <Text style={[theme.textSecondary, { marginBottom: 6 }]}>Grupy uprawnień</Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+                {userGroups.map((g) => (
+                  <View
+                    key={g.id}
+                    style={{
+                      backgroundColor: colors.backgroundSoft,
+                      borderWidth: 1,
+                      borderColor: colors.primary,
+                      borderRadius: 12,
+                      paddingHorizontal: 10,
+                      paddingVertical: 3,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: colors.primary, fontWeight: "500" }}>
+                      {g.name}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
         </View>
 
         {/* Stats */}

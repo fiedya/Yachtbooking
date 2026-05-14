@@ -1,4 +1,5 @@
 import { AuthProvider } from "@/src/providers/AuthProvider";
+import { PermissionsProvider } from "@/src/providers/PermissionsProvider";
 import { CalendarModeProvider } from "@/src/providers/CalendarModeProvider";
 
 import { registerForPushNotificationsAsync } from "@/src/services/notificationService";
@@ -24,9 +25,11 @@ export default function RootLayout() {
   return (
     <ModeProvider>
       <AuthProvider>
-        <CalendarModeProvider>
-          <Stack screenOptions={{ headerShown: false }} />
-        </CalendarModeProvider>
+        <PermissionsProvider>
+          <CalendarModeProvider>
+            <Stack screenOptions={{ headerShown: false }} />
+          </CalendarModeProvider>
+        </PermissionsProvider>
       </AuthProvider>
     </ModeProvider>
   );

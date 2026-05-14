@@ -1,12 +1,16 @@
 import { colors } from "@/src/theme/colors";
 
 import Icon from "@/src/components/Icon";
+import { Permission } from "@/src/entities/permissionGroup";
+import { usePermissions } from "@/src/providers/PermissionsProvider";
 import { Tabs } from "expo-router";
 import { useMode } from "../../src/providers/ModeProvider";
 
 export default function TabsLayout() {
   const { mode } = useMode();
   const isAdmin = mode === "admin";
+  const { can } = usePermissions();
+  const showAdminTab = isAdmin || can(Permission.PermissionsGroups);
 
   return (
     <Tabs
@@ -66,7 +70,7 @@ export default function TabsLayout() {
         name="admin"
         options={{
           title: "Admin",
-          href: isAdmin ? undefined : null,
+          href: showAdminTab ? undefined : null,
           tabBarIcon: ({ color, size }) => (
             <Icon name="key-outline" size={size} color={color} />
           ),

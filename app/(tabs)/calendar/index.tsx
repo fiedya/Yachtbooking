@@ -5,13 +5,15 @@ import Icon from "@/src/components/Icon";
 import { BookingStatus } from "@/src/entities/booking";
 import { Duty } from "@/src/entities/duty";
 import { Note } from "@/src/entities/note";
+import { Permission } from "@/src/entities/permissionGroup";
 import { getBookingStatusLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { useCalendarMode } from "@/src/providers/CalendarModeProvider";
 import { useMode } from "@/src/providers/ModeProvider";
+import { usePermissions } from "@/src/providers/PermissionsProvider";
 import { subscribeToSharedWeekBookings, updateBookingStatus } from "@/src/services/booking.service";
-import { createNote, subscribeToNotesForBooking } from "@/src/services/noteService";
 import { subscribeToWeekDuties } from "@/src/services/dutyService";
+import { createNote, subscribeToNotesForBooking } from "@/src/services/noteService";
 import { getUserPhotoUrl, subscribeToUser } from "@/src/services/userService";
 import { subscribeToAvailableYachts } from "@/src/services/yachtService";
 import { colors } from "@/src/theme/colors";
@@ -23,18 +25,18 @@ import { useIsFocused } from "@react-navigation/native";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-    Alert,
-    Animated,
-    Image,
-    PanResponder,
-    Platform,
-    Pressable,
-    ScrollView,
-    Switch,
-    Text,
-    TextInput,
-    View,
-    useWindowDimensions
+  Alert,
+  Animated,
+  Image,
+  PanResponder,
+  Platform,
+  Pressable,
+  ScrollView,
+  Switch,
+  Text,
+  TextInput,
+  View,
+  useWindowDimensions
 } from "react-native";
 
 function startOfWeek(date: Date) {
@@ -298,6 +300,9 @@ export default function CalendarScreen() {
   const { calendarMode, toggleCalendarMode } = useCalendarMode();
   const isDutiesMode = calendarMode === "duties";
 
+  const { can } = usePermissions();
+  const canApproveBooking = isAdmin || can(Permission.ApproveBooking);
+  const canManageDuty = isAdmin || can(Permission.ManageDuty);
   const [weekmode] = useState<"week">("week");
   const [weekOffset, setWeekOffset] = useState(0);
   const [bookings, setBookings] = useState<any[]>([]);
@@ -742,7 +747,7 @@ export default function CalendarScreen() {
                           return;
                         }
                         if (isDutiesMode) {
-                          if (isAdmin) {
+                          if (canManageDuty) {
                             setPendingSlot({ day: day.toISOString(), hour: h });
                             setTimeout(() => {
                               const startDate = new Date(day);
@@ -1069,8 +1074,15 @@ export default function CalendarScreen() {
               </View>
             )}
 
-            {isAdmin && selectedBooking && (
-              <View style={{ flexDirection: "row", justifyContent: "center", gap: 12 }}>
+            {/* Admin Approve/Reject Buttons */}
+            {canApproveBooking && selectedBooking && (
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  gap: 12,
+                }}
+              >
                 <Pressable
                   style={{ backgroundColor: colors.primary, paddingHorizontal: 18, paddingVertical: 8, borderRadius: 6, marginRight: 8, minWidth: 90, alignItems: "center" }}
                   onPress={async () => {
@@ -1219,7 +1231,7 @@ export default function CalendarScreen() {
           <Pressable style={theme.modal} onPress={(e) => e.stopPropagation()}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
               <Text style={theme.title}>Dyżur</Text>
-              {isAdmin && (
+              {canManageDuty && (
                 <Pressable
                   onPress={() => {
                     const duty = selectedDuty;

@@ -21,6 +21,9 @@ export default function AdminLayout() {
       <Stack.Screen name="all-duties" options={{ title: "Wszystkie dyżury" }} />
       <Stack.Screen name="duty-officers" options={{ title: "Dyżurni" }} />
       <Stack.Screen name="duty-stats" options={{ title: "Statystyki dyżurów" }} />
+
+      <Stack.Screen name="permission-groups" options={{ title: "Grupy uprawnień" }} />
+      <Stack.Screen name="permission-group-details" options={{ title: "Szczegóły grupy" }} />
     </Stack>
   );
 }

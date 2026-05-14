@@ -1,5 +1,7 @@
 import Icon from "@/src/components/Icon";
+import { Permission } from "@/src/entities/permissionGroup";
 import { useAuth } from "@/src/providers/AuthProvider";
+import { usePermissions } from "@/src/providers/PermissionsProvider";
 import { subscribeToUser } from "@/src/services/userService";
 import { colors } from "@/src/theme/colors";
 import { headerStyles } from "@/src/theme/header";
@@ -26,6 +28,7 @@ const TILES: NavTile[] = [
   { label: "Wszystkie dyżury", description: "Historia dyżurów", route: "/admin/all-duties", icon: "shield-checkmark-outline" },
   { label: "Dyżurni", description: "Zapisani dyżurni", route: "/admin/duty-officers", icon: "person-circle-outline" },
   { label: "Statystyki dyżurów", description: "Czas dyżurów per osoba", route: "/admin/duty-stats", icon: "bar-chart-outline" },
+  { label: "Grupy uprawnień", description: "Zarządzaj rolami i dostępem", route: "/admin/permission-groups", icon: "shield-checkmark-outline" },
 ];
 
 export default function AdminScreen() {
@@ -33,6 +36,9 @@ export default function AdminScreen() {
   const rootNavigationState = useRootNavigationState();
   const { mode } = useMode();
   const { user, uid, loading: authLoading } = useAuth();
+  const { can } = usePermissions();
+  const canManagePermGroups = can(Permission.PermissionsGroups);
+  const isFullAdmin = mode === "admin";
 
   useEffect(() => {
     if (!rootNavigationState?.key) return;
@@ -44,13 +50,19 @@ export default function AdminScreen() {
     }
 
     const unsub = subscribeToUser(user.uid, (profile) => {
-      if (profile?.role !== "admin" || mode !== "admin") {
+      const hasAdminAccess =
+        (profile?.role === "admin" && mode === "admin") || canManagePermGroups;
+      if (!hasAdminAccess) {
         router.replace("/(tabs)/calendar");
       }
     });
 
     return unsub;
-  }, [rootNavigationState?.key, authLoading, user?.uid, mode, router]);
+  }, [rootNavigationState?.key, authLoading, user?.uid, mode, router, canManagePermGroups]);
+
+  const visibleTiles = isFullAdmin
+    ? TILES
+    : TILES.filter((t) => canManagePermGroups && t.route === "/admin/permission-groups");
 
   return (
     <View style={styles.screen}>
@@ -63,7 +75,7 @@ export default function AdminScreen() {
         }}
       />
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 48 }}>
-        {TILES.map((tile) => (
+        {visibleTiles.map((tile) => (
           <Pressable
             key={tile.route}
             onPress={() => router.push(tile.route as any)}

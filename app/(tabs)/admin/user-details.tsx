@@ -1,12 +1,20 @@
+import { Permission, PermissionGroup } from "@/src/entities/permissionGroup";
 import { UserStatus } from "@/src/entities/user";
 import { getUserStatusLabel } from "@/src/helpers/enumHelper";
 import { useAuth } from "@/src/providers/AuthProvider";
-import { subscribeToUser, updateUserStatus } from "@/src/services/userService";
+import { subscribeToAllPermissionGroups } from "@/src/services/permissionGroupService";
+import {
+  subscribeToUser,
+  updateUserPermissionGroups,
+  updateUserStatus,
+} from "@/src/services/userService";
+import { usePermissions } from "@/src/providers/PermissionsProvider";
+import { useMode } from "@/src/providers/ModeProvider";
 import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 type UserDetails = {
   uid: string;
@@ -14,6 +22,7 @@ type UserDetails = {
   surname: string;
   phone: string;
   status: UserStatus;
+  permissionGroups?: string[];
 };
 
 function InfoRow({ label, value }: { label: string; value: string }) {
@@ -42,19 +51,55 @@ export default function UserDetailsScreen() {
   const { uid } = useLocalSearchParams<{ uid: string }>();
   const { uid: adminUid } = useAuth();
   const router = useRouter();
+  const { mode } = useMode();
+  const { can } = usePermissions();
+  const canVerifyUsers = mode === "admin" || can(Permission.VerifyUsers);
   const [user, setUser] = useState<UserDetails | null>(null);
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [updating, setUpdating] = useState(false);
+  const [allGroups, setAllGroups] = useState<PermissionGroup[]>([]);
+  const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(new Set());
+  const [savingGroups, setSavingGroups] = useState(false);
 
   useEffect(() => {
     if (!uid) return;
-    const unsub = subscribeToUser(uid, (user) => {
-      if (!user) return;
-      setUser(user);
+    const unsub = subscribeToUser(uid, (u) => {
+      if (!u) return;
+      setUser(u);
+      setSelectedGroupIds(new Set(u.permissionGroups ?? []));
     });
     return unsub;
   }, [uid]);
+
+  useEffect(() => {
+    return subscribeToAllPermissionGroups(setAllGroups);
+  }, []);
+
+  const groupsDirty = useMemo(() => {
+    const current = new Set(user?.permissionGroups ?? []);
+    if (current.size !== selectedGroupIds.size) return true;
+    for (const id of selectedGroupIds) if (!current.has(id)) return true;
+    return false;
+  }, [selectedGroupIds, user?.permissionGroups]);
+
+  function toggleGroup(groupId: string) {
+    setSelectedGroupIds((prev) => {
+      const next = new Set(prev);
+      next.has(groupId) ? next.delete(groupId) : next.add(groupId);
+      return next;
+    });
+  }
+
+  async function handleSaveGroups() {
+    if (!user) return;
+    setSavingGroups(true);
+    try {
+      await updateUserPermissionGroups(user.uid, Array.from(selectedGroupIds));
+    } finally {
+      setSavingGroups(false);
+    }
+  }
 
   if (!user) {
     return (
@@ -92,7 +137,7 @@ export default function UserDetailsScreen() {
   }
 
   return (
-    <View style={theme.screenPadded}>
+    <ScrollView style={theme.screen} contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
       {/* User info card */}
       <View style={{ backgroundColor: colors.backgroundSoft, borderRadius: 12, padding: 16, marginBottom: 20 }}>
         <InfoRow label="Imię" value={user.name} />
@@ -104,7 +149,7 @@ export default function UserDetailsScreen() {
         </View>
       </View>
 
-      {user.status !== UserStatus.Verified && (
+      {canVerifyUsers && user.status !== UserStatus.Verified && (
         <Pressable
           style={[theme.button, { marginBottom: 12, opacity: updating ? 0.5 : 1 }]}
           onPress={handleVerify}
@@ -114,7 +159,7 @@ export default function UserDetailsScreen() {
         </Pressable>
       )}
 
-      {user.status !== UserStatus.Rejected && !showRejectInput && (
+      {canVerifyUsers && user.status !== UserStatus.Rejected && !showRejectInput && (
         <Pressable
           style={[theme.button, theme.buttonDanger]}
           onPress={() => { setRejectionReason(""); setShowRejectInput(true); }}
@@ -123,7 +168,7 @@ export default function UserDetailsScreen() {
         </Pressable>
       )}
 
-      {showRejectInput && (
+      {canVerifyUsers && showRejectInput && (
         <View style={[theme.card, theme.cardPadding, { marginTop: 8 }]}>
           <Text style={[theme.sectionTitle, { marginBottom: 8 }]}>Podaj powód odrzucenia</Text>
           <TextInput
@@ -157,6 +202,68 @@ export default function UserDetailsScreen() {
           </View>
         </View>
       )}
-    </View>
+
+      {/* Grupy uprawnień */}
+      <View style={{ marginTop: 28 }}>
+        <Text style={[theme.sectionTitle, { marginBottom: 12 }]}>Grupy uprawnień</Text>
+        {allGroups.length === 0 ? (
+          <Text style={theme.textMuted}>Brak zdefiniowanych grup. Utwórz je w sekcji "Grupy uprawnień".</Text>
+        ) : (
+          allGroups.map((group) => {
+            const active = selectedGroupIds.has(group.id);
+            return (
+              <Pressable
+                key={group.id}
+                onPress={() => toggleGroup(group.id)}
+                style={[
+                  theme.card,
+                  {
+                    padding: 14,
+                    marginBottom: 8,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 12,
+                    borderWidth: 1.5,
+                    borderColor: active ? colors.primary : colors.border,
+                    backgroundColor: active ? "#eef3ff" : colors.white,
+                  },
+                ]}
+              >
+                <View
+                  style={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: 11,
+                    borderWidth: 2,
+                    borderColor: active ? colors.primary : colors.lightGrey,
+                    backgroundColor: active ? colors.primary : colors.white,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={[theme.textPrimary, { fontWeight: active ? "600" : "400" }]}>
+                    {group.name}
+                  </Text>
+                  <Text style={theme.textMuted}>
+                    {group.permissions.length === 0 ? "Brak uprawnień" : `${group.permissions.length} uprawnie${group.permissions.length === 1 ? "nie" : group.permissions.length < 5 ? "nia" : "ń"}`}
+                  </Text>
+                </View>
+              </Pressable>
+            );
+          })
+        )}
+
+        {groupsDirty && (
+          <Pressable
+            onPress={handleSaveGroups}
+            disabled={savingGroups}
+            style={[theme.button, { marginTop: 12 }, savingGroups && theme.buttonDisabled]}
+          >
+            <Text style={theme.buttonText}>{savingGroups ? "Zapisuję..." : "Zapisz grupy"}</Text>
+          </Pressable>
+        )}
+      </View>
+    </ScrollView>
   );
 }

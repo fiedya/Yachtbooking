@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { DutyOfficer } from "../entities/duty";
+import { Permission } from "../entities/permissionGroup";
 import { subscribeToDutyOfficers } from "../services/dutyService";
 import { useAuth } from "./AuthProvider";
 import { useMode } from "./ModeProvider";
+import { usePermissions } from "./PermissionsProvider";
 
 export type CalendarMode = "yachtbooking" | "duties";
 
@@ -25,6 +27,8 @@ export function CalendarModeProvider({ children }: { children: React.ReactNode }
   const [dutyOfficers, setDutyOfficers] = useState<DutyOfficer[]>([]);
   const { user } = useAuth();
   const { mode } = useMode();
+  const { can } = usePermissions();
+  const canManageDuty = mode === "admin" || can(Permission.ManageDuty);
 
   useEffect(() => {
     if (mode !== "admin") {
@@ -33,12 +37,12 @@ export function CalendarModeProvider({ children }: { children: React.ReactNode }
   }, [mode]);
 
   useEffect(() => {
-    if (mode !== "admin" || !user) {
+    if (!canManageDuty || !user) {
       setDutyOfficers([]);
       return;
     }
     return subscribeToDutyOfficers(setDutyOfficers);
-  }, [mode, user?.uid]);
+  }, [canManageDuty, user?.uid]);
 
   const toggleCalendarMode = () => {
     setCalendarMode((prev) => (prev === "yachtbooking" ? "duties" : "yachtbooking"));

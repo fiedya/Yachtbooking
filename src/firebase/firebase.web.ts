@@ -12,6 +12,7 @@ import {
     onSnapshot as _onSnapshot,
     setDoc as _setDoc,
     updateDoc as _updateDoc,
+    deleteDoc as _deleteDoc,
     addDoc,
     collection,
     doc,
@@ -172,6 +173,10 @@ export function onSnapshot(
 
 export function addDocAuto(col: string, data: any) {
   return addDoc(collection(db, col), data);
+}
+
+export function deleteDoc(col: string, id: string) {
+  return _deleteDoc(doc(db, col, id));
 }
 
 export function onDocSnapshot(
