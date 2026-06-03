@@ -1,6 +1,7 @@
 import { AuthProvider } from "@/src/providers/AuthProvider";
 import { PermissionsProvider } from "@/src/providers/PermissionsProvider";
 import { CalendarModeProvider } from "@/src/providers/CalendarModeProvider";
+import { VersionGateProvider } from "@/src/providers/VersionGateProvider";
 
 import { registerForPushNotificationsAsync } from "@/src/services/notificationService";
 import { useFonts } from "expo-font";
@@ -25,11 +26,13 @@ export default function RootLayout() {
   return (
     <ModeProvider>
       <AuthProvider>
-        <PermissionsProvider>
-          <CalendarModeProvider>
-            <Stack screenOptions={{ headerShown: false }} />
-          </CalendarModeProvider>
-        </PermissionsProvider>
+        <VersionGateProvider>
+          <PermissionsProvider>
+            <CalendarModeProvider>
+              <Stack screenOptions={{ headerShown: false }} />
+            </CalendarModeProvider>
+          </PermissionsProvider>
+        </VersionGateProvider>
       </AuthProvider>
     </ModeProvider>
   );

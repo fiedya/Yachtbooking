@@ -39,6 +39,16 @@ export default function AuthScreen() {
     }
   }, [authLoading, user, router]);
 
+  // Wyczyść reCAPTCHA verifier przy odmontowaniu (np. HMR lub nawigacja)
+  useEffect(() => {
+    return () => {
+      if (Platform.OS === "web" && window.recaptchaVerifier) {
+        try { window.recaptchaVerifier.clear(); } catch {}
+        window.recaptchaVerifier = null;
+      }
+    };
+  }, []);
+
   /* --------------------------------
      SEND SMS CODE
   ---------------------------------- */
@@ -57,18 +67,22 @@ export default function AuthScreen() {
 
         const auth = getAuth(getApp());
 
-        // 🔐 Init reCAPTCHA ON DEMAND (NOT in useEffect)
-        if (!window.recaptchaVerifier) {
-          window.recaptchaVerifier = new RecaptchaVerifier(
-            auth,
-            "recaptcha-container",
-            {
-              size: "invisible",
-            },
-          );
-
-          await window.recaptchaVerifier.render();
+        // 🔐 Zawsze czyść stary verifier — token reCAPTCHA jest jednorazowy
+        if (window.recaptchaVerifier) {
+          try { window.recaptchaVerifier.clear(); } catch {}
+          window.recaptchaVerifier = null;
         }
+
+        // Safari blokuje invisible reCAPTCHA przez ITP — użyj normal jako fallback
+        const isSafari =
+          /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+        window.recaptchaVerifier = new RecaptchaVerifier(
+          auth,
+          "recaptcha-container",
+          { size: isSafari ? "normal" : "invisible" },
+        );
+        await window.recaptchaVerifier.render();
 
         confirmation = await signInWithPhoneNumber(
           auth,
@@ -87,6 +101,11 @@ export default function AuthScreen() {
       setStep("code");
     } catch (e: any) {
       console.error("[PHONE AUTH ERROR]", e);
+      // Wyczyść verifier po błędzie — przy kolejnej próbie zostanie stworzony świeży
+      if (Platform.OS === "web" && window.recaptchaVerifier) {
+        try { window.recaptchaVerifier.clear(); } catch {}
+        window.recaptchaVerifier = null;
+      }
       setError(e?.message || "Nie udało się wysłać kodu");
     } finally {
       setLoading(false);

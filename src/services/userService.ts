@@ -11,6 +11,7 @@ import {
     setDoc,
     updateDoc,
 } from "@/src/firebase/init";
+import { PermissionGroup } from "../entities/permissionGroup";
 import { User, UserStatus } from "../entities/user";
 
 /* ----------------------------------
@@ -296,8 +297,37 @@ export async function updateUserAvatar(
 export async function updateUserPermissionGroups(
   userId: string,
   permissionGroups: string[],
+  effectivePermissions: string[],
 ) {
-  return updateDoc("users", userId, { permissionGroups });
+  return updateDoc("users", userId, { permissionGroups, effectivePermissions });
+}
+
+/**
+ * After editing a permission group, recalculates effectivePermissions for all users
+ * who belong to that group, so Firestore security rules stay in sync.
+ */
+export async function recalculateEffectivePermissionsForGroup(
+  groupId: string,
+  allGroups: PermissionGroup[],
+) {
+  const snapshot: any = await queryDocs("users", {
+    where: ["permissionGroups", "array-contains", groupId],
+  });
+  const docs = snapshot.docs ?? snapshot._docs ?? [];
+
+  await Promise.all(
+    docs.map((doc: any) => {
+      const groupIds: string[] = doc.data().permissionGroups ?? [];
+      const effectivePermissions = [
+        ...new Set(
+          groupIds.flatMap(
+            (id) => allGroups.find((g) => g.id === id)?.permissions ?? [],
+          ),
+        ),
+      ];
+      return updateDoc("users", doc.id, { effectivePermissions });
+    }),
+  );
 }
 
 export async function probeUserPermissions(userId: string) {

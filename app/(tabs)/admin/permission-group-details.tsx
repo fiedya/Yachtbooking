@@ -11,6 +11,7 @@ import {
   subscribeToAllPermissionGroups,
   updatePermissionGroup,
 } from "@/src/services/permissionGroupService";
+import { recalculateEffectivePermissionsForGroup } from "@/src/services/userService";
 import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -68,10 +69,13 @@ export default function PermissionGroupDetailsScreen() {
     if (!name.trim()) return;
     setSaving(true);
     try {
-      await updatePermissionGroup(id, {
-        name: name.trim(),
-        permissions: Array.from(selectedPerms),
-      });
+      const updatedPerms = Array.from(selectedPerms);
+      await updatePermissionGroup(id, { name: name.trim(), permissions: updatedPerms });
+      // Sync effectivePermissions in user docs so Firestore rules stay in sync
+      const updatedGroups = groups.map((g) =>
+        g.id === id ? { ...g, name: name.trim(), permissions: updatedPerms } : g,
+      );
+      await recalculateEffectivePermissionsForGroup(id, updatedGroups);
       router.back();
     } finally {
       setSaving(false);

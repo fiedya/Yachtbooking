@@ -53,7 +53,9 @@ export default function Icon({
       "notifications-outline": WebIcons.IoNotificationsOutline,
       "add": WebIcons.IoAdd,
       "pencil": WebIcons.IoPencil,
+      "trash-outline": WebIcons.IoTrashOutline,
       "alert-circle-outline": WebIcons.IoAlertCircleOutline,
+      "phone-portrait-outline": WebIcons.IoPhonePortraitOutline,
       "copy-outline": WebIcons.IoCopyOutline,
     };
 

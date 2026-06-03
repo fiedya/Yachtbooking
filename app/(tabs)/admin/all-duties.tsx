@@ -1,6 +1,7 @@
 import Icon from "@/src/components/Icon";
 import { Duty } from "@/src/entities/duty";
 import { subscribeToWeekDuties } from "@/src/services/dutyService";
+import { useAuth } from "@/src/providers/AuthProvider";
 import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";
 import { useRouter } from "expo-router";
@@ -29,12 +30,14 @@ const RANGE_START = new Date(2000, 0, 1);
 const RANGE_END = new Date(2100, 0, 1);
 
 export default function AllDutiesScreen() {
+  const { user } = useAuth();
   const [duties, setDuties] = useState<Duty[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const router = useRouter();
 
   useEffect(() => {
+    if (!user) return;
     const unsub = subscribeToWeekDuties(
       RANGE_START,
       RANGE_END,
@@ -42,7 +45,7 @@ export default function AllDutiesScreen() {
       (err) => { console.error("[ALL DUTIES]", err); setLoading(false); },
     );
     return unsub;
-  }, []);
+  }, [user]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

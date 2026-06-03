@@ -15,8 +15,14 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-      return isSignedIn() && 
+      return isSignedIn() &&
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function hasPermission(perm) {
+      return isSignedIn() &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid))
+               .data.get('effectivePermissions', []).hasAny([perm]);
     }
     
     // =============================================
@@ -26,13 +32,15 @@ service cloud.firestore {
     match /users/{userId} {
       // Anyone signed in can read user profiles (for displaying names, photos)
       allow read: if isSignedIn();
-      
+
       // Users can only create their own profile
       allow create: if isOwner(userId);
-      
-      // Users can update their own profile, admins can update any
-      allow update: if isOwner(userId) || isAdmin();
-      
+
+      // Users can update their own profile; admins i użytkownicy z VerifyUsers mogą każdy
+      allow update: if isOwner(userId)
+                    || isAdmin()
+                    || hasPermission('verify_users');
+
       // Only admins can delete users
       allow delete: if isAdmin();
     }
@@ -44,9 +52,12 @@ service cloud.firestore {
     match /yachts/{yachtId} {
       // Anyone signed in can read yachts
       allow read: if isSignedIn();
-      
-      // Only admins can create, update, or delete yachts
-      allow create, update, delete: if isAdmin();
+
+      // Admins lub użytkownicy z EditYacht / ChangeYachtStatus
+      allow create, delete: if isAdmin() || hasPermission('edit_yacht');
+      allow update: if isAdmin()
+                    || hasPermission('edit_yacht')
+                    || hasPermission('change_yacht_status');
     }
     
     // =============================================
@@ -56,14 +67,16 @@ service cloud.firestore {
     match /bookings/{bookingId} {
       // Anyone signed in can read bookings (for calendar view)
       allow read: if isSignedIn();
-      
+
       // Users can create their own bookings
-      allow create: if isSignedIn() && 
+      allow create: if isSignedIn() &&
                        request.resource.data.userId == request.auth.uid;
-      
-      // Users can update their own bookings, admins can update any
-      allow update: if isOwner(resource.data.userId) || isAdmin();
-      
+
+      // Users can update their own bookings; admins i użytkownicy z ApproveBooking mogą każdy
+      allow update: if isOwner(resource.data.userId)
+                    || isAdmin()
+                    || hasPermission('approve_booking');
+
       // Only admins can delete bookings
       allow delete: if isAdmin();
     }
@@ -136,8 +149,8 @@ service cloud.firestore {
       // Anyone signed in can read duties (for calendar view)
       allow read: if isSignedIn();
 
-      // Only admins can create, update, or delete duties
-      allow create, update, delete: if isAdmin();
+      // Admins lub użytkownicy z ManageDuty
+      allow create, update, delete: if isAdmin() || hasPermission('manage_duty');
     }
 
     // =============================================
@@ -148,8 +161,20 @@ service cloud.firestore {
       // Anyone signed in can read duty officers (for autocomplete)
       allow read: if isSignedIn();
 
-      // Only admins can create, update, or delete duty officers
-      allow create, update, delete: if isAdmin();
+      // Admins lub użytkownicy z ManageDuty
+      allow create, update, delete: if isAdmin() || hasPermission('manage_duty');
+    }
+
+    // =============================================
+    // APP CONFIG COLLECTION
+    // =============================================
+
+    match /appConfig/{docId} {
+      // Public read — version gate must work before login
+      allow read: if true;
+
+      // Only admins can update version control settings
+      allow write: if isAdmin();
     }
   }
 }

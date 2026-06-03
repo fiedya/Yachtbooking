@@ -25,4 +25,6 @@ export type User = {
   rejectionReason?: string;
   rejectedByAdminUid?: string;
   permissionGroups?: string[];
+  /** Spłaszczone uprawnienia ze wszystkich grup — używane przez reguły Firestore */
+  effectivePermissions?: string[];
 };

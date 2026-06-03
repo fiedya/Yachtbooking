@@ -1,22 +1,25 @@
 import { DutyOfficer } from "@/src/entities/duty";
 import { subscribeToDutyOfficers } from "@/src/services/dutyService";
+import { useAuth } from "@/src/providers/AuthProvider";
 import { colors } from "@/src/theme/colors";
 import { styles as theme } from "@/src/theme/styles";
 import { useEffect, useMemo, useState } from "react";
 import { FlatList, Text, TextInput, View } from "react-native";
 
 export default function DutyOfficersScreen() {
+  const { user } = useAuth();
   const [officers, setOfficers] = useState<DutyOfficer[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
+    if (!user) return;
     const unsub = subscribeToDutyOfficers(
       (data) => { setOfficers(data); setLoading(false); },
       (err) => { console.error("[DUTY OFFICERS]", err); setLoading(false); },
     );
     return unsub;
-  }, []);
+  }, [user]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

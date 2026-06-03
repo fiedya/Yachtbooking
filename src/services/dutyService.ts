@@ -34,13 +34,12 @@ export async function checkDutyCoverage(start: Date, end: Date): Promise<boolean
     });
 
     const docs = snapshot.docs ?? snapshot._docs ?? [];
-    const duties = docs.map((doc: any) => {
-      const d = doc.data();
-      return {
-        start: d.start.toDate(),
-        end: d.end.toDate(),
-      };
-    });
+    const duties = docs
+      .filter((doc: any) => !doc.data().deleted)
+      .map((doc: any) => {
+        const d = doc.data();
+        return { start: d.start.toDate(), end: d.end.toDate() };
+      });
 
     return isFullyCovered(start, end, duties);
   } catch {
@@ -53,7 +52,9 @@ export async function checkDutyOverlap(start: Date, end: Date, excludeId?: strin
     where: [["start", "<", end]],
   });
   const docs = snapshot.docs ?? snapshot._docs ?? [];
-  const filtered = (excludeId ? docs.filter((d: any) => d.id !== excludeId) : docs)
+  const filtered = docs
+    .filter((d: any) => !d.data().deleted)
+    .filter((d: any) => !excludeId || d.id !== excludeId)
     .filter((d: any) => d.data().end.toDate() > start);
   return filtered.length > 0;
 }
@@ -157,6 +158,10 @@ export async function updateDuty(dutyId: string, params: {
   });
 }
 
+export async function softDeleteDuty(dutyId: string): Promise<void> {
+  await updateDoc("duties", dutyId, { deleted: true });
+}
+
 export async function getDutyOfficersOnce(): Promise<DutyOfficer[]> {
   const snapshot: any = await queryDocs("dutyOfficers", {});
   const docs = snapshot.docs ?? snapshot._docs ?? [];
@@ -171,6 +176,7 @@ export async function getDutiesInRange(start: Date, end: Date): Promise<Duty[]> 
   });
   const docs = snapshot.docs ?? snapshot._docs ?? [];
   return docs
+    .filter((doc: any) => !doc.data().deleted)
     .filter((doc: any) => doc.data().end.toDate() > start)
     .map((doc: any) => ({ id: doc.id, ...doc.data() } as Duty));
 }
@@ -195,6 +201,7 @@ export function subscribeToWeekDuties(
       const docs = snapshot.docs ?? snapshot._docs ?? [];
       const duties: Duty[] = docs
         .map((doc: any) => ({ id: doc.id, ...doc.data() }))
+        .filter((d: any) => !d.deleted)
         .filter((d: any) => {
           const s = d.start?.toDate?.();
           const e = d.end?.toDate?.();

@@ -6,6 +6,7 @@ export enum Permission {
   ChangeYachtStatus = "change_yacht_status",
   EditYacht         = "edit_yacht",
   PermissionsGroups = "permissions_groups",
+  CustomBookingName = "custom_booking_name",
 }
 
 export const PermissionLabels: Record<Permission, string> = {
@@ -16,6 +17,7 @@ export const PermissionLabels: Record<Permission, string> = {
   [Permission.ChangeYachtStatus]: "Zmiana statusów jachtu",
   [Permission.EditYacht]:         "Edycja danych jachtu",
   [Permission.PermissionsGroups]: "Zarządzanie grupami uprawnień",
+  [Permission.CustomBookingName]: "Wpisanie dowolnej osoby rezerwującej",
 };
 
 export type PermissionGroup = {

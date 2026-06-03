@@ -56,6 +56,7 @@ export default function BookScreen() {
   const { can } = usePermissions();
   const canMultiYacht = isAdmin || can(Permission.MultiYachtBooking);
   const canManageDuty = isAdmin || can(Permission.ManageDuty);
+  const canCustomName = isAdmin || can(Permission.CustomBookingName);
   const isEditingDuty = canManageDuty && !!dutyId && edit === "1";
   const isDutyMode = (calendarMode === "duties" && canManageDuty && !edit && !copyBookingId) || isEditingDuty;
   const getDatePart = (iso?: string) => (iso ? new Date(iso) : new Date());
@@ -87,6 +88,7 @@ export default function BookScreen() {
   const [settings, setSettings] = useState<{ usePseudonims: boolean }>({
     usePseudonims: false,
   });
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [editingBooking, setEditingBooking] = useState<any>(null);
   const availabilityRequestIdRef = useRef(0);
 
@@ -106,11 +108,14 @@ export default function BookScreen() {
     return d;
   });
   const [dutySubmitting, setDutySubmitting] = useState(false);
+  const [dutyError, setDutyError] = useState<string | null>(null);
   const [showDutyStartDatePicker, setShowDutyStartDatePicker] = useState(false);
   const [showDutyStartTimePicker, setShowDutyStartTimePicker] = useState(false);
   const [showDutyEndDatePicker, setShowDutyEndDatePicker] = useState(false);
   const [showDutyEndTimePicker, setShowDutyEndTimePicker] = useState(false);
   const [officerSuggestionsVisible, setOfficerSuggestionsVisible] = useState(false);
+  // true gdy użytkownik wybrał dyżurnego z listy podpowiedzi (lub edytujemy istniejący)
+  const [dutyOfficerPickedFromList, setDutyOfficerPickedFromList] = useState(false);
 
   const now = new Date();
   const isWeb = Platform.OS === "web";
@@ -146,6 +151,7 @@ export default function BookScreen() {
     setDutyOfficerName("");
     setDutyOfficerPhone("");
     setOfficerSuggestionsVisible(false);
+    setDutyOfficerPickedFromList(false);
     const now = new Date();
     if (paramStartDate) {
       const d = new Date(paramStartDate);
@@ -174,6 +180,7 @@ export default function BookScreen() {
       if (!duty) return;
       setDutyOfficerName(duty.dutyOfficerName);
       setDutyOfficerPhone(duty.dutyOfficerPhone);
+      setDutyOfficerPickedFromList(true);
       const s = duty.start?.toDate?.();
       const e = duty.end?.toDate?.();
       if (s) { setDutyStartDate(s); setDutyStartTime(s); }
@@ -281,9 +288,21 @@ export default function BookScreen() {
         useYachtShortcuts: false,
       };
       setSettings({ usePseudonims: prefs.usePseudonims ?? false });
+      setUserProfile(data);
     });
     return unsub;
   }, [user?.uid]);
+
+  // ─── Pre-fill booking name for users with CustomBookingName permission ──────
+  useEffect(() => {
+    if (!isFocused || edit || copyBookingId) return;
+    if (!canCustomName || !userProfile) return;
+    const fullName = settings.usePseudonims && userProfile.pseudonim
+      ? userProfile.pseudonim
+      : `${userProfile.name ?? ""} ${userProfile.surname ?? ""}`.trim();
+    setBookingName(fullName);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFocused]);
 
   // ─── Duty coverage check for booking form ────────────────────────────────
   useEffect(() => {
@@ -345,7 +364,7 @@ export default function BookScreen() {
 
       const profile = await getUser(user.uid);
       let fullName = "";
-      if (isAdmin && bookingName.trim()) {
+      if (canCustomName && bookingName.trim()) {
         fullName = bookingName.trim();
       } else if (profile) {
         if (settings.usePseudonims && profile.pseudonim) {
@@ -426,7 +445,20 @@ export default function BookScreen() {
       return;
     }
 
+    if (!dutyOfficerPickedFromList) {
+      const nameLower = name.toLowerCase();
+      const duplicate = dutyOfficers.find((o) => o.name.toLowerCase().trim() === nameLower);
+      if (duplicate) {
+        Alert.alert(
+          "Dyżurny już istnieje",
+          `Dyżurny o nazwie "${duplicate.name}" już istnieje w systemie. Wybierz go z listy podpowiedzi zamiast tworzyć nowego.`,
+        );
+        return;
+      }
+    }
+
     setDutySubmitting(true);
+    setDutyError(null);
     try {
       if (isEditingDuty && dutyId) {
         await updateDuty(dutyId, { dutyOfficerName: name, dutyOfficerPhone: phone, start, end });
@@ -437,10 +469,16 @@ export default function BookScreen() {
       }
       router.replace("/(tabs)/calendar");
     } catch (e: any) {
+      console.error("[DUTY SAVE ERROR]", e);
       if (e?.message === "OVERLAP") {
+        setDutyError("W podanym terminie istnieje już inny dyżur");
         Alert.alert("Konflikt", "W podanym terminie istnieje już inny dyżur");
       } else {
-        Alert.alert("Błąd", "Nie udało się zapisać dyżuru");
+        const msg = e?.code === "permission-denied"
+          ? "Brak uprawnień do zapisu dyżuru. Skontaktuj się z administratorem."
+          : "Nie udało się zapisać dyżuru";
+        setDutyError(msg);
+        Alert.alert("Błąd", msg);
       }
     } finally {
       setDutySubmitting(false);
@@ -542,6 +580,7 @@ export default function BookScreen() {
               onChangeText={(text) => {
                 setDutyOfficerName(text);
                 setOfficerSuggestionsVisible(true);
+                setDutyOfficerPickedFromList(false);
               }}
               placeholder="Imię i nazwisko dyżurnego"
               style={[styles.pickerButton, styles.inputDefaultText]}
@@ -571,6 +610,7 @@ export default function BookScreen() {
                       setDutyOfficerName(officer.name);
                       setDutyOfficerPhone(officer.phone);
                       setOfficerSuggestionsVisible(false);
+                      setDutyOfficerPickedFromList(true);
                     }}
                     style={{
                       paddingHorizontal: 12,
@@ -716,6 +756,12 @@ export default function BookScreen() {
           )}
         </ScrollView>
 
+        {dutyError && (
+          <Text style={{ color: "red", marginBottom: 8, textAlign: "center" }}>
+            {dutyError}
+          </Text>
+        )}
+
         <Pressable
           style={[styles.submit, { marginTop: 10 }, dutySubmitting && styles.submitDisabled]}
           onPress={handleCreateDuty}
@@ -741,7 +787,7 @@ export default function BookScreen() {
         }}
       />
       <ScrollView>
-        {isAdmin && (
+        {canCustomName && (
           <View>
             <Text style={styles.label}>Osoba rezerwująca</Text>
             <TextInput

@@ -60,6 +60,7 @@ setPersistence(auth, browserLocalPersistence).catch(() => {
   // iOS Safari private mode can throw — safe to ignore
 });
 
+
 const db = getFirestore(app);
 
 

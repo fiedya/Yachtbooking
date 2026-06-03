@@ -12,4 +12,5 @@ export type Duty = {
   dutyOfficerName: string;
   dutyOfficerPhone: string;
   createdAt: any;
+  deleted?: boolean;
 };

@@ -29,6 +29,7 @@ const TILES: NavTile[] = [
   { label: "Dyżurni", description: "Zapisani dyżurni", route: "/admin/duty-officers", icon: "person-circle-outline" },
   { label: "Statystyki dyżurów", description: "Czas dyżurów per osoba", route: "/admin/duty-stats", icon: "bar-chart-outline" },
   { label: "Grupy uprawnień", description: "Zarządzaj rolami i dostępem", route: "/admin/permission-groups", icon: "shield-checkmark-outline" },
+  { label: "Kontrola wersji", description: "Wymuszone aktualizacje aplikacji", route: "/admin/version-control", icon: "phone-portrait-outline" },
 ];
 
 export default function AdminScreen() {

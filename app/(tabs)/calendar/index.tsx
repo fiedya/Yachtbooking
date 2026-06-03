@@ -12,7 +12,7 @@ import { useCalendarMode } from "@/src/providers/CalendarModeProvider";
 import { useMode } from "@/src/providers/ModeProvider";
 import { usePermissions } from "@/src/providers/PermissionsProvider";
 import { subscribeToSharedWeekBookings, updateBookingStatus } from "@/src/services/booking.service";
-import { subscribeToWeekDuties } from "@/src/services/dutyService";
+import { softDeleteDuty, subscribeToWeekDuties } from "@/src/services/dutyService";
 import { createNote, subscribeToNotesForBooking } from "@/src/services/noteService";
 import { getUserPhotoUrl, subscribeToUser } from "@/src/services/userService";
 import { subscribeToAvailableYachts } from "@/src/services/yachtService";
@@ -430,6 +430,7 @@ export default function CalendarScreen() {
   };
 
   useEffect(() => {
+    if (!user) return;
     const unsub = subscribeToAvailableYachts((data) => {
       setYachts(data);
       const map: { [id: string]: { name: string; shortcut?: string } } = {};
@@ -437,7 +438,7 @@ export default function CalendarScreen() {
       setYachtMap(map);
     });
     return unsub;
-  }, []);
+  }, [user]);
 
   const filteredBookings = useMemo(() => {
     let result = bookings;
@@ -461,7 +462,7 @@ export default function CalendarScreen() {
 
   // ─── Bookings subscription ────────────────────────────────────────────────
   useEffect(() => {
-    if (!isFocused) { setIsRefreshing(false); return; }
+    if (!isFocused || !user) { setIsRefreshing(false); return; }
     const weekEnd = addDays(weekStart, 7);
     setIsRefreshing(true);
     const unsub = subscribeToSharedWeekBookings(
@@ -472,11 +473,11 @@ export default function CalendarScreen() {
       { isAdmin },
     );
     return unsub;
-  }, [isFocused, weekStart]);
+  }, [isFocused, weekStart, user]);
 
   // ─── Duties subscription ──────────────────────────────────────────────────
   useEffect(() => {
-    if (!isFocused) return;
+    if (!isFocused || !user) return;
     const weekEnd = addDays(weekStart, 7);
     const unsub = subscribeToWeekDuties(
       weekStart,
@@ -485,7 +486,7 @@ export default function CalendarScreen() {
       (error) => console.error("[CALENDAR] duties error", error),
     );
     return unsub;
-  }, [isFocused, weekStart]);
+  }, [isFocused, weekStart, user]);
 
   const days = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
@@ -1232,17 +1233,43 @@ export default function CalendarScreen() {
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
               <Text style={theme.title}>Dyżur</Text>
               {canManageDuty && (
-                <Pressable
-                  onPress={() => {
-                    const duty = selectedDuty;
-                    setSelectedDuty(null);
-                    router.push({ pathname: "/(tabs)/book", params: { dutyId: duty.id, edit: "1" } });
-                  }}
-                  style={{ padding: 4 }}
-                  accessibilityLabel="Edytuj dyżur"
-                >
-                  <Icon name="pencil" size={22} color={colors.primary} />
-                </Pressable>
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  <Pressable
+                    onPress={() => {
+                      const duty = selectedDuty;
+                      setSelectedDuty(null);
+                      router.push({ pathname: "/(tabs)/book", params: { dutyId: duty.id, edit: "1" } });
+                    }}
+                    style={{ padding: 4 }}
+                    accessibilityLabel="Edytuj dyżur"
+                  >
+                    <Icon name="pencil" size={22} color={colors.primary} />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => {
+                      const duty = selectedDuty;
+                      Alert.alert(
+                        "Usuń dyżur",
+                        `Czy na pewno chcesz usunąć dyżur ${duty.dutyOfficerName}?`,
+                        [
+                          { text: "Anuluj", style: "cancel" },
+                          {
+                            text: "Usuń",
+                            style: "destructive",
+                            onPress: async () => {
+                              setSelectedDuty(null);
+                              await softDeleteDuty(duty.id);
+                            },
+                          },
+                        ],
+                      );
+                    }}
+                    style={{ padding: 4 }}
+                    accessibilityLabel="Usuń dyżur"
+                  >
+                    <Icon name="trash-outline" size={22} color={colors.danger} />
+                  </Pressable>
+                </View>
               )}
             </View>
             <Text style={[theme.textPrimary, { marginBottom: 4 }]}>

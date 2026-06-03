@@ -39,8 +39,15 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   }, [uid]);
 
   useEffect(() => {
-    return subscribeToAllPermissionGroups(setAllGroups);
-  }, []);
+    if (!uid) {
+      setAllGroups([]);
+      return;
+    }
+    return subscribeToAllPermissionGroups(
+      setAllGroups,
+      (err) => console.error("[PERMISSIONS] permissionGroups snapshot error", err),
+    );
+  }, [uid]);
 
   const resolvedPermissions = useMemo<Set<Permission>>(() => {
     if (!userProfile) return new Set();

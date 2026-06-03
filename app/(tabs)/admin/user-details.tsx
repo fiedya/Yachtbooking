@@ -59,6 +59,7 @@ export default function UserDetailsScreen() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [updating, setUpdating] = useState(false);
   const [allGroups, setAllGroups] = useState<PermissionGroup[]>([]);
+  const [allGroupsLoaded, setAllGroupsLoaded] = useState(false);
   const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(new Set());
   const [savingGroups, setSavingGroups] = useState(false);
 
@@ -73,8 +74,12 @@ export default function UserDetailsScreen() {
   }, [uid]);
 
   useEffect(() => {
-    return subscribeToAllPermissionGroups(setAllGroups);
-  }, []);
+    if (!adminUid) return;
+    return subscribeToAllPermissionGroups(
+      (data) => { setAllGroups(data); setAllGroupsLoaded(true); },
+      (err) => { console.error("[USER DETAILS] permissionGroups error", err); setAllGroupsLoaded(true); },
+    );
+  }, [adminUid]);
 
   const groupsDirty = useMemo(() => {
     const current = new Set(user?.permissionGroups ?? []);
@@ -93,9 +98,23 @@ export default function UserDetailsScreen() {
 
   async function handleSaveGroups() {
     if (!user) return;
+    if (!allGroupsLoaded) {
+      console.warn("[USER DETAILS] Grupy uprawnień jeszcze nie załadowane, anulowano zapis");
+      return;
+    }
     setSavingGroups(true);
     try {
-      await updateUserPermissionGroups(user.uid, Array.from(selectedGroupIds));
+      const groupIdArray = Array.from(selectedGroupIds);
+      // Spłaszcz uprawnienia ze wszystkich wybranych grup (bez duplikatów)
+      const effectivePermissions = [
+        ...new Set(
+          groupIdArray.flatMap(
+            (id) => allGroups.find((g) => g.id === id)?.permissions ?? [],
+          ),
+        ),
+      ];
+      console.log("[USER DETAILS] Zapis grup:", groupIdArray, "effectivePermissions:", effectivePermissions);
+      await updateUserPermissionGroups(user.uid, groupIdArray, effectivePermissions);
     } finally {
       setSavingGroups(false);
     }
@@ -206,7 +225,9 @@ export default function UserDetailsScreen() {
       {/* Grupy uprawnień */}
       <View style={{ marginTop: 28 }}>
         <Text style={[theme.sectionTitle, { marginBottom: 12 }]}>Grupy uprawnień</Text>
-        {allGroups.length === 0 ? (
+        {!allGroupsLoaded ? (
+          <Text style={theme.textMuted}>Ładowanie grup…</Text>
+        ) : allGroups.length === 0 ? (
           <Text style={theme.textMuted}>Brak zdefiniowanych grup. Utwórz je w sekcji "Grupy uprawnień".</Text>
         ) : (
           allGroups.map((group) => {
@@ -254,7 +275,7 @@ export default function UserDetailsScreen() {
           })
         )}
 
-        {groupsDirty && (
+        {groupsDirty && allGroupsLoaded && (
           <Pressable
             onPress={handleSaveGroups}
             disabled={savingGroups}
